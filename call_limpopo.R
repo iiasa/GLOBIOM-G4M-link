@@ -251,7 +251,7 @@ if (merge_gdx_downscaling){
 if (!merge_gdx_downscaling & merge_regions){
   for (i in 1:length(scenarios_for_downscaling)){
     scenarios_idx <- which(scenario_mapping %in% scenarios_for_downscaling[i]) - 1
-    merge_gdx_down(project,paste0(wd_downscaling,path_for_G4M),scenarios_idx,
+    merge_gdx_down(project,path_for_G4M,scenarios_idx,
                    scenarios_for_downscaling[i],cluster_nr)
   } 
 }
