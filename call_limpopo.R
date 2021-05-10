@@ -236,7 +236,7 @@ cluster_nr <- as.numeric(readLines(paste0("./Condor/",project,"/cluster_nr.txt")
 # Transfer gdx to G4M folder - in case files were merged on limpopo
 if (merge_gdx_downscaling){
   # Read merged output
-  f <- paste("./Model/gdx/downscaled_",project,"_",cluster_nr,"_merged.gdx",sep="")
+  f <- paste0("./Model/gdx/downscaled_",project,"_",cluster_nr,"_merged.gdx")
   globiom4g4m_file <- gdx(f)
   all_outputs_glob4g4m <- all_items(globiom4g4m_file)
   allparam_glob4g4m <- batch_extract_tib(all_outputs_glob4g4m$parameters,f)
