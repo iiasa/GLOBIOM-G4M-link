@@ -84,7 +84,7 @@ system("RScript R/Condor_run.R R/sample_config.R")
 cluster_nr <- as.numeric(readLines(paste0("./Condor/",project,"/cluster_nr.txt"),warn=FALSE))
 
 # create output path string
-path_for_g4m2 <- gsub("/","\\\\",path_for_G4M)
+path_for_g4m2 <- gsub("/","%X%",path_for_G4M)
 
 # Configure merged output file
 tempString <- readLines("./Model/8_merge_output.gms",warn=FALSE)
@@ -107,10 +107,10 @@ close(simDestination)
 
 # Point gdx output to downscaling folder
 tempString <- readLines("./Model/8a_rep_g4m.gms",warn=FALSE)
-path_for_downscaling2 <- gsub("/","\\\\",path_for_downscaling)
+path_for_downscaling2 <- gsub("/","%X%",path_for_downscaling)
 
 tempString[246] <- paste0("execute_unload \"",path_for_downscaling2,"output_landcover_%project%_%lab%\"LANDCOVER_COMPARE_SCEN, LUC_COMPARE_SCEN0, Price_compare2,MacroScen, IEA_SCEN, BioenScen, ScenYear, REGION, COUNTRY,REGION_MAP") 
-tempString[248] <- paste0("execute_unload \"",path_for_downscaling2,"output_globiom4g4mm_%project%_%lab%\" G4Mm_SupplyResidues, G4Mm_SupplyWood, G4Mm_Wood_price, G4Mm_LandRent,G4Mm_CO2PRICE, MacroScen, IEA_SCEN, BioenScen, ScenYear") 
+tempString[248] <- paste0("execute_unload \"",path_for_g4m2,"output_globiom4g4mm_%project%_%lab%\" G4Mm_SupplyResidues, G4Mm_SupplyWood, G4Mm_Wood_price, G4Mm_LandRent,G4Mm_CO2PRICE, MacroScen, IEA_SCEN, BioenScen, ScenYear") 
 
 # Save file 
 simDestination <- file("./Model/8a_rep_g4m_tmp.gms", open="wt") #open file connection to write
