@@ -7,16 +7,11 @@
 #' scripts in sequence. In the second block,... to be done
 #' the code calls G4M. In the third block,... to be done
 
-
-# Load libraries 
-
-library(gdxrrw)
-library(gdxtools)
-library(tidyverse)
-library(stringr)
+# Remove any objects from active environment so that below it will contain only the default config
+rm(list=ls())
 
 ################################################################################
-#                        CONFIGURATION PARAMETERS
+#                     DEFAULT CONFIGURATION PARAMETERS
 ################################################################################
 
 # 1st block - Initial GLOBIOM run
@@ -40,8 +35,7 @@ g4m_feedback_file <- paste0("tabs_gui_FAOFRA2015CRF_CSIRO_t14_SSP2_iea_REGION37_
 regional_ag <- "ggi" # regional aggregation level
 path_for_downscaling <- "H:/Downscaling/Model/input/" # path to save gdx for downscaling
 
-
-#Downscaling configuration
+# Downscaling configuration
 wd_downscaling <- "H:/Downscaling/" # working directory for downscaling
 merge_gdx_downscaling <- T # merge all gdx outputs on limpopo
 merge_regions <- F # merge gdx locally by scenario 
@@ -60,6 +54,52 @@ resolution_downscaling <- 37 # number of regions specified in the downscaling
 #-------------------------------------------------------------------------------
 
 #-------------------------------------------------------------------------------
+
+################################################################################
+#                        CONFIGURATION PROCESSING
+################################################################################
+
+# Collect the names and types of the default config parameters
+config_names <- ls()
+if (length(config_names) == 0) {stop("Default configuration is absent! Please restore the default configuration. It is required for configuration checking, also when providing a separate configuration file.")}
+config_types <- lapply(lapply(config_names, get), typeof)
+
+# Can now pollute the name space, load libraries
+
+library(gdxrrw)
+library(gdxtools)
+library(tidyverse)
+library(stringr)
+
+# Presence of Config settings is obligatory in a config file other then for the settings listed here
+OPTIONAL_CONFIG_SETTINGS <- c(
+)
+
+# Read config file if specified via an argument, check presence and types.
+args <- commandArgs(trailingOnly=TRUE)
+if (length(args) == 0) {
+  warning("No config file argument supplied, using default run settings.")
+} else if (length(args) == 1) {
+  # Remove mandatory config defaults from the global scope
+  rm(list=config_names[!(config_names %in% OPTIONAL_CONFIG_SETTINGS)])
+  
+  # Source the config file, should add mandatory config settings to the global scope
+  source(args[1], local=TRUE, echo=FALSE)
+  
+  # Check that all config settings exist, this catches mandatory settings missing in the config file
+  for (i in seq_along(config_names))  {
+    name <- config_names[i]
+    if (!exists(name)) stop(str_glue("Mandatory config setting {name} is not set in config file {args[1]}!"))
+    type <- typeof(get(name))
+    if (type != config_types[[i]] &&
+        name != "resolution_downscaling" && # R has no stable numerical type
+        type != "NULL" && # allow for configured vector being empty
+        config_types[[i]] != "NULL" # allow for default vector being empty
+    ) stop(str_glue("{name} set to wrong type in {args[1]}, type should be {config_types[[i]]}"))
+  }
+} else {
+  stop("Multiple arguments provided! Expecting at most a single config file argument.")
+}
 
 ################################################################################
 #                           INITIAL GLOBIOM RUN
