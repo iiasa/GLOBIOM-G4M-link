@@ -37,7 +37,7 @@ merge_gdx <- function(project,wd,c_nr){
     error=function(e) e
   )
   
-  if(!inherits(error_code, "error")){
+  if(error_code != 0){
     setwd(prior_wd)
     stop(paste("Bad return from gams"))
   }
@@ -64,7 +64,7 @@ merge_gdx_down <- function(project,wd_out,s_list,s_cnt,c_nr,path_out){
     error=function(e) e
   )
   
-  if(!inherits(error_code, "error")){
+  if(error_code != 0){
     setwd(prior_wd)
     stop(paste("Bad return from gams"))
   }
