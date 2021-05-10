@@ -247,15 +247,13 @@ if (merge_gdx_downscaling){
             params = allparam_glob4g4m, sets = allsets_glob4g4m)
 }
 
-# Merge outputs locally for each scenario if not merged on limpopo
 if (!merge_gdx_downscaling & merge_regions){
   for (i in 1:length(scenarios_for_downscaling)){
     scenarios_idx <- which(scenario_mapping %in% scenarios_for_downscaling[i]) - 1
-    merge_gdx_down(project,path_for_G4M,scenarios_idx,
-                   scenarios_for_downscaling[i],cluster_nr)
+    merge_gdx_down(project,paste0(wd_downscaling,"Model/gdx"),scenarios_idx,
+                   scenarios_for_downscaling[i],cluster_nr,path_for_G4M)
   } 
 }
-
 
 #-------------------------------------------------------------------------------
 # Configure options for post-processing of  downscaling  - not needed if G4M uses the gdx files directly
