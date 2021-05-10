@@ -38,7 +38,7 @@ reporting_iamc_g4m <- "no" # Reporting G4M to IAMC yes/no
 g4m_feedback_file <- paste0("tabs_gui_FAOFRA2015CRF_CSIRO_t14_SSP2_iea_REGION37_",
                            date_label,"_final_csv") # G4M feedback file
 regional_ag <- "ggi" # regional aggregation level
-path_for_downscaling <- "H:/Downscaling/input/" # path to save gdx for downscaling
+path_for_downscaling <- "H:/Downscaling/Model/input/" # path to save gdx for downscaling
 
 
 #Downscaling configuration
