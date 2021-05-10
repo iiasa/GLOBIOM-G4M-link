@@ -222,7 +222,7 @@ scen_string <- paste0(scen_string,")")
 
 tempString <- readLines("./R/sample_config.R",warn=FALSE)
 tempString[17] <- paste0("EXPERIMENT = \"",project,"\"# label for your run")    
-tempString[19] <- paste0("JOBS = c(",scen_string,")")
+tempString[19] <- paste0("JOBS = ",scen_string)
 
 simDestination <- file("./R/sample_config.R", open="wt") #open file connection to write
 writeLines(tempString, simDestination)
