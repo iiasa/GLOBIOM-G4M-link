@@ -27,8 +27,8 @@ merge_gdx <- function(project,wd,c_nr){
   setwd(wd)
   
   merge_args <- c()
-  merge_args <- c(merge_args, str_glue(paste("output_",project,"_",c_nr,".*.gdx",sep="")))
-  merge_args <- c(merge_args, str_glue(paste("output=output_",project,"_",c_nr,"_merged.gdx",sep="")))
+  merge_args <- c(merge_args, str_glue("output_",project,"_",c_nr,".*.gdx"))
+  merge_args <- c(merge_args, str_glue("output=output_",project,"_",c_nr,"_merged.gdx"))
   
   # Invoke GDX merge
   
@@ -54,8 +54,8 @@ merge_gdx_down <- function(project,wd_out,s_list,s_cnt,c_nr,path_out){
   setwd(wd_out)
   s_list <-  sprintf("%06d", s_list)
   merge_args <- c()
-  merge_args <- c(merge_args, paste0("downscaled_",project,"_",c_nr,".",s_list,".gdx"))
-  merge_args <- c(merge_args, str_glue(paste0("output=",path_out,"output_landcover_",project,"_",s_cnt,"_merged.gdx")))
+  merge_args <- c(merge_args, str_c("downscaled_",project,"_",c_nr,".",s_list,".gdx"))
+  merge_args <- c(merge_args, str_glue(str_glue("output=",path_out,"output_landcover_",project,"_",s_cnt,"_merged.gdx")))
 
   # Invoke GDX merge
   
