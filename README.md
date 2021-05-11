@@ -4,7 +4,7 @@ R script to automatize the link between GLOBIOM and G4M.
 
 ## Dependencies
 
-`xl2gdx.R` depends on:
+The script depends on:
 - The [tidyverse](https://www.tidyverse.org/) curated R package collection.
 - [**gdxrrw**](https://github.com/GAMS-dev/gdxrrw), an R package for
   reading/writing GDX files from R. For a list of which binary package versions
