@@ -26,7 +26,7 @@ merge_gdx <- T # merge gdx output on limpopo
 # Post-processing script configuration (8_merged_output)
 limpopo_run <- "yes" # Run on limpopo yes/no
 resolution <- "region37" # GLOBIOM resolution
-date_label <- stringr::str_remove_all(format(Sys.Date(), "%d-%m-%Y"),"-") # Date of run
+date_label <- format(Sys.Date(), "%d%m%Y") # Date of run
 reporting_g4m <- "yes" #Reporting to G4M yes/no
 reporting_iamc <- "yes" #Reporting to IAMC yes/no
 reporting_iamc_g4m <- "no" # Reporting G4M to IAMC yes/no 
