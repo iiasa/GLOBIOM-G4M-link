@@ -220,7 +220,7 @@ tempString[676] <- str_glue("execute_unload 'gdx%X%",gdx_output_name, ".gdx',")
 write_lines(tempString,"./Model/1_downscaling_tmp.gms")
 
 # Define list of scenarios and predict downscaling scenarios
-scenario_mapping <- rep(0:max(eval(parse(text=scenarios))),each=resolution_downscaling)
+scenario_mapping <- rep(0:max(eval(parse(text=scenarios_for_downscaling))),each=resolution_downscaling)
 
 #-------------------------------------------------------------------------------
 # # Configuration options - deprecated version of limpopo script 
