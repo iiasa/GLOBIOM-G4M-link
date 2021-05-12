@@ -2,6 +2,15 @@
 
 R script to automatize the link between GLOBIOM and G4M.
 
+## Getting started
+
+1. Clone this repository to a working directory able to hold some gigabytes. For example
+   somewhere on your H: drive.
+3. Check the DownScale subdirectory has content. If not, the clone did not bring in the
+   Git submodule that lives there. To still get it, with the command line Git client do  
+   `git submodule update --init --recursive`  
+   from the root of the cloned repository.
+
 ## Dependencies
 
 The script depends on:
