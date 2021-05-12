@@ -2,7 +2,7 @@
 
 R script to automatize the link between GLOBIOM and G4M.
 
-## Getting started
+## Getting set
 
 1. Clone this repository to a working directory able to hold some gigabytes. For example
    somewhere on your H: drive.
@@ -19,6 +19,7 @@ R script to automatize the link between GLOBIOM and G4M.
    graphical client like TortoiseSVN, making sure the working copy goes into a `GLOBIOM`
    subdirectory of the root level of your clone of this repository. Also, make a `Condor`
    subdirectory of `GLOBIOM`.
+4. Install the R dependencies if needed.
 
 ## R Dependencies
 
