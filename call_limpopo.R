@@ -26,11 +26,11 @@ merge_gdx <- T # merge gdx output on limpopo
 # Post-processing script configuration (8_merged_output)
 limpopo_run <- "yes" # Run on limpopo yes/no
 resolution <- "region37" # GLOBIOM resolution
-date_label <- str_remove_all(format(Sys.Date(), "%d-%m-%Y"),"-") # Date of run
+date_label <- stringr::str_remove_all(format(Sys.Date(), "%d-%m-%Y"),"-") # Date of run
 reporting_g4m <- "yes" #Reporting to G4M yes/no
 reporting_iamc <- "yes" #Reporting to IAMC yes/no
 reporting_iamc_g4m <- "no" # Reporting G4M to IAMC yes/no 
-g4m_feedback_file <- str_glue("tabs_gui_FAOFRA2015CRF_CSIRO_t14_SSP2_iea_REGION37_",
+g4m_feedback_file <- stringr::str_glue("tabs_gui_FAOFRA2015CRF_CSIRO_t14_SSP2_iea_REGION37_",
                            date_label,"_final_csv") # G4M feedback file
 regional_ag <- "ggi" # regional aggregation level
 path_for_downscaling <- "H:/Downscaling/Model/input/" # path to save gdx for downscaling
