@@ -22,8 +22,8 @@ R script to automatize the link between GLOBIOM and G4M.
    graphical client like TortoiseSVN, making sure the working copy goes into a `GLOBIOM`
    subdirectory of the root level of your clone of this repository. Also, make a `Condor`
    subdirectory of `GLOBIOM`.
-4. Run the GLOBIOM precompilation `GLOBIOM/Data/0_executebatch_total.gms` and the
-   model `GLOBIOM/Model/0_executebatch.gms` up to the scenarios stage 6 (comment
+4. Run the GLOBIOM precompilation `GLOBIOM/Data/0_executebatch_total.gms` and thereafter
+   the model `GLOBIOM/Model/0_executebatch.gms` up to the scenarios stage 6 (comment
    out the stages >= 6). This will provide a restart file in the `GLOBIOM/Model/t`
    directory that can be used by the script to perform parallel scenario (stage 6)
    runs on the Limpopo cluster.
