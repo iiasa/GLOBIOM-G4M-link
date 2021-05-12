@@ -128,7 +128,7 @@ cluster_nr <- as.numeric(read_lines(str_glue("./Condor/",project,"/cluster_nr.tx
 path_for_g4m2 <- str_replace_all(path_for_G4M,"/","%X%")
 
 # Configure merged output file
-tempString <- read_lines("./Model/8_merge_output.gms",warn=FALSE)
+tempString <- read_lines("./Model/8_merge_output.gms")
 tempString[18] <- str_glue("$set limpopo    ",limpopo_run) 
 tempString[20] <- str_glue("$set limpopo_nr ",cluster_nr) 
 tempString[22] <- str_glue("$set project ",project) 
