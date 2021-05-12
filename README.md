@@ -6,12 +6,21 @@ R script to automatize the link between GLOBIOM and G4M.
 
 1. Clone this repository to a working directory able to hold some gigabytes. For example
    somewhere on your H: drive.
-3. Check the DownScale subdirectory has content. If not, the clone did not bring in the
+2. Check the DownScale subdirectory has content. If not, the clone did not bring in the
    Git submodule that lives there. To still get it, with the command line Git client do  
    `git submodule update --init --recursive`  
    from the root of the cloned repository.
+3. Checkout a GLOBIOM branch from subversion by running the `checkout.bat` script from
+   the command prompt or your bash shell. This requires the `svn` Subversion command line
+   client to be accessible via your PATH environment variable (on-path). You may wish
+   to change the Subversion URL in the script to check out a different branch.
+   
+   If you don't have `svn` on-path, perform the `svn` step in `checkout.bat` with a
+   graphical client like TortoiseSVN, making sure the working copy goes into a `GLOBIOM`
+   subdirectory of the root level of your clone of this repository. Also, make a `Condor`
+   subdirectory of `GLOBIOM`.
 
-## Dependencies
+## R Dependencies
 
 The script depends on:
 - The [tidyverse](https://www.tidyverse.org/) curated R package collection.
