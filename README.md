@@ -13,13 +13,19 @@ R script to automatize the link between GLOBIOM and G4M.
 3. Checkout a GLOBIOM branch from subversion by running the `checkout.bat` script from
    the command prompt or your bash shell. This requires the `svn` Subversion command line
    client to be accessible via your PATH environment variable (on-path). You may wish
-   to change the Subversion URL in the script to check out a different branch.
+   to change the Subversion URL in the script to check out a different branch. The branch
+   should be close to the Trunk version of GLOBIOM.
    
    If you don't have `svn` on-path, perform the `svn` step in `checkout.bat` with a
    graphical client like TortoiseSVN, making sure the working copy goes into a `GLOBIOM`
    subdirectory of the root level of your clone of this repository. Also, make a `Condor`
    subdirectory of `GLOBIOM`.
-4. Install the R dependencies if needed.
+4. Run the GLOBIOM precompilation `GLOBIOM/Data/0_executebatch_total.gms` and the
+   model `GLOBIOM/Model/0_executebatch.gms` up to the scenarios stage 6 (comment
+   out the stages >= 6). This will provide a restart file in the `GLOBIOM/Model/t`
+   directory that can be used by the script to perform parallel scenario (stage 6)
+   runs on the Limpopo cluster.
+6. Install the R dependencies if needed.
 
 ## R Dependencies
 
