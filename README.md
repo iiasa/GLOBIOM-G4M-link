@@ -2,6 +2,10 @@
 
 R script to automatize the link between GLOBIOM and G4M.
 
+- [Getting set](#getting-set)
+- [R Dependencies](#r-dependencies)
+- [Run the script](#run-the-script)
+
 ## Getting set
 
 1. Clone this repository to a working directory able to hold some gigabytes. For example
