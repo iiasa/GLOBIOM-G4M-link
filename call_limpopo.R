@@ -14,6 +14,18 @@ rm(list=ls())
 #                     DEFAULT CONFIGURATION PARAMETERS
 ################################################################################
 
+# Global options
+#-------------------------------------------------------------------------------
+
+globiom_intial <- T # call the initial GLOBIOM run
+downscaling_initial <- T # call the initial downscaling - needs data from the intial GLOBIOM run
+G4M <- F # call G4M - needs data from the intial downscaling
+globiom_final <- F # call the final GLOBIOM run - needs data from the G4M run
+downscaling_final <- F # call the final downscaling - needs data from the final GLOBIOM run
+
+#-------------------------------------------------------------------------------
+
+
 # 1st block - Initial GLOBIOM run
 #-------------------------------------------------------------------------------
 
@@ -102,231 +114,67 @@ if (length(args) == 0) {
   stop("Multiple arguments provided! Expecting at most a single config file argument.")
 }
 
+
+
 ################################################################################
-#                           INITIAL GLOBIOM RUN
+#                                GLOBIOM-G4M-LINK
 ################################################################################
 
-# Define wd
-setwd(wd)
 
-# Update sample_config file
-tempString <- read_lines("./R/sample_config.R")
-tempString[17] <- str_glue("EXPERIMENT = \"",project,"\"# label for your run")    
-tempString[19] <- str_glue("JOBS = c(",scenarios,")")
-tempString[40] <- str_glue("MERGE_GDX_OUTPUT = ",merge_gdx," # optional")
+# Load link functions
 
-# Save file
-write_lines(tempString, "./R/sample_config.R")
+cd <- getwd()
+source("./globiom_g4m_functions.R")
 
-# Submit runs to limpopo
-system("RScript R/Condor_run.R R/sample_config.R")
-
-# Retrieve limpopo cluster number - cluster_nr.txt was created by modifying the Condor_run.R script
-cluster_nr <- as.numeric(read_lines(str_glue("./Condor/",project,"/cluster_nr.txt")))
-
-# create output path string
-path_for_g4m2 <- str_replace_all(path_for_G4M,"/","%X%")
-
-# Configure merged output file
-tempString <- read_lines("./Model/8_merge_output.gms")
-tempString[18] <- str_glue("$set limpopo    ",limpopo_run) 
-tempString[20] <- str_glue("$set limpopo_nr ",cluster_nr) 
-tempString[22] <- str_glue("$set project ",project) 
-tempString[24] <- str_glue("$set region ",resolution)  
-tempString[26] <- str_glue("$set lab ",date_label)  
-tempString[29] <- str_glue("$set rep_g4m        ",reporting_g4m) 
-tempString[31] <- str_glue("$set rep_iamc_glo   ",reporting_iamc)  
-tempString[33] <- str_glue("$set rep_iamc_g4m   ",reporting_iamc_g4m)  
-tempString[36] <- str_glue("$set g4mfile ",g4m_feedback_file)  
-tempString[38] <- str_glue("$set regionagg ",regional_ag) 
-tempString[151] <- "$include 8a_rep_g4m_tmp.gms" 
-
-# Save file 
-write_lines(tempString, "./Model/8_merge_output_tmp.gms")
-
-# Point gdx output to downscaling folder
-tempString <- read_lines("./Model/8a_rep_g4m.gms")
-path_for_downscaling2 <- str_replace_all(path_for_downscaling,"/","%X%")
-
-tempString[246] <- str_glue("execute_unload \"",path_for_downscaling2,"output_landcover_%project%_%lab%\"LANDCOVER_COMPARE_SCEN, LUC_COMPARE_SCEN0, Price_compare2,MacroScen, IEA_SCEN, BioenScen, ScenYear, REGION, COUNTRY,REGION_MAP") 
-tempString[248] <- str_glue("execute_unload \"",path_for_g4m2,"output_globiom4g4mm_%project%_%lab%\" G4Mm_SupplyResidues, G4Mm_SupplyWood, G4Mm_Wood_price, G4Mm_LandRent,G4Mm_CO2PRICE, MacroScen, IEA_SCEN, BioenScen, ScenYear") 
-
-# Save file 
-write_lines(tempString, "./Model/8a_rep_g4m_tmp.gms")
-
-# Change wd to run post-processing file
-wd_model <- str_glue(wd,"Model/")
-setwd(wd_model)
-
-# Run post-processing script
-rc <- tryCatch(
-  system("gams 8_merge_output_tmp.gms"),
-  error=function(e) e
-  )
-if(rc != 0){
-  setwd(wd)
-  stop("Bad return from gams")
-}
-
-# Return to previous wd
-setwd(wd)
-
-#-------------------------------------------------------------------------------
-# Retrieve G4M files - not needed as gdx will be saved directly to G4M folder 
-# 
-# # 1 - Socio-economic data
-# f <- paste("./Model/output/g4m/output_globiom4g4mm_",project,"_",date_label,".gdx",sep="")
-# globiom4g4mm_file <- gdx(f)
-# all_outputs_glob4g4m <- all_items(globiom4g4mm_file)
-# allparam_glob4g4m <- batch_extract_tib(all_outputs_glob4g4m$parameters,f)
-# allsets_glob4g4m <- batch_extract_tib(all_outputs_glob4g4m$sets,f)
-# 
-# # 2 - Landcover data
-# f <- paste("./Model/output/g4m/output_landcover_",project,"_",date_label,".gdx",sep="")
-# landcover_file <- gdx(f)
-# all_outputs_landcover <- all_items(landcover_file)
-# allparam_landcover <- batch_extract_tib(all_outputs_landcover$parameters,f)
-# allsets_landcover <- batch_extract_tib(all_outputs_landcover$sets,f)
-# 
-# # Save to G4M folder
-# path_to_g4m <- "./Model/output/g4m/"
-# g4m_filename_globiom4g4mm <- "globiom4g4mm_2"
-# g4m_filename_landcover <- "landcover_2"
-# 
-# # Write gdx files to shared folder
-# write.gdx(paste(path_to_g4m,"output_",g4m_filename_globiom4g4mm,"_",project,"_",date_label,".gdx",
-#                 sep=""), params = allparam_glob4g4m, sets = allsets_glob4g4m)
-# 
-# write.gdx(paste(path_to_g4m,"output_",g4m_filename_landcover,"_",project,"_",date_label,".gdx",sep=""),
-#           params = allparam_landcover, sets = allsets_landcover)
-#-------------------------------------------------------------------------------
-
-# Run Downscaling
-
-# Change wd to downscaling folder
-setwd(wd_downscaling)
-
-# Load helper functions
-source("./R/helper_functions.R")
-
-# Configure downscaling script
-tempString <- read_lines("./Model/1_downscaling.gms")
-tempString[2] <- str_glue("$setglobal project ",project) 
-tempString[3] <- str_glue("$setglobal lab     ",date_label) 
-tempString[4] <- "$setLocal X %system.dirSep%"
-tempString[676] <- str_glue("execute_unload 'gdx%X%",gdx_output_name, ".gdx',") 
-
-# Save file 
-write_lines(tempString,"./Model/1_downscaling_tmp.gms")
-
-# Define list of scenarios and predict downscaling scenarios
-scenario_mapping <- rep(0:max(eval(parse(text=scenarios_for_downscaling))),each=resolution_downscaling)
-
-#-------------------------------------------------------------------------------
-# # Configuration options - deprecated version of limpopo script 
-# gams_file <- "1_downscaling_tmp"
-# get_gdx <- "yes"
-
-# # limpopo configuration file
-# config_ssp <- rep("",4)
-# 
-# config_ssp[1] <- project # project name
-# config_ssp[2] <- scenario_nr # number of scenarios
-# config_ssp[3] <- gams_file # gams script name
-# config_ssp[4] <- "yes" # return gdx
-# 
-# # Write limpopo configuration file
-# write.table(config_ssp,"P:/globiom/Projects/Downscaling/_config_ssp_tmp.txt",
-#             col.names=F, row.names=F, quote = FALSE)
-# 
-# #Call limpopo script
-# system("_start_down_tmp.bat _config_ssp_tmp.txt")
-#-------------------------------------------------------------------------------
-
-# Create string to specify which scenarios should be downscaled
-
-scen_string <- "c("
-for (i in 1: length(scenarios_for_downscaling)){
-  scenarios_idx <- which(scenario_mapping %in% scenarios_for_downscaling[i]) - 1
-  if (i==1) {scen_string <- str_glue(scen_string,str_glue(min(scenarios_idx),":",max(scenarios_idx)))} else {
-  scen_string <- str_glue(scen_string,",",str_glue(min(scenarios_idx),":",max(scenarios_idx)))}
-} 
-scen_string <- str_glue(scen_string,")")
-
-# Update sample_config file - needs revised 1_downscaling script and 
-# reorganization of Downscaling folder (All files into a Model folder and an R folder with limpopo scripts)
-
-tempString <- read_lines("./R/sample_config.R")
-tempString[17] <- str_glue("EXPERIMENT = \"",project,"\"# label for your run")    
-tempString[19] <- str_glue("JOBS = ",scen_string)
-
-# Save file
-write_lines(tempString,"./R/sample_config.R")
-
-# Submit runs to limpopo
-system("RScript R/Condor_run.R R/sample_config.R")
-
-cluster_nr <- as.numeric(read_lines(str_glue("./Condor/",project,"/cluster_nr.txt")))
-
-# Transfer gdx to G4M folder - in case files were merged on limpopo
-if (merge_gdx_downscaling){
-  # Read merged output
-  f <- str_glue("./Model/gdx/downscaled_",project,"_",cluster_nr,"_merged.gdx")
-  globiom4g4m_file <- gdx(f)
-  all_outputs_glob4g4m <- all_items(globiom4g4m_file)
-  allparam_glob4g4m <- batch_extract_tib(all_outputs_glob4g4m$parameters,f)
-  allsets_glob4g4m <- batch_extract_tib(all_outputs_glob4g4m$sets,f)
+run_link <- function(globiom_intial,downscaling_initial,G4M,globiom_final,downscaling_final)
+{
   
-  # Write to G4M folder
-  write.gdx(str_glue(path_for_G4M,"downscaled_","output_",project,"_",date_label,".gdx"), 
-            params = allparam_glob4g4m, sets = allsets_glob4g4m)
+  # Initial globiom run
+  if (globiom_intial) 
+  {
+    
+    # Run GLOBIOM
+    run_globiom_initial(wd,project,scenarios,merge_gdx, limpopo_run,resolution,date_label,
+                        reporting_g4m,reporting_iamc,reporting_iamc_g4m,g4m_feedback_file,
+                        regional_ag,path_for_downscaling,cd)
+    
+    print("Initial GLOBIOM run complete")
+  }
+  
+  if (downscaling_initial) 
+  {
+    # Run Initial downscaling
+    
+    if (!file.exists(str_glue(wd_downscaling,"/Model/input/","output_landcover_",project,"_",date_label,".gdx"))) stop("File for downscaling not found! Please call the intial GLOBIOM run before downscaling")
+  
+    run_downscaling(wd_downscaling,project,scenarios_for_downscaling,date_label,merge_gdx_downscaling,
+                    gdx_output_name,merge_regions, path_for_G4M,resolution_downscaling,cd)
+    
+    print("Initial downscaling complete")
+  }
+  
+  if (G4M) 
+  {
+    if (!file.exists(str_glue(path_for_G4M,"/",gdx_output_name,"_output_",project,"_",date_label))) stop("File for G4M run not found! Please call the intial downscaling before the G4M run")
+    
+    # Run G4M
+
+  }
+  
+  if (globiom_final) 
+  {
+    # Run GLOBIOM
+
+  }
+  
+  if (downscaling_final) 
+  {
+    # Run GLOBIOM
+    
+  }
 }
 
-if (!merge_gdx_downscaling & merge_regions){
-  for (i in 1:length(scenarios_for_downscaling)){
-    scenarios_idx <- which(scenario_mapping %in% scenarios_for_downscaling[i]) - 1
-    merge_gdx_down(project,str_glue(wd_downscaling,"Model/gdx"),scenarios_idx,
-                   scenarios_for_downscaling[i],cluster_nr,path_for_G4M)
-  } 
-}
-
-#-------------------------------------------------------------------------------
-# Configure options for post-processing of  downscaling  - not needed if G4M uses the gdx files directly
-
- #setwd(wd_downscaling)
- # tempString <- readLines("./Model/2_comp_results.gms",warn=FALSE)
- # tempString[1] <- paste("$setglobal project ",project,sep="") 
- # tempString[2] <- paste("$setglobal lab     ",date_label,sep="") 
- # 
- # # Save file 
- # simDestination <- file("./Model/2_comp_results_tmp.gms", open="wt") #open file connection to write
- # writeLines(tempString, simDestination)
- # close(simDestination)
- # 
- # # Run post-processing of downscaling (will be omitted if G4M uses the gdx files)
- # rc <- tryCatch(
- #   system("gams 2_comp_results_tmp.gms"),
- #   error=function(e) e
- # )
- # if(!inherits(rc, "error")){
- #   setwd(wd_downscaling)
- #   stop(paste("Bad return from gams"))
- # }
-#-------------------------------------------------------------------------------
-
-# Back to original wd
-setwd(wd)
-
-################################################################################
-#                                 G4M RUN
-################################################################################
-
-
-
-################################################################################
-#                            FINAL GLOBIOM RUN
-################################################################################
-
+run_link(globiom_intial,downscaling_initial,G4M,globiom_final,downscaling_final)
 
 
 
