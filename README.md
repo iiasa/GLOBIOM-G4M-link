@@ -54,9 +54,9 @@ The script depends on:
 
 ## Run the script
 
-The `call_limpopo.R` script has a default configuration that you may need to adjust to your requirements. Do not edit the script, but instead coyy the default configuration located at the start of the script to a separate `.R` configuration file with name of your choosing. Here we will use `my_config.R` as the example name.
+The `call_limpopo.R` script has a default configuration `R/default_configuration.R`. Adjust the configuration to your requirements. Do not edit the default configuration file, but instead copy it to a separate `.R` configuration file with a name of your choosing and edit the copy. Below we will use `my_config.R` as the example name.
 
-To invoke the script from the command line or shell, make sure that the repository root directory (the directory containing the script) is the current working directory, and then invoke it through `Rscript`, passing the configuration file path as only command line parameter:  
-`Rscript call_limpopo.R my_config.R`
+To invoke the script from the command line or shell, make sure that the repository root directory (the directory containing the script) is the current working directory, and then invoke it through `Rscript`, passing your configuration file path as only command line parameter:  
+`Rscript call_limpopo.R R/my_config.R`
 
 To invoke the script from Rstudio, create a project for the repository root directory. When that project is open, the default current working directory should already match the repository root. You can verify this via `getwd()` in the Console tab of RStudio and if needed correct it via `setwd()`. Next, load the `call_limpopo.R` script in a tab and source it.
