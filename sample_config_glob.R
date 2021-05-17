@@ -16,7 +16,7 @@
 # Please read the header of R/Condor_run.R for further information.
 EXPERIMENT = "test_EPA"# label for your run
 PREFIX = "_globiom" # prefix for per-job .err, log, .lst, and .out files
-JOBS = c(c(0,75))
+JOBS = c(0,75)
 HOST_REGEXP = "^limpopo[1-6]" # a regular expression to select execute hosts from the cluster
 REQUEST_MEMORY = 13000 # memory (MiB) to reserve for each job
 REQUEST_CPUS = 1 # number of hardware threads to reserve for each job
