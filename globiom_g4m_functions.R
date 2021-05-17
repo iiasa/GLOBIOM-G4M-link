@@ -104,7 +104,7 @@ run_downscaling <- function(wd_downscaling,project,scenarios_for_downscaling,dat
   # Configure downscaling script
   tempString <- read_lines("./Model/1_downscaling.gms")
   if (!any(str_detect(tempString,"%system.dirSep%"))) {
-    tempString <- c("$setLocal X %system.dirSep",tempString)
+    tempString <- c("$setLocal X %system.dirSep%",tempString)
   }
   
   tempString <- str_replace(tempString,"\\$setglobal\\s+project\\s+[:print:]+",str_glue("$setglobal project ",project))
