@@ -4,7 +4,10 @@
 
 
 
-#' Function to call the initial GLOBIOM run
+#' Call the initial GLOBIOM run. The function reads in and edits the Condor_run.R and sample_config.R
+#' scripts and submits the scenario runs to limpopo. Subsequently, the 8_merged_output.gms script
+#' is edited to match the current project and label, and export its outputs to the Downscaling folder
+#' for further processing
 
 run_globiom_initial <- function(wd,project,scenarios,merge_gdx, limpopo_run,resolution,date_label,
                                 reporting_g4m,reporting_iamc,reporting_iamc_g4m,g4m_feedback_file,
@@ -91,7 +94,9 @@ run_globiom_initial <- function(wd,project,scenarios,merge_gdx, limpopo_run,reso
 }
 
 
-#' Function to call the downscaling script and export data to the subsequent G4M run
+#' Call the downscaling script and export data to the subsequent G4M run. The function reads in 
+#' and edits the Condor_run.R and sample_config.R scripts and submits the downscaling runs to limpopo. 
+#' Subsequently, the dowscaled output is saved to the G4M input folder.
 
 run_downscaling <- function(wd_downscaling,project,scenarios_for_downscaling,date_label,merge_gdx_downscaling,
                             gdx_output_name,merge_regions, path_for_G4M,resolution_downscaling,cd)
