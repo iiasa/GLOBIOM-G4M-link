@@ -169,7 +169,7 @@ run_downscaling <- function(wd_downscaling,project,scenarios_for_downscaling,dat
   write_lines(tempString,"./R/sample_config_tmp.R")
   
   # Update Condor_run script
-  tempString <- read_lines(str_glue(cd,"/Condor_run.R"))
+  tempString <- read_lines(str_glue(cd,"/Condor_run_R/Condor_run.R"))
   write_lines(tempString, "./R/Condor_run_tmp.R")
   
   # Submit runs to limpopo
