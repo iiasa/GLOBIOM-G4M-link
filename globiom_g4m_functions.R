@@ -166,16 +166,16 @@ run_downscaling <- function(wd_downscaling,project,scenarios_for_downscaling,dat
   
   # Transfer gdx to G4M folder - in case files were merged on limpopo
   if (merge_gdx_downscaling){
-    # Read merged output
-    f <- str_glue("./Model/gdx/downscaled_",project,"_",cluster_nr,"_merged.gdx")
-    globiom4g4m_file <- gdx(f)
-    all_outputs_glob4g4m <- all_items(globiom4g4m_file)
-    allparam_glob4g4m <- batch_extract_tib(all_outputs_glob4g4m$parameters,f)
-    allsets_glob4g4m <- batch_extract_tib(all_outputs_glob4g4m$sets,f)
     
-    # Write to G4M folder
-    write.gdx(str_glue(path_for_G4M,"downscaled_","output_",project,"_",date_label,".gdx"), 
-              params = allparam_glob4g4m, sets = allsets_glob4g4m)
+    # Save merged output to G4M folder
+    f <- str_glue("./Model/gdx/downscaled_",project,"_",cluster_nr,"_merged.gdx")
+    source <- str_glue("./Model/gdx/downscaled_","output_",project,"_",date_label,".gdx")
+    
+    # Rename merged output file
+    file.rename(from=f,to=source)
+    
+    # Copy to G4M folder
+    file.copy(from=source,to=path_for_G4M,overwrite = T)
   }
   
   if (!merge_gdx_downscaling & merge_regions){
