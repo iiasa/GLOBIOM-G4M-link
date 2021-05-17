@@ -26,11 +26,15 @@ run_globiom_initial <- function(wd,project,scenarios,merge_gdx, limpopo_run,reso
   tempString <- str_replace(tempString,"MERGE_GDX_OUTPUT\\s{0,}=\\s{0,}[:print:]+",str_glue("MERGE_GDX_OUTPUT = ",merge_gdx," # optional"))
   tempString <- str_replace(tempString,"scen_type\\s{0,}=\\s{0,}[:print:]+//","scen_type=feedback //")
   
-  # Save file
-  write_lines(tempString, "./R/sample_config.R")
+   # Save file
+  write_lines(tempString,"./R/sample_config_tmp.R")
+  
+  # Update Condor_run script
+  tempString <- read_lines(str_glue(cd,"/Condor_run.R"))
+  write_lines(tempString, "./R/Condor_run_tmp.R")
   
   # Submit runs to limpopo
-  system("RScript R/Condor_run.R R/sample_config.R")
+  system("RScript R/Condor_run_tmp.R R/sample_config_tmp.R")
   
   # Retrieve limpopo cluster number - cluster_nr.txt was created by modifying the Condor_run.R script
   cluster_nr <- as.numeric(read_lines(str_glue("./Condor/",project,"/cluster_nr.txt")))
@@ -157,10 +161,14 @@ run_downscaling <- function(wd_downscaling,project,scenarios_for_downscaling,dat
   tempString <- str_replace(tempString," JOBS\\s{0,}=\\s{0,}[:print:]+",str_glue("JOBS = ",scen_string))
   
   # Save file
-  write_lines(tempString,"./R/sample_config.R")
+  write_lines(tempString,"./R/sample_config_tmp.R")
+  
+  # Update Condor_run script
+  tempString <- read_lines(str_glue(cd,"/Condor_run.R"))
+  write_lines(tempString, "./R/Condor_run_tmp.R")
   
   # Submit runs to limpopo
-  system("RScript R/Condor_run.R R/sample_config.R")
+  system("RScript R/Condor_run_tmp.R R/sample_config_tmp.R")
   
   cluster_nr <- as.numeric(read_lines(str_glue("./Condor/",project,"/cluster_nr.txt")))
   
