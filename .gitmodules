@@ -1,3 +1,6 @@
 [submodule "DownScale"]
 	path = DownScale
 	url = https://github.com/iiasa/DownScale
+[submodule "Condor_run_R"]
+	path = Condor_run_R
+	url = https://github.com/iiasa/Condor_run_R
