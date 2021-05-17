@@ -54,7 +54,7 @@ The script depends on:
 
 ## Run the script
 
-The `call_limpopo.R` script has a default configuration that you may need to adjust to your requirements. Do not edit the script, but instead coyy the default configuration located at the start of the script to a separate `.R` configuration file with name of your choosing. Here we will use `my_config.R` as the example name.
+The `call_limpopo.R` script has a default configuration `R/default_configuration.R` that you may need to adjust to your requirements. Do not edit that default configuration file, but instead copy it to a separate `.R` configuration file with name of your choosing and edit it to make the configuration settings fit for your purposes. Below we will use `my_config.R` as the example name.
 
 To invoke the script from the command line or shell, make sure that the repository root directory (the directory containing the script) is the current working directory, and then invoke it through `Rscript`, passing the configuration file path as only command line parameter:  
 `Rscript call_limpopo.R my_config.R`
