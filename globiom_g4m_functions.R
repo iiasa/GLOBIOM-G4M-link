@@ -20,7 +20,7 @@ run_globiom_initial <- function(wd,project,scenarios,merge_gdx, limpopo_run,reso
   # Update sample_config file
 
 #  tempString <- read_lines(str_glue(dirname(rstudioapi::getActiveDocumentContext()$path),"/sample_config_glob.R"))
-  tempString <- read_lines(str_glue(cd,"/sample_config_down.R"))
+  tempString <- read_lines(str_glue(cd,"/sample_config_glob.R"))
   tempString <- str_replace(tempString,"EXPERIMENT\\s{0,}=\\s{0,}[:print:]+",str_glue("EXPERIMENT = \"",project,"\"# label for your run"))
   tempString <- str_replace(tempString,"JOBS\\s{0,}=\\s{0,}[:print:]+",str_glue("JOBS = c(",scenarios,")"))
   tempString <- str_replace(tempString,"MERGE_GDX_OUTPUT\\s{0,}=\\s{0,}[:print:]+",str_glue("MERGE_GDX_OUTPUT = ",merge_gdx," # optional"))
