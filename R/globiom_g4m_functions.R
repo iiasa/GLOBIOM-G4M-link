@@ -9,9 +9,7 @@
 #' is edited to match the current project and label, and export its outputs to the Downscaling folder
 #' for further processing
 
-run_globiom_initial <- function(WD,PROJECT,SCENARIOS,MERGE_GDX, LIMPOPO_RUN,RESOLUTION,DATE_LABEL,
-                                REPORTING_G4M,REPORTING_IAMC,REPORTING_IAMC_G4M,G4M_FEEDBACK_FILE,
-                                REGIONAL_AG,PATH_FOR_DOWNSCALING,cd) 
+run_globiom_initial <- function(cd) 
 {
   # current wd
   prior_wd <- getwd()
@@ -98,8 +96,7 @@ run_globiom_initial <- function(WD,PROJECT,SCENARIOS,MERGE_GDX, LIMPOPO_RUN,RESO
 #' and edits the Condor_run.R and sample_config.R scripts and submits the downscaling runs to limpopo. 
 #' Subsequently, the dowscaled output is saved to the G4M input folder.
 
-run_downscaling <- function(WD_DOWNSCALING,PROJECT,SCENARIOS_FOR_DOWNSCALING,DATE_LABEL,MERGE_GDX_DOWNSCALING,
-                            GDX_OUTPUT_NAME,MERGE_REGIONS, PATH_FOR_G4M,RESOLUTION_DOWNSCALING,cd)
+run_downscaling <- function(cd)
 {
   # current wd
   prior_wd <- getwd()
@@ -194,13 +191,10 @@ run_downscaling <- function(WD_DOWNSCALING,PROJECT,SCENARIOS_FOR_DOWNSCALING,DAT
   if (!MERGE_GDX_DOWNSCALING & MERGE_REGIONS){
     for (i in 1:length(SCENARIOS_FOR_DOWNSCALING)){
       scenarios_idx <- which(scenario_mapping %in% SCENARIOS_FOR_DOWNSCALING[i]) - 1
-      merge_gdx_down(PROJECT,str_glue(WD_DOWNSCALING,"Model/gdx"),scenarios_idx,
+      merge_gdx_down(str_glue(WD_DOWNSCALING,"Model/gdx"),scenarios_idx,
                      SCENARIOS_FOR_DOWNSCALING[i],cluster_nr,PATH_FOR_G4M)
     } 
   }
   
   setwd(prior_wd)
 }
-
-
-

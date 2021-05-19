@@ -48,7 +48,7 @@ merge_gdx <- function(PROJECT,WD,c_nr){
 
 
 # Merge gdx files from downscaling according to the scenario number
-merge_gdx_down <- function(PROJECT,wd_out,s_list,s_cnt,c_nr,path_out){
+merge_gdx_down <- function(wd_out,s_list,s_cnt,c_nr,path_out){
   prior_wd <- getwd()
   
   setwd(wd_out)
@@ -71,7 +71,3 @@ merge_gdx_down <- function(PROJECT,wd_out,s_list,s_cnt,c_nr,path_out){
   
   setwd(prior_wd)
 }
-
-
-
-

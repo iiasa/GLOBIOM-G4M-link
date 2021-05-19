@@ -70,7 +70,7 @@ if (length(args) == 0) {
 cd <- getwd()
 source("R/globiom_g4m_functions.R")
 
-run_link <- function(GLOBIOM_INITIAL,DOWNSCALING_INITIAL,G4M,GLOBIOM_FINAL,DOWNSCALING_FINAL)
+run_link <- function()
 {
   
   # Initial globiom run
@@ -78,9 +78,7 @@ run_link <- function(GLOBIOM_INITIAL,DOWNSCALING_INITIAL,G4M,GLOBIOM_FINAL,DOWNS
   {
     
     # Run GLOBIOM
-    run_globiom_initial(WD,PROJECT,SCENARIOS,MERGE_GDX, LIMPOPO_RUN,RESOLUTION,DATE_LABEL,
-                        REPORTING_G4M,REPORTING_IAMC,REPORTING_IAMC_G4M,G4M_FEEDBACK_FILE,
-                        REGIONAL_AG,PATH_FOR_DOWNSCALING,cd)
+    run_globiom_initial(cd)
     
     print("Initial GLOBIOM run complete")
   }
@@ -91,8 +89,7 @@ run_link <- function(GLOBIOM_INITIAL,DOWNSCALING_INITIAL,G4M,GLOBIOM_FINAL,DOWNS
     
     if (!file.exists(str_glue(WD_DOWNSCALING,"/Model/input/","output_landcover_",PROJECT,"_",DATE_LABEL,".gdx"))) stop("File for downscaling not found! Please call the intial GLOBIOM run before downscaling")
   
-    run_downscaling(WD_DOWNSCALING,PROJECT,SCENARIOS_FOR_DOWNSCALING,DATE_LABEL,MERGE_GDX_DOWNSCALING,
-                    GDX_OUTPUT_NAME,MERGE_REGIONS, PATH_FOR_G4M,RESOLUTION_DOWNSCALING,cd)
+    run_downscaling(cd)
     
     print("Initial downscaling complete")
   }
@@ -118,7 +115,4 @@ run_link <- function(GLOBIOM_INITIAL,DOWNSCALING_INITIAL,G4M,GLOBIOM_FINAL,DOWNS
   }
 }
 
-run_link(GLOBIOM_INITIAL,DOWNSCALING_INITIAL,G4M,GLOBIOM_FINAL,DOWNSCALING_FINAL)
-
-
-
+run_link()
