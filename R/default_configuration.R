@@ -5,11 +5,11 @@
 # Global options
 #-------------------------------------------------------------------------------
 
-globiom_intial <- T # call the initial GLOBIOM run
-downscaling_initial <- T # call the initial downscaling - needs data from the intial GLOBIOM run
+GLOBIOM_INITIAL <- T # call the initial GLOBIOM run
+DOWNSCALING_INITIAL <- T # call the initial downscaling - needs data from the intial GLOBIOM run
 G4M <- F # call G4M - needs data from the intial downscaling
-globiom_final <- F # call the final GLOBIOM run - needs data from the G4M run
-downscaling_final <- F # call the final downscaling - needs data from the final GLOBIOM run
+GLOBIOM_FINAL <- F # call the final GLOBIOM run - needs data from the G4M run
+DOWNSCALING_FINAL <- F # call the final downscaling - needs data from the final GLOBIOM run
 
 #-------------------------------------------------------------------------------
 
@@ -18,31 +18,31 @@ downscaling_final <- F # call the final downscaling - needs data from the final 
 #-------------------------------------------------------------------------------
 
 # Limpopo scenario configuration - may include all sample_config options
-wd <- "H:/Branch_trunk_EPA/" # working directory
-project <- "test_EPA" # project name
-scenarios <- "0" # scenarios to run
-merge_gdx <- T # merge gdx output on limpopo
+WD <- "H:/Branch_trunk_EPA/" # working directory
+PROJECT <- "test_EPA" # project name
+SCENARIOS <- "0" # scenarios to run
+MERGE_GDX <- T # merge gdx output on limpopo
 
 # Post-processing script configuration (8_merged_output)
-limpopo_run <- "yes" # Run on limpopo yes/no
-resolution <- "region37" # GLOBIOM resolution
-date_label <- format(Sys.Date(), "%d%m%Y") # Date of run
-reporting_g4m <- "yes" #Reporting to G4M yes/no
-reporting_iamc <- "yes" #Reporting to IAMC yes/no
-reporting_iamc_g4m <- "no" # Reporting G4M to IAMC yes/no 
-g4m_feedback_file <- stringr::str_glue("tabs_gui_FAOFRA2015CRF_CSIRO_t14_SSP2_iea_REGION37_",
-                           date_label,"_final_csv") # G4M feedback file
-regional_ag <- "ggi" # regional aggregation level
-path_for_downscaling <- "H:/Downscaling/Model/input/" # path to save gdx for downscaling
+LIMPOPO_RUN <- "REGIONAL_AG" # Run on limpopo REGIONAL_AG/no
+RESOLUTION <- "region37" # Set GLOBIOM region "resolution"
+DATE_LABEL <- format(Sys.Date(), "%d%m%Y") # Date of run
+REPORTING_G4M <- "REGIONAL_AG" #Reporting to G4M REGIONAL_AG/no
+REPORTING_IAMC <- "REGIONAL_AG" #Reporting to IAMC REGIONAL_AG/no
+REPORTING_IAMC_G4M <- "no" # Reporting G4M to IAMC REGIONAL_AG/no 
+G4M_FEEDBACK_FILE <- stringr::str_glue("tabs_gui_FAOFRA2015CRF_CSIRO_t14_SSP2_iea_REGION37_",
+                           DATE_LABEL,"_final_csv") # G4M feedback file
+REGIONAL_AG <- "ggi" # regional aggregation level
+PATH_FOR_DOWNSCALING <- "H:/Downscaling/Model/input/" # path to save gdx for downscaling
 
 # Downscaling configuration
-wd_downscaling <- "H:/Downscaling/" # working directory for downscaling
-merge_gdx_downscaling <- T # merge all gdx outputs on limpopo
-gdx_output_name <- "downscaled" # prefix of downscaled gdx file
-merge_regions <- F # merge gdx locally by scenario 
-path_for_G4M <- "H:/Downscaling/Model/output/" # path to save gdx for G4M run
-scenarios_for_downscaling <- "0" # full set or subset of scenarios defined previously
-resolution_downscaling <- 37 # number of regions specified in the downscaling
+WD_DOWNSCALING <- "H:/Downscaling/" # working directory for downscaling
+MERGE_GDX_DOWNSCALING <- T # merge all gdx outputs on limpopo
+GDX_OUTPUT_NAME <- "downscaled" # prefix of downscaled gdx file
+MERGE_REGIONS <- F # merge gdx locally by scenario 
+PATH_FOR_G4M <- "H:/Downscaling/Model/output/" # path to save gdx for G4M run
+SCENARIOS_FOR_DOWNSCALING <- "0" # full set or subset of scenarios defined previously
+RESOLUTION_DOWNSCALING <- 37 # number of regions specified in the downscaling
 
 #-------------------------------------------------------------------------------
 # 2nd block - G4M run

@@ -49,7 +49,7 @@ if (length(args) == 0) {
     if (!exists(name)) stop(str_glue("Mandatory config setting {name} is not set in config file {args[1]}!"))
     type <- typeof(get(name))
     if (type != config_types[[i]] &&
-        name != "resolution_downscaling" && # R has no stable numerical type
+        name != "RESOLUTION_DOWNSCALING" && # R has no stable numerical type
         type != "NULL" && # allow for configured vector being empty
         config_types[[i]] != "NULL" # allow for default vector being empty
     ) stop(str_glue("{name} set to wrong type in {args[1]}, type should be {config_types[[i]]}"))
@@ -70,55 +70,55 @@ if (length(args) == 0) {
 cd <- getwd()
 source("R/globiom_g4m_functions.R")
 
-run_link <- function(globiom_intial,downscaling_initial,G4M,globiom_final,downscaling_final)
+run_link <- function(GLOBIOM_INITIAL,DOWNSCALING_INITIAL,G4M,GLOBIOM_FINAL,DOWNSCALING_FINAL)
 {
   
   # Initial globiom run
-  if (globiom_intial) 
+  if (GLOBIOM_INITIAL) 
   {
     
     # Run GLOBIOM
-    run_globiom_initial(wd,project,scenarios,merge_gdx, limpopo_run,resolution,date_label,
-                        reporting_g4m,reporting_iamc,reporting_iamc_g4m,g4m_feedback_file,
-                        regional_ag,path_for_downscaling,cd)
+    run_globiom_initial(WD,PROJECT,SCENARIOS,MERGE_GDX, LIMPOPO_RUN,RESOLUTION,DATE_LABEL,
+                        REPORTING_G4M,REPORTING_IAMC,REPORTING_IAMC_G4M,G4M_FEEDBACK_FILE,
+                        REGIONAL_AG,PATH_FOR_DOWNSCALING,cd)
     
     print("Initial GLOBIOM run complete")
   }
   
-  if (downscaling_initial) 
+  if (DOWNSCALING_INITIAL) 
   {
     # Run Initial downscaling
     
-    if (!file.exists(str_glue(wd_downscaling,"/Model/input/","output_landcover_",project,"_",date_label,".gdx"))) stop("File for downscaling not found! Please call the intial GLOBIOM run before downscaling")
+    if (!file.exists(str_glue(WD_DOWNSCALING,"/Model/input/","output_landcover_",PROJECT,"_",DATE_LABEL,".gdx"))) stop("File for downscaling not found! Please call the intial GLOBIOM run before downscaling")
   
-    run_downscaling(wd_downscaling,project,scenarios_for_downscaling,date_label,merge_gdx_downscaling,
-                    gdx_output_name,merge_regions, path_for_G4M,resolution_downscaling,cd)
+    run_downscaling(WD_DOWNSCALING,PROJECT,SCENARIOS_FOR_DOWNSCALING,DATE_LABEL,MERGE_GDX_DOWNSCALING,
+                    GDX_OUTPUT_NAME,MERGE_REGIONS, PATH_FOR_G4M,RESOLUTION_DOWNSCALING,cd)
     
     print("Initial downscaling complete")
   }
   
   if (G4M) 
   {
-    if (!file.exists(str_glue(path_for_G4M,"/",gdx_output_name,"_output_",project,"_",date_label))) stop("File for G4M run not found! Please call the intial downscaling before the G4M run")
+    if (!file.exists(str_glue(PATH_FOR_G4M,"/",GDX_OUTPUT_NAME,"_output_",PROJECT,"_",DATE_LABEL))) stop("File for G4M run not found! Please call the intial downscaling before the G4M run")
     
     # Run G4M
 
   }
   
-  if (globiom_final) 
+  if (GLOBIOM_FINAL) 
   {
     # Run GLOBIOM
 
   }
   
-  if (downscaling_final) 
+  if (DOWNSCALING_FINAL) 
   {
     # Run GLOBIOM
     
   }
 }
 
-run_link(globiom_intial,downscaling_initial,G4M,globiom_final,downscaling_final)
+run_link(GLOBIOM_INITIAL,DOWNSCALING_INITIAL,G4M,GLOBIOM_FINAL,DOWNSCALING_FINAL)
 
 
 

@@ -19,16 +19,16 @@ batch_extract_tib <- function(items,files=NULL,gdxs=NULL){
 
 
 # Merge gdx files if not set in the sample_config file
-merge_gdx <- function(project,wd,c_nr){
+merge_gdx <- function(PROJECT,WD,c_nr){
   
   prior_wd <- getwd()
   # Set wd to gdx folder
   
-  setwd(wd)
+  setwd(WD)
   
   merge_args <- c()
-  merge_args <- c(merge_args, str_glue("output_",project,"_",c_nr,".*.gdx"))
-  merge_args <- c(merge_args, str_glue("output=output_",project,"_",c_nr,"_merged.gdx"))
+  merge_args <- c(merge_args, str_glue("output_",PROJECT,"_",c_nr,".*.gdx"))
+  merge_args <- c(merge_args, str_glue("output=output_",PROJECT,"_",c_nr,"_merged.gdx"))
   
   # Invoke GDX merge
   
@@ -48,14 +48,14 @@ merge_gdx <- function(project,wd,c_nr){
 
 
 # Merge gdx files from downscaling according to the scenario number
-merge_gdx_down <- function(project,wd_out,s_list,s_cnt,c_nr,path_out){
+merge_gdx_down <- function(PROJECT,wd_out,s_list,s_cnt,c_nr,path_out){
   prior_wd <- getwd()
   
   setwd(wd_out)
   s_list <-  sprintf("%06d", s_list)
   merge_args <- c()
-  merge_args <- c(merge_args, str_c("downscaled_",project,"_",c_nr,".",s_list,".gdx"))
-  merge_args <- c(merge_args, str_glue(str_glue("output=",path_out,"output_landcover_",project,"_",s_cnt,"_merged.gdx")))
+  merge_args <- c(merge_args, str_c("downscaled_",PROJECT,"_",c_nr,".",s_list,".gdx"))
+  merge_args <- c(merge_args, str_glue(str_glue("output=",path_out,"output_landcover_",PROJECT,"_",s_cnt,"_merged.gdx")))
 
   # Invoke GDX merge
   
