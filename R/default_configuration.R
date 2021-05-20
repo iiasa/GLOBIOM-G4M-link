@@ -36,10 +36,10 @@ REGIONAL_AG = "ggi" # regional aggregation level
 PATH_FOR_DOWNSCALING = "H:/Downscaling/Model/input/" # path to save gdx for downscaling
 
 # Downscaling configuration
-WD_DOWNSCALING = "H:/Downscaling/" # working directory for downscaling
+WD_DOWNSCALING = "DownScale" # working directory for downscaling relative to current path
 MERGE_GDX_DOWNSCALING = TRUE # merge all gdx outputs on limpopo
 GDX_OUTPUT_NAME = "downscaled" # prefix of downscaled gdx file
-MERGE_REGIONS = F # merge gdx locally by scenario 
+MERGE_REGIONS = FALSE # merge gdx locally by scenario 
 PATH_FOR_G4M = "H:/Downscaling/Model/output/" # path to save gdx for G4M run
 SCENARIOS_FOR_DOWNSCALING = "0" # full set or subset of scenarios defined previously
 RESOLUTION_DOWNSCALING = 37 # number of regions specified in the downscaling
