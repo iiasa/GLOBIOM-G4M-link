@@ -17,19 +17,41 @@ run_globiom_initial <- function(cd)
   # Define model wd
   WD <- str_glue(cd,"/",WD_GLOBIOM,"/")
 
-  # Update sample_config file
-  tempString <- read_lines("./sample_config_glob.R")
-  tempString <- str_replace(tempString,"EXPERIMENT\\s{0,}=\\s{0,}[:print:]+",str_glue("EXPERIMENT = \"",PROJECT,"\"# label for your run"))
-  tempString <- str_replace(tempString,"JOBS\\s{0,}=\\s{0,}[:print:]+",str_glue("JOBS = c(",SCENARIOS,")"))
-  tempString <- str_replace(tempString,"MERGE_GDX_OUTPUT\\s{0,}=\\s{0,}[:print:]+",str_glue("MERGE_GDX_OUTPUT = ",MERGE_GDX," # optional"))
-  tempString <- str_replace(tempString,"scen_type\\s{0,}=\\s{0,}[:print:]+//","scen_type=feedback //")
+  config_template <- c(
+    'EXPERIMENT = "{PROJECT}"',
+    'PREFIX = "_globiom"',
+    'JOBS = c({SCENARIOS})',
+    'HOST_REGEXP = "^limpopo"',
+    'REQUEST_MEMORY = 13000',
+    'REQUEST_CPUS = 1',
+    'GAMS_CURDIR = "Model"',
+    'GAMS_FILE_PATH = "6_scenarios.gms"',
+    'GAMS_VERSION = "32.2"',
+    'GAMS_ARGUMENTS = "//nsim=\'%1\' //yes_output=1 //ssp=SSP2 //scen_type=feedback //water_bio=0 PC=2 PS=0 PW=130"',
+    'BUNDLE_INCLUDE = "Model"',
+    'BUNDLE_INCLUDE_DIRS = c("include")',
+    'BUNDLE_EXCLUDE_DIRS = c(".git", ".svn", "225*", "doc")',
+    'BUNDLE_EXCLUDE_FILES = c("**/*.~*", "**/*.log", "**/*.log~*", "**/*.lxi", "**/*.lst")',
+    'BUNDLE_ADDITIONAL_FILES = c()',
+    'RETAIN_BUNDLE = FALSE',
+    'RESTART_FILE_PATH = "t/a4_r1.g00"',
+    'G00_OUTPUT_DIR = "t"',
+    'G00_OUTPUT_FILE = "a6_out.g00"',
+    'GET_G00_OUTPUT = FALSE',
+    'GDX_OUTPUT_DIR = "gdx"',
+    'GDX_OUTPUT_FILE = "output.gdx"',
+    'GET_GDX_OUTPUT = TRUE',
+    'MERGE_GDX_OUTPUT = {MERGE_GDX}',
+    'WAIT_FOR_RUN_COMPLETION = TRUE',
+    'NICE_USER = FALSE'
+  )
+  config_path <- file.path(TEMP_DIR, "config.R")
+  write_lines(unlist(lapply(config_template, str_glue)), config_path)
+  rm(config_template)
   
-   # Save file
-    # Create R folder in GLOBIOM directory if absent
+  # Create R folder in GLOBIOM directory if absent
   if (!dir.exists(file.path(str_glue("./",WD_GLOBIOM,"/R")))) dir.create(file.path(str_glue("./",WD_GLOBIOM,"/R")))
-  
-  write_lines(tempString, str_glue("./",WD_GLOBIOM,"/R/sample_config_tmp.R"))
-  
+
   # Update Condor_run script
   tempString <- read_lines("./Condor_run_R/Condor_run.R")
   
@@ -51,7 +73,7 @@ run_globiom_initial <- function(cd)
   setwd(WD)
               
   # Submit runs to limpopo
-  system("RScript R/Condor_run_tmp.R R/sample_config_tmp.R")
+  system(str_glue("RScript R/Condor_run_tmp.R {config_path}"))
   
   # Retrieve limpopo cluster number - cluster_nr.txt was created by modifying the Condor_run.R script
   cluster_nr <- readr::parse_number(read_lines(str_glue("./Condor/",PROJECT,"/cluster_nr.txt")))
