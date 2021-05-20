@@ -6,7 +6,7 @@
 #-------------------------------------------------------------------------------
 
 GLOBIOM_INITIAL = TRUE # call the initial GLOBIOM run
-DOWNSCALING_INITIAL = TRUE # call the initial downscaling - needs data from the intial GLOBIOM run
+DOWNSCALING_INITIAL = TRUE # call the initial downscaling - needs data from the initial GLOBIOM run
 G4M = FALSE # call G4M - needs data from the intial downscaling
 GLOBIOM_FINAL = FALSE # call the final GLOBIOM run - needs data from the G4M run
 DOWNSCALING_FINAL = FALSE # call the final downscaling - needs data from the final GLOBIOM run
