@@ -27,8 +27,8 @@ MERGE_GDX = TRUE # merge gdx output on limpopo
 LIMPOPO_RUN = "yes" # Run on limpopo yes/no
 RESOLUTION = "region37" # Set GLOBIOM region "resolution"
 DATE_LABEL = format(Sys.Date(), "%d%m%Y") # Date of run
-REPORTING_G4M = "REGIONAL_AG" #Reporting to G4M REGIONAL_AG/no
-REPORTING_IAMC = "REGIONAL_AG" #Reporting to IAMC REGIONAL_AG/no
+REPORTING_G4M = "yes" #Reporting to G4M yes/no
+REPORTING_IAMC = "yes" #Reporting to IAMC yes/no
 REPORTING_IAMC_G4M = "no" # Reporting G4M to IAMC REGIONAL_AG/no 
 G4M_FEEDBACK_FILE = stringr::str_glue("tabs_gui_FAOFRA2015CRF_CSIRO_t14_SSP2_iea_REGION37_",
                            DATE_LABEL,"_final_csv") # G4M feedback file
