@@ -24,7 +24,7 @@ SCENARIOS = "0" # scenarios to run
 MERGE_GDX = TRUE # merge gdx output on limpopo
 
 # Post-processing script configuration (8_merged_output)
-LIMPOPO_RUN = "REGIONAL_AG" # Run on limpopo REGIONAL_AG/no
+LIMPOPO_RUN = "yes" # Run on limpopo yes/no
 RESOLUTION = "region37" # Set GLOBIOM region "resolution"
 DATE_LABEL = format(Sys.Date(), "%d%m%Y") # Date of run
 REPORTING_G4M = "REGIONAL_AG" #Reporting to G4M REGIONAL_AG/no
