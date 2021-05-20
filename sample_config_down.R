@@ -20,11 +20,11 @@ JOBS = c(0:36)
 HOST_REGEXP = "^limpopo[1-6]" # a regular expression to select execute hosts from the cluster
 REQUEST_MEMORY = 2500 # memory (MiB) to reserve for each job
 REQUEST_CPUS = 1 # number of hardware threads to reserve for each job
-GAMS_CURDIR = "Model" # optional, working directory for GAMS and its arguments relative to working directory, "" defaults to the working directory
+#GAMS_CURDIR = "Model" # optional, working directory for GAMS and its arguments relative to working directory, "" defaults to the working directory
 GAMS_FILE_PATH = "1_downscaling_tmp.gms" # path to GAMS file to run for each job, relative to GAMS_CURDIR
 GAMS_VERSION = "32.2" # must be installed on all execute hosts
 GAMS_ARGUMENTS = "//nsim='%1'" # additional GAMS arguments, can use {<config>} expansion here
-BUNDLE_INCLUDE = "Model" # optional, recursive, what to include in bundle, can be a wildcard
+#BUNDLE_INCLUDE = "Model" # optional, recursive, what to include in bundle, can be a wildcard
 BUNDLE_INCLUDE_DIRS = c("include") # optional, further directories to include recursively, added to root of bundle, supports wildcards
 BUNDLE_EXCLUDE_DIRS = c(".git", ".svn", "225*", "doc") # optional, recursive, supports wildcards
 BUNDLE_EXCLUDE_FILES = c("**/*.~*", "**/*.log", "**/*.log~*", "**/*.lxi", "**/*.lst") # optional, supports wildcards
