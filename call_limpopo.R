@@ -58,7 +58,12 @@ if (length(args) == 0) {
   stop("Multiple arguments provided! Expecting at most a single config file argument.")
 }
 
+# R temporary directory
 
+TEMP_DIR <- tempdir()
+fsep <- ifelse(str_detect(TEMP_DIR, fixed("\\") ), "\\", ".Platform$file.sep") # Get the platform file separator: .Platform$file.sep is set to / on Windows
+TEMP_DIR <- str_replace_all(TEMP_DIR, fixed(fsep), .Platform$file.sep)
+rm(fsep)
 
 ################################################################################
 #                                GLOBIOM-G4M-LINK
