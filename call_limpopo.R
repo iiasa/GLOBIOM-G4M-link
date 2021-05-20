@@ -14,7 +14,7 @@
 
 # Remove any objects from active environment and read the default configuration
 rm(list=ls())
-source("default_configuration.R")
+source("R/default_configuration.R")
 
 # Collect the names and types of the default config parameters
 config_names <- ls()
