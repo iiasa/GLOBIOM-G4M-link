@@ -12,33 +12,49 @@
 run_globiom_initial <- function(cd) 
 {
   # current wd
-  prior_wd <- getwd()
+  #prior_wd <- getwd()
   
-  # Define wd
-  if (prior_wd != WD) setwd(WD)
-  
+  # Define model wd
+  WD <- str_glue(cd,"/",WD_GLOBIOM,"/")
 
   # Update sample_config file
-
-#  tempString <- read_lines(str_glue(dirname(rstudioapi::getActiveDocumentContext()$path),"/sample_config_glob.R"))
-  tempString <- read_lines(str_glue(cd,"/sample_config_glob.R"))
+  tempString <- read_lines("./sample_config_glob.R")
   tempString <- str_replace(tempString,"EXPERIMENT\\s{0,}=\\s{0,}[:print:]+",str_glue("EXPERIMENT = \"",PROJECT,"\"# label for your run"))
   tempString <- str_replace(tempString,"JOBS\\s{0,}=\\s{0,}[:print:]+",str_glue("JOBS = c(",scenarios,")"))
   tempString <- str_replace(tempString,"MERGE_GDX_OUTPUT\\s{0,}=\\s{0,}[:print:]+",str_glue("MERGE_GDX_OUTPUT = ",merge_gdx," # optional"))
   tempString <- str_replace(tempString,"scen_type\\s{0,}=\\s{0,}[:print:]+//","scen_type=feedback //")
   
    # Save file
-  write_lines(tempString,"./R/sample_config_tmp.R")
+    # Create R folder in GLOBIOM directory if absent
+  if (!dir.exists(file.path(str_glue("./",WD_GLOBIOM,"/R")))) dir.create(file.path(str_glue("./",WD_GLOBIOM,"/R")))
+  
+  write_lines(tempString, str_glue("./",WD_GLOBIOM,"/R/sample_config_tmp.R")
   
   # Update Condor_run script
-  tempString <- read_lines(str_glue(cd,"/Condor_run.R"))
-  write_lines(tempString, "./R/Condor_run_tmp.R")
+  tempString <- read_lines("./Condor_run_R/Condor_run.R")
   
+  # Add string to export cluster number
+  cluster_string <- c("cluster_file <- file.path(run_dir, \"cluster_nr.txt\")",
+                      "job_conn<-file(cluster_file, open=\"wt\")",
+                      "write_lines(predicted_cluster, job_conn)",
+                      "close(job_conn)",
+                      "rm(job_conn)")
+  
+  # Add to Condor_run script
+  cluster_idx <- min(which(str_detect(tempString,"predicted_cluster")))
+  tempString <- c(tempString[1:cluster_idx],cluster_string,tempString[(cluster_idx+1):length(tempString)])
+  
+  # Save file
+  write_lines(tempString,"./",WD_GLOBIOM,"/R/Condor_run_tmp.R")
+  
+  # Define wd
+  setwd(WD)
+              
   # Submit runs to limpopo
   system("RScript R/Condor_run_tmp.R R/sample_config_tmp.R")
   
   # Retrieve limpopo cluster number - cluster_nr.txt was created by modifying the Condor_run.R script
-  cluster_nr <- as.numeric(read_lines(str_glue("./Condor/",PROJECT,"/cluster_nr.txt")))
+  cluster_nr <- readr::parse_number(read_lines(str_glue("./Condor/",PROJECT,"/cluster_nr.txt")))
   
   # create output path string
   path_for_g4m2 <- str_replace_all(PATH_FOR_G4M,"/","%X%")
@@ -62,7 +78,7 @@ run_globiom_initial <- function(cd)
   
   # Point gdx output to downscaling folder
   tempString <- read_lines("./Model/8a_rep_g4m.gms")
-  path_for_downscaling2 <- str_replace_all(PATH_FOR_DOWNSCALING,"/","%X%")
+  path_for_downscaling2 <- str_replace_all(str_glue(cd,"/",WD_DOWNSCALING,"/input"),"/","%X%")
   
   tempString <- str_replace(tempString,"execute_unload[:print:]+output_landcover[:print:]+",
                             str_glue("execute_unload \"",path_for_downscaling2,"output_landcover_%project%_%lab%\"LANDCOVER_COMPARE_SCEN, LUC_COMPARE_SCEN0, Price_compare2,MacroScen, IEA_SCEN, BioenScen, ScenYear, REGION, COUNTRY,REGION_MAP"))
@@ -88,7 +104,7 @@ run_globiom_initial <- function(cd)
   }
   
   # Return to previous wd
-  setwd(prior_wd)
+  setwd(cd)
 }
 
 
@@ -99,16 +115,10 @@ run_globiom_initial <- function(cd)
 run_downscaling <- function(cd)
 {
   # current wd
-  prior_wd <- getwd()
-  
-  # Change wd to downscaling folder
-  setwd(WD_DOWNSCALING)
-  
-  # Load helper functions
-#  source("./R/helper_functions.R")
+  #prior_wd <- getwd()
   
   # Configure downscaling script
-  tempString <- read_lines("./Model/1_downscaling.gms")
+  tempString <- read_lines(str_glue("./",WD_DOWNSCALING,"/1_downscaling.gms"))
   if (!any(str_detect(tempString,"%system.dirSep%"))) {
     tempString <- c("$setLocal X %system.dirSep%",tempString)
   }
@@ -118,7 +128,7 @@ run_downscaling <- function(cd)
   tempString <- str_replace(tempString,"execute_unload[:print:]+",str_glue("execute_unload 'gdx%X%",GDX_OUTPUT_NAME, ".gdx',"))  
   
    # Save file 
-  write_lines(tempString,"./Model/1_downscaling_tmp.gms")
+  write_lines(tempString,str_glue("./",WD_DOWNSCALING,"/1_downscaling_tmp.gms"))
   
   # Define list of scenarios and predict downscaling scenarios
   scenario_mapping <- rep(0:max(eval(parse(text=SCENARIOS_FOR_DOWNSCALING))),each=RESOLUTION_DOWNSCALING)
@@ -158,16 +168,42 @@ run_downscaling <- function(cd)
   # reorganization of Downscaling folder (All files into a Model folder and an R folder with limpopo scripts)
   
 #  tempString <- read_lines(str_glue(dirname(rstudioapi::getActiveDocumentContext()$path),"/sample_config_down.R"))
-  tempString <- read_lines(str_glue(cd,"/sample_config_down.R"))
+  tempString <- read_lines("./sample_config_down.R")
   tempString <- str_replace(tempString," EXPERIMENT\\s{0,}=\\s{0,}[:print:]+",str_glue("EXPERIMENT = \"",PROJECT,"\"# label for your run"))
   tempString <- str_replace(tempString," JOBS\\s{0,}=\\s{0,}[:print:]+",str_glue("JOBS = ",scen_string))
   
+    # Create R folder in downscaling directory if absent
+  if (!dir.exists(file.path(str_glue("./",WD_DOWNSCALING,"/R")))) dir.create(file.path(str_glue("./",WD_DOWNSCALING,"/R")))
+
+  # Create gdx folder in downscaling directory if absent
+  if (!dir.exists(file.path(str_glue("./",WD_DOWNSCALING,"/gdx")))) dir.create(file.path(str_glue("./",WD_DOWNSCALING,"/gdx")))
+
+  # Create input/output folder in downscaling directory if absent
+  if (!dir.exists(file.path(str_glue("./",WD_DOWNSCALING,"/input")))) dir.create(file.path(str_glue("./",WD_DOWNSCALING,"/input")))
+  if (!dir.exists(file.path(str_glue("./",WD_DOWNSCALING,"/output")))) dir.create(file.path(str_glue("./",WD_DOWNSCALING,"/output")))  
+
   # Save file
-  write_lines(tempString,"./R/sample_config_tmp.R")
+  write_lines(tempString,str_glue("./",WD_DOWNSCALING,"/R/sample_config_tmp.R"))
   
   # Update Condor_run script
-  tempString <- read_lines(str_glue(cd,"/Condor_run_R/Condor_run.R"))
-  write_lines(tempString, "./R/Condor_run_tmp.R")
+  tempString <- read_lines(str_glue("./",WD_DOWNSCALING,"/R/Condor_run.R"))
+  
+  # Add string to export cluster number
+  cluster_string <- c("cluster_file <- file.path(run_dir, \"cluster_nr.txt\")",
+                      "job_conn<-file(cluster_file, open=\"wt\")",
+                      "write_lines(predicted_cluster, job_conn)",
+                      "close(job_conn)",
+                      "rm(job_conn)")
+  
+  # Add to Condor_run script
+  culster_idx <- min(which(str_detect(tempString,"predicted_cluster")))
+  tempString <- c(tempString[1:culster_idx],cluster_string,tempString[(culster_idx+1):length(tempString)])
+  
+  # Save file
+  write_lines(tempString, str_glue("./",WD_DOWNSCALING,"/R/Condor_run_tmp.R"))
+  
+  # Change wd to downscaling folder
+  setwd(str_glue("./",WD_DOWNSCALING))
   
   # Submit runs to limpopo
   system("RScript R/Condor_run_tmp.R R/sample_config_tmp.R")
@@ -178,8 +214,8 @@ run_downscaling <- function(cd)
   if (MERGE_GDX_DOWNSCALING){
     
     # Save merged output to G4M folder
-    f <- str_glue("./Model/gdx/downscaled_",PROJECT,"_",cluster_nr,"_merged.gdx")
-    source <- str_glue("./Model/gdx/downscaled_","output_",PROJECT,"_",DATE_LABEL,".gdx")
+    f <- str_glue("./gdx/downscaled_",PROJECT,"_",cluster_nr,"_merged.gdx")
+    source <- str_glue("./gdx/downscaled_","output_",PROJECT,"_",DATE_LABEL,".gdx")
     
     # Rename merged output file
     file.rename(from=f,to=source)
