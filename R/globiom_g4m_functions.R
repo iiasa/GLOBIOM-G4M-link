@@ -78,6 +78,10 @@ run_globiom_initial <- function(cd)
   
   # Point gdx output to downscaling folder
   tempString <- read_lines("./Model/8a_rep_g4m.gms")
+  
+  # Create downscaling input folder if absent
+  if (!dir.exists(file.path(str_glue(cd,"/",WD_DOWNSCALING,"/input/")))) dir.create(file.path(str_glue(cd,"/",WD_DOWNSCALING,"/input/")))
+
   path_for_downscaling2 <- str_replace_all(str_glue(cd,"/",WD_DOWNSCALING,"/input"),"/","%X%")
   
   tempString <- str_replace(tempString,"execute_unload[:print:]+output_landcover[:print:]+",
@@ -178,8 +182,7 @@ run_downscaling <- function(cd)
   # Create gdx folder in downscaling directory if absent
   if (!dir.exists(file.path(str_glue("./",WD_DOWNSCALING,"/gdx")))) dir.create(file.path(str_glue("./",WD_DOWNSCALING,"/gdx")))
 
-  # Create input/output folder in downscaling directory if absent
-  if (!dir.exists(file.path(str_glue("./",WD_DOWNSCALING,"/input")))) dir.create(file.path(str_glue("./",WD_DOWNSCALING,"/input")))
+  # Create output folder in downscaling directory if absent
   if (!dir.exists(file.path(str_glue("./",WD_DOWNSCALING,"/output")))) dir.create(file.path(str_glue("./",WD_DOWNSCALING,"/output")))  
 
   # Save file
