@@ -69,6 +69,7 @@ if (length(args) == 0) {
 
 cd <- getwd()
 source("R/globiom_g4m_functions.R")
+source("R/helper_functions.R")
 
 run_link <- function()
 {
