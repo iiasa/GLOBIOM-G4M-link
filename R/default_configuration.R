@@ -18,7 +18,7 @@ DOWNSCALING_FINAL = FALSE # call the final downscaling - needs data from the fin
 #-------------------------------------------------------------------------------
 
 # Limpopo scenario configuration - may include all sample_config options
-WD = "H:/Branch_trunk_EPA/" # working directory
+WD_GLOBIOM = "GLOBIOM" # working directory for GLOBIOM relative to current path
 PROJECT = "test_EPA" # project name
 SCENARIOS = "0" # scenarios to run
 MERGE_GDX = TRUE # merge gdx output on limpopo
