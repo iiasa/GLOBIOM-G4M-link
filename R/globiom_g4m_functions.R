@@ -36,7 +36,7 @@ run_globiom_initial <- function(cd)
   # Add string to export cluster number
   cluster_string <- c("cluster_file <- file.path(run_dir, \"cluster_nr.txt\")",
                       "job_conn<-file(cluster_file, open=\"wt\")",
-                      "write_lines(predicted_cluster, job_conn)",
+                      "writeLines(str_glue(predicted_cluster), job_conn)",
                       "close(job_conn)",
                       "rm(job_conn)")
   
@@ -191,7 +191,7 @@ run_downscaling <- function(cd)
   # Add string to export cluster number
   cluster_string <- c("cluster_file <- file.path(run_dir, \"cluster_nr.txt\")",
                       "job_conn<-file(cluster_file, open=\"wt\")",
-                      "write_lines(predicted_cluster, job_conn)",
+                      "writeLines(str_glue(predicted_cluster), job_conn)",
                       "close(job_conn)",
                       "rm(job_conn)")
   
