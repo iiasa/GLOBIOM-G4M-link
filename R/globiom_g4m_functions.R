@@ -20,8 +20,8 @@ run_globiom_initial <- function(cd)
   # Update sample_config file
   tempString <- read_lines("./sample_config_glob.R")
   tempString <- str_replace(tempString,"EXPERIMENT\\s{0,}=\\s{0,}[:print:]+",str_glue("EXPERIMENT = \"",PROJECT,"\"# label for your run"))
-  tempString <- str_replace(tempString,"JOBS\\s{0,}=\\s{0,}[:print:]+",str_glue("JOBS = c(",scenarios,")"))
-  tempString <- str_replace(tempString,"MERGE_GDX_OUTPUT\\s{0,}=\\s{0,}[:print:]+",str_glue("MERGE_GDX_OUTPUT = ",merge_gdx," # optional"))
+  tempString <- str_replace(tempString,"JOBS\\s{0,}=\\s{0,}[:print:]+",str_glue("JOBS = c(",SCENARIOS,")"))
+  tempString <- str_replace(tempString,"MERGE_GDX_OUTPUT\\s{0,}=\\s{0,}[:print:]+",str_glue("MERGE_GDX_OUTPUT = ",MERGE_GDX," # optional"))
   tempString <- str_replace(tempString,"scen_type\\s{0,}=\\s{0,}[:print:]+//","scen_type=feedback //")
   
    # Save file
