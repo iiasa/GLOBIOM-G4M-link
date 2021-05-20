@@ -45,7 +45,7 @@ run_globiom_initial <- function(cd)
   tempString <- c(tempString[1:cluster_idx],cluster_string,tempString[(cluster_idx+1):length(tempString)])
   
   # Save file
-  write_lines(tempString,"./",WD_GLOBIOM,"/R/Condor_run_tmp.R")
+  write_lines(tempString,str_glue("./",WD_GLOBIOM,"/R/Condor_run_tmp.R"))
   
   # Define wd
   setwd(WD)
