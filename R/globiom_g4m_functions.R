@@ -28,7 +28,7 @@ run_globiom_initial <- function(cd)
     # Create R folder in GLOBIOM directory if absent
   if (!dir.exists(file.path(str_glue("./",WD_GLOBIOM,"/R")))) dir.create(file.path(str_glue("./",WD_GLOBIOM,"/R")))
   
-  write_lines(tempString, str_glue("./",WD_GLOBIOM,"/R/sample_config_tmp.R")
+  write_lines(tempString, str_glue("./",WD_GLOBIOM,"/R/sample_config_tmp.R"))
   
   # Update Condor_run script
   tempString <- read_lines("./Condor_run_R/Condor_run.R")
