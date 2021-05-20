@@ -208,7 +208,7 @@ run_downscaling <- function(cd)
   # Submit runs to limpopo
   system("RScript R/Condor_run_tmp.R R/sample_config_tmp.R")
   
-  cluster_nr <- as.numeric(read_lines(str_glue("./Condor/",PROJECT,"/cluster_nr.txt")))
+  cluster_nr <- readr::parse_number(read_lines(str_glue("./Condor/",PROJECT,"/cluster_nr.txt")))
   
   # Transfer gdx to G4M folder - in case files were merged on limpopo
   if (MERGE_GDX_DOWNSCALING){
