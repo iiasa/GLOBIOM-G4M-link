@@ -57,6 +57,7 @@ if (length(args) == 0) {
 } else {
   stop("Multiple arguments provided! Expecting at most a single config file argument.")
 }
+rm(args, name, type, config_names, config_types)
 
 # Determine temporary directory for this R session
 
