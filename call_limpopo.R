@@ -93,7 +93,7 @@ run_link <- function()
   {
     # Run Initial downscaling
     
-    if (!file.exists(str_glue(WD_DOWNSCALING,"/Model/input/","output_landcover_",PROJECT,"_",DATE_LABEL,".gdx"))) stop("File for downscaling not found! Please call the intial GLOBIOM run before downscaling")
+    if (!file.exists(str_glue(WD_DOWNSCALING,"/input/","output_landcover_",PROJECT,"_",DATE_LABEL,".gdx"))) stop("File for downscaling not found! Please call the intial GLOBIOM run before downscaling")
   
     run_downscaling(cd)
     
