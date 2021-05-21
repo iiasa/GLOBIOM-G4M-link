@@ -205,13 +205,17 @@ run_downscaling <- function(cd)
   if (!dir.exists(file.path(str_glue("./",WD_DOWNSCALING,"/gdx")))) dir.create(file.path(str_glue("./",WD_DOWNSCALING,"/gdx")))
 
   # Create output folder in downscaling directory if absent
-  if (!dir.exists(file.path(str_glue("./",WD_DOWNSCALING,"/output")))) dir.create(file.path(str_glue("./",WD_DOWNSCALING,"/output")))  
+  if (!dir.exists(file.path(str_glue("./",WD_DOWNSCALING,"/output")))) dir.create(file.path(str_glue("./",WD_DOWNSCALING,"/output")))
+  
+    # Create Condor folder in downscaling directory if absent
+  if (!dir.exists(file.path(str_glue(cd,"/",WD_DOWNSCALING,"/Condor")))) dir.create(file.path(str_glue("./",WD_DOWNSCALING,"/Condor")))  
+  if (!dir.exists(file.path(str_glue(cd,"/",WD_DOWNSCALING,"/t")))) dir.create(file.path(str_glue("./",WD_DOWNSCALING,"/t")))  
 
   # Save file
   write_lines(tempString,str_glue("./",WD_DOWNSCALING,"/R/sample_config_tmp.R"))
   
   # Update Condor_run script
-  tempString <- read_lines(str_glue("./",WD_DOWNSCALING,"/R/Condor_run.R"))
+  tempString <- read_lines("./Condor_run_R/Condor_run.R")
   
   # Add string to export cluster number
   cluster_string <- c("cluster_file <- file.path(run_dir, \"cluster_nr.txt\")",
@@ -257,5 +261,5 @@ run_downscaling <- function(cd)
     } 
   }
   
-  setwd(prior_wd)
+  setwd(cd)
 }
