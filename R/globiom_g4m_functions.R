@@ -104,7 +104,7 @@ run_globiom_initial <- function(cd)
   # Create downscaling input folder if absent
   if (!dir.exists(file.path(str_glue(cd,"/",WD_DOWNSCALING,"/input/")))) dir.create(file.path(str_glue(cd,"/",WD_DOWNSCALING,"/input/")))
 
-  path_for_downscaling2 <- str_replace_all(str_glue(cd,"/",WD_DOWNSCALING,"/input"),"/","%X%")
+  path_for_downscaling2 <- str_replace_all(str_glue(cd,"/",WD_DOWNSCALING,"/input/"),"/","%X%")
   
   tempString <- str_replace(tempString,"execute_unload[:print:]+output_landcover[:print:]+",
                             str_glue("execute_unload \"",path_for_downscaling2,"output_landcover_%project%_%lab%\"LANDCOVER_COMPARE_SCEN, LUC_COMPARE_SCEN0, Price_compare2,MacroScen, IEA_SCEN, BioenScen, ScenYear, REGION, COUNTRY,REGION_MAP"))
