@@ -18,7 +18,7 @@ run_globiom_initial <- function(cd)
   WD <- str_glue(cd,"/",WD_GLOBIOM,"/")
 
   config_template <- c(
-    'EXPERIMENT = "{PROJECT}"',
+    'EXPERIMENT = "{PROJECT}_glob"',
     'PREFIX = "_globiom"',
     'JOBS = c({SCENARIOS})',
     'HOST_REGEXP = "^limpopo"',
@@ -45,8 +45,8 @@ run_globiom_initial <- function(cd)
     'WAIT_FOR_RUN_COMPLETION = TRUE',
     'NICE_USER = FALSE'
   )
-  config_path <- file.path(TEMP_DIR, "config.R")
-  write_lines(unlist(lapply(config_template, str_glue)), config_path)
+  config_path <- file.path(TEMP_DIR, "config_glob.R")
+  write_lines(lapply(config_template, str_glue), config_path)
   rm(config_template)
   
   # Create R folder in GLOBIOM directory if absent
@@ -72,7 +72,7 @@ run_globiom_initial <- function(cd)
   # Define wd
   setwd(WD)
               
-  # Submit runs to limpopo
+  # Submit run to limpopo
   system(str_glue("RScript R/Condor_run_tmp.R {config_path}"))
   
   # Retrieve limpopo cluster number - cluster_nr.txt was created by modifying the Condor_run.R script
@@ -190,15 +190,38 @@ run_downscaling <- function(cd)
   } 
   scen_string <- str_glue(scen_string,")")
   
-  # Update sample_config file - needs revised 1_downscaling script and 
-  # reorganization of Downscaling folder (All files into a Model folder and an R folder with limpopo scripts)
-  
-#  tempString <- read_lines(str_glue(dirname(rstudioapi::getActiveDocumentContext()$path),"/sample_config_down.R"))
-  tempString <- read_lines("./sample_config_down.R")
-  tempString <- str_replace(tempString," EXPERIMENT\\s{0,}=\\s{0,}[:print:]+",str_glue("EXPERIMENT = \"",PROJECT,"\"# label for your run"))
-  tempString <- str_replace(tempString," JOBS\\s{0,}=\\s{0,}[:print:]+",str_glue("JOBS = ",scen_string))
-  
-    # Create R folder in downscaling directory if absent
+  config_template <- c(
+    'EXPERIMENT = "{PROJECT}_down"',
+    'PREFIX = "_globiom"',
+    'JOBS = c({scen_string})',
+    'HOST_REGEXP = "^limpopo"',
+    'REQUEST_MEMORY = 2500',
+    'REQUEST_CPUS = 1',
+    '#GAMS_CURDIR = "Model"',
+    'GAMS_FILE_PATH = "1_downscaling_tmp.gms"',
+    'GAMS_VERSION = "32.2"',
+    'GAMS_ARGUMENTS = "//nsim=\'%1\'"',
+    '#BUNDLE_INCLUDE = "Model"',
+    'BUNDLE_INCLUDE_DIRS = c("include")',
+    'BUNDLE_EXCLUDE_DIRS = c(".git", ".svn", "225*", "doc")',
+    'BUNDLE_EXCLUDE_FILES = c("**/*.~*", "**/*.log", "**/*.log~*", "**/*.lxi", "**/*.lst")',
+    'BUNDLE_ADDITIONAL_FILES = c()',
+    'RETAIN_BUNDLE = FALSE',
+    'G00_OUTPUT_DIR = "t"',
+    'G00_OUTPUT_FILE = "d1_out.g00"',
+    'GET_G00_OUTPUT = FALSE',
+    'GDX_OUTPUT_DIR = "gdx"',
+    'GDX_OUTPUT_FILE = "downscaled.gdx"',
+    'GET_GDX_OUTPUT = TRUE',
+    'MERGE_GDX_OUTPUT = TRUE',
+    'WAIT_FOR_RUN_COMPLETION = TRUE',
+    'NICE_USER = FALSE'
+  )
+  config_path <- file.path(TEMP_DIR, "config_down.R")
+  write_lines(lapply(config_template, str_glue), config_path)
+  rm(config_template)
+
+  # Create R folder in downscaling directory if absent
   if (!dir.exists(file.path(str_glue("./",WD_DOWNSCALING,"/R")))) dir.create(file.path(str_glue("./",WD_DOWNSCALING,"/R")))
 
   # Create gdx folder in downscaling directory if absent
@@ -234,8 +257,8 @@ run_downscaling <- function(cd)
   # Change wd to downscaling folder
   setwd(str_glue("./",WD_DOWNSCALING))
   
-  # Submit runs to limpopo
-  system("RScript R/Condor_run_tmp.R R/sample_config_tmp.R")
+  # Submit run to limpopo
+  system(str_glue("RScript R/Condor_run_tmp.R {config_path}"))
   
   cluster_nr <- readr::parse_number(read_lines(str_glue("./Condor/",PROJECT,"/cluster_nr.txt")))
   
