@@ -4,10 +4,11 @@
 
 
 
-#' Call the initial GLOBIOM run. The function reads in and edits the Condor_run.R and sample_config.R
-#' scripts and submits the scenario runs to limpopo. Subsequently, the 8_merged_output.gms script
-#' is edited to match the current project and label, and export its outputs to the Downscaling folder
-#' for further processing
+#' Perform the initial GLOBIOM scenarios run. The function reads in and edits
+#' the Condor_run.R and sample_config.R scripts and submits the scenario for
+#' parallel execution on Limpopo. Subsequently, the 8_merged_output.gms script
+#' is edited to match the current project and label, and export its outputs to
+#' the Downscaling folder for further processing
 
 run_globiom_initial <- function(cd) 
 {
@@ -72,9 +73,10 @@ run_globiom_initial <- function(cd)
   # Define wd
   setwd(WD)
               
-  # Submit run to limpopo
-  system(str_glue("RScript R/Condor_run_tmp.R {config_path}"))
-  
+  # Submit run to Limpopo
+  rc <- system(str_glue("RScript R/Condor_run_tmp.R {config_path}"))
+  if (rc != 0) stop("GLOBIOM parallel Condor run on Limpopo failed!")
+
   # Retrieve limpopo cluster number - cluster_nr.txt was created by modifying the Condor_run.R script
   cluster_nr <- readr::parse_number(read_lines(str_glue("./Condor/",PROJECT,"/cluster_nr.txt")))
   
@@ -256,10 +258,11 @@ run_downscaling <- function(cd)
   
   # Change wd to downscaling folder
   setwd(str_glue("./",WD_DOWNSCALING))
-  
-  # Submit run to limpopo
-  system(str_glue("RScript R/Condor_run_tmp.R {config_path}"))
-  
+
+  # Submit run to Limpopo
+  rc <- system(str_glue("RScript R/Condor_run_tmp.R {config_path}"))
+  if (rc != 0) stop("Downscaling parallel Condor run on Limpopo failed!")
+
   cluster_nr <- readr::parse_number(read_lines(str_glue("./Condor/",PROJECT,"/cluster_nr.txt")))
   
   # Transfer gdx to G4M folder - in case files were merged on limpopo
