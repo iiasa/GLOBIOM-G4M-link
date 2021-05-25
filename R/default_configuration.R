@@ -28,10 +28,8 @@ LIMPOPO_RUN = "yes" # Run on limpopo yes/no
 RESOLUTION = "region37" # Set GLOBIOM region "resolution"
 DATE_LABEL = format(Sys.Date(), "%d%m%Y") # Date of run
 REPORTING_G4M = "yes" #Reporting to G4M yes/no
-REPORTING_IAMC = "yes" #Reporting to IAMC yes/no
+REPORTING_IAMC = "no" #Reporting to IAMC yes/no
 REPORTING_IAMC_G4M = "no" # Reporting G4M to IAMC REGIONAL_AG/no 
-G4M_FEEDBACK_FILE = stringr::str_glue("tabs_gui_FAOFRA2015CRF_CSIRO_t14_SSP2_iea_REGION37_",
-                           DATE_LABEL,"_final_csv") # G4M feedback file
 REGIONAL_AG = "ggi" # regional aggregation level
 PATH_FOR_DOWNSCALING = "H:/Downscaling/Model/input/" # path to save gdx for downscaling
 
@@ -45,13 +43,17 @@ SCENARIOS_FOR_DOWNSCALING = "0" # full set or subset of scenarios defined previo
 RESOLUTION_DOWNSCALING = 37 # number of regions specified in the downscaling
 
 #-------------------------------------------------------------------------------
+
 # 2nd block - G4M run
-
 #-------------------------------------------------------------------------------
 
 #-------------------------------------------------------------------------------
+
 # 3rd block - final GLOBIOM run
-
 #-------------------------------------------------------------------------------
-
+PATH_FOR_FEEDBACK = "I:/augustynczik/" #Path for G4M output file
+G4M_FEEDBACK_FILE = "tabs_gui_FAOFRA2015CRF_CSIRO_t14_SSP2_EPA_07052021_final_csv_test3.csv" #Name of G4M output file
+REPORTING_G4M_FINAL = "no" #Reporting to G4M yes/no
+REPORTING_IAMC_FINAL = "yes" #Reporting to IAMC yes/no
+REPORTING_IAMC_G4M_FINAL = "yes" # Reporting G4M to IAMC REGIONAL_AG/no 
 #-------------------------------------------------------------------------------
