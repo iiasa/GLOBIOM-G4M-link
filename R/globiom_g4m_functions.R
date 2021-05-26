@@ -378,10 +378,7 @@ run_globiom_final <- function(cd){
   
   # Return to previous wd
   setwd(cd)
-  }
-  
-  
-  # Return to previous wd
-  setwd(cd)
 }
+  
+  
 
