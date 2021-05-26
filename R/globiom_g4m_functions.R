@@ -4,11 +4,10 @@
 
 
 
-#' Perform the initial GLOBIOM scenarios run. The function reads in and edits
-#' the Condor_run.R and sample_config.R scripts and submits the scenario for
-#' parallel execution on Limpopo. Subsequently, the 8_merged_output.gms script
-#' is edited to match the current project and label, and export its outputs to
-#' the Downscaling folder for further processing
+#' Perform the initial GLOBIOM scenarios run. The function submits the scenario
+#' for parallel execution on Limpopo. Subsequently, the 8_merged_output.gms
+#' script is edited to match the current project and label, and export its
+#' outputs to the Downscaling folder for further processing
 
 run_globiom_initial <- function(cd) 
 {
@@ -18,6 +17,7 @@ run_globiom_initial <- function(cd)
   # Define model wd
   WD <- str_glue(cd,"/",WD_GLOBIOM,"/")
 
+  cluster_number_log <- file.path(TEMP_DIR, "cluster_number.log")
   config_template <- c(
     'EXPERIMENT = "{PROJECT}_glob"',
     'PREFIX = "_globiom"',
@@ -44,42 +44,21 @@ run_globiom_initial <- function(cd)
     'GET_GDX_OUTPUT = TRUE',
     'MERGE_GDX_OUTPUT = {MERGE_GDX}',
     'WAIT_FOR_RUN_COMPLETION = TRUE',
-    'NICE_USER = FALSE'
+    'NICE_USER = FALSE',
+    'CLUSTER_NUMBER_LOG = "{cluster_number_log}"'
   )
   config_path <- file.path(TEMP_DIR, "config_glob.R")
   write_lines(lapply(config_template, str_glue), config_path)
   rm(config_template)
   
-  # Create R folder in GLOBIOM directory if absent
-  if (!dir.exists(file.path(str_glue("./",WD_GLOBIOM,"/R")))) dir.create(file.path(str_glue("./",WD_GLOBIOM,"/R")))
-
-  # Update Condor_run script
-  tempString <- read_lines("./Condor_run_R/Condor_run.R")
-  
-  # Add string to export cluster number
-  cluster_string <- c("cluster_file <- file.path(run_dir, \"cluster_nr.txt\")",
-                      "job_conn<-file(cluster_file, open=\"wt\")",
-                      "writeLines(str_glue(predicted_cluster), job_conn)",
-                      "close(job_conn)",
-                      "rm(job_conn)")
-  
-  # Add to Condor_run script
-  cluster_idx <- min(which(str_detect(tempString,"predicted_cluster")))
-  tempString <- c(tempString[1:cluster_idx],cluster_string,tempString[(cluster_idx+1):length(tempString)])
-  
-  # Save file
-  write_lines(tempString,str_glue("./",WD_GLOBIOM,"/R/Condor_run_tmp.R"))
-  
   # Define wd
   setwd(WD)
               
-  # Submit run to Limpopo
-  rc <- system(str_glue("Rscript --vanilla R/Condor_run_tmp.R {config_path}"))
+  # Submit run to Limpopo and retrieve the run's Condor cluster number on completion
+  rc <- system(str_glue("Rscript --vanilla {cd}/Condor_run_R/Condor_run.R {config_path}"))
   if (rc != 0) stop("GLOBIOM parallel Condor run on Limpopo failed!")
+  cluster_nr <- readr::parse_number(read_file(cluster_number_log))
 
-  # Retrieve limpopo cluster number - cluster_nr.txt was created by modifying the Condor_run.R script
-  cluster_nr <- readr::parse_number(read_lines(str_glue("./Condor/",PROJECT,"/cluster_nr.txt")))
-  
   # create output path string
   path_for_g4m2 <- str_replace_all(PATH_FOR_G4M,"/","%X%")
   
@@ -136,9 +115,9 @@ run_globiom_initial <- function(cd)
 }
 
 
-#' Call the downscaling script and export data to the subsequent G4M run. The function reads in 
-#' and edits the Condor_run.R and sample_config.R scripts and submits the downscaling runs to limpopo. 
-#' Subsequently, the dowscaled output is saved to the G4M input folder.
+#' Call the downscaling script and export data to the subsequent G4M run. The
+#' function reads in submits the downscaling runs to limpopo. Subsequently, the
+#' dowscaled output is saved to the G4M input folder.
 
 run_downscaling <- function(cd)
 {
@@ -191,7 +170,8 @@ run_downscaling <- function(cd)
       scen_string <- str_glue(scen_string,",",str_glue(min(scenarios_idx),":",max(scenarios_idx)))}
   } 
   scen_string <- str_glue(scen_string,")")
-  
+
+  cluster_number_log <- file.path(TEMP_DIR, "cluster_number.log")
   config_template <- c(
     'EXPERIMENT = "{PROJECT}_down"',
     'PREFIX = "_globiom"',
@@ -217,14 +197,12 @@ run_downscaling <- function(cd)
     'GET_GDX_OUTPUT = TRUE',
     'MERGE_GDX_OUTPUT = TRUE',
     'WAIT_FOR_RUN_COMPLETION = TRUE',
-    'NICE_USER = FALSE'
+    'NICE_USER = FALSE',
+    'CLUSTER_NUMBER_LOG = "{cluster_number_log}"'
   )
   config_path <- file.path(TEMP_DIR, "config_down.R")
   write_lines(lapply(config_template, str_glue), config_path)
   rm(config_template)
-
-  # Create R folder in downscaling directory if absent
-  if (!dir.exists(file.path(str_glue("./",WD_DOWNSCALING,"/R")))) dir.create(file.path(str_glue("./",WD_DOWNSCALING,"/R")))
 
   # Create gdx folder in downscaling directory if absent
   if (!dir.exists(file.path(str_glue("./",WD_DOWNSCALING,"/gdx")))) dir.create(file.path(str_glue("./",WD_DOWNSCALING,"/gdx")))
@@ -236,35 +214,14 @@ run_downscaling <- function(cd)
   if (!dir.exists(file.path(str_glue(cd,"/",WD_DOWNSCALING,"/Condor")))) dir.create(file.path(str_glue("./",WD_DOWNSCALING,"/Condor")))  
   if (!dir.exists(file.path(str_glue(cd,"/",WD_DOWNSCALING,"/t")))) dir.create(file.path(str_glue("./",WD_DOWNSCALING,"/t")))  
 
-  # Save file
-  write_lines(tempString,str_glue("./",WD_DOWNSCALING,"/R/sample_config_tmp.R"))
-  
-  # Update Condor_run script
-  tempString <- read_lines("./Condor_run_R/Condor_run.R")
-  
-  # Add string to export cluster number
-  cluster_string <- c("cluster_file <- file.path(run_dir, \"cluster_nr.txt\")",
-                      "job_conn<-file(cluster_file, open=\"wt\")",
-                      "writeLines(str_glue(predicted_cluster), job_conn)",
-                      "close(job_conn)",
-                      "rm(job_conn)")
-  
-  # Add to Condor_run script
-  culster_idx <- min(which(str_detect(tempString,"predicted_cluster")))
-  tempString <- c(tempString[1:culster_idx],cluster_string,tempString[(culster_idx+1):length(tempString)])
-  
-  # Save file
-  write_lines(tempString, str_glue("./",WD_DOWNSCALING,"/R/Condor_run_tmp.R"))
-  
   # Change wd to downscaling folder
   setwd(str_glue("./",WD_DOWNSCALING))
 
-  # Submit run to Limpopo
-  rc <- system(str_glue("Rscript --vanilla R/Condor_run_tmp.R {config_path}"))
+  # Submit run to Limpopo and retrieve the run's Condor cluster number on completion
+  rc <- system(str_glue("Rscript --vanilla {cd}/Condor_run_R/Condor_run.R {config_path}"))
   if (rc != 0) stop("Downscaling parallel Condor run on Limpopo failed!")
+  cluster_nr <- parse_number(read_file(cluster_number_log))
 
-  cluster_nr <- readr::parse_number(read_lines(str_glue("./Condor/",PROJECT,"/cluster_nr.txt")))
-  
   # Transfer gdx to G4M folder - in case files were merged on limpopo
   if (MERGE_GDX_DOWNSCALING){
     
