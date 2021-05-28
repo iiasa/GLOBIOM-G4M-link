@@ -36,7 +36,7 @@ R notebook to automatize the link between GLOBIOM and G4M.
    runs on the Limpopo cluster.
 5. To preview the notebook and its possible output, visit
    [this page](https://iiasa.github.io/GLOBIOM-G4M-link/GLOBIOM-G4M-link.nb.html)
-   or load `GLOBIOM-G4M-link.html` into a web browser.
+   or load `GLOBIOM-G4M-link.nb.html` into a web browser.
 6. Install the R dependencies if needed.
 
 ## R Dependencies
@@ -60,3 +60,4 @@ The notebook depends on:
 
 Open `GLOBIOM-G4M-link.Rmd` in RStudio and, read the instructions contained in the notebook, and run the chunks. Typically, you will run the chunks in first-to-last order, but if a chunk fails, you may need to re-run it.
 
+When you run the notebook, the output HTML file (`GLOBIOM-G4M-link.nb.html`) in your working tree will be updated.
