@@ -12,9 +12,10 @@ To run the link, load this notebook in RStudio, read the documentation before ea
 
 Carefully check the output of each chunk for errors, and if present make adjustments and re-run the chunk that failed.
 
-This notebook has a default configuration `R/default_configuration.R`. Adjust the configuration to your requirements. Do not edit the default configuration file, but instead copy it to a separate `.R` configuration file with a name of your choosing and edit the copy. 
+The repository includes a default configuration file `R/default_configuration.R`. To adjust the configuration to your requirements, copy the default configuration file to a new file at `R/configuration.R` and edit that copy. Your
+adapted copy will be checked against the defaults.
 
-## Process the configuration.
+## Process the configuration
 
 ```{r}
 # Remove any objects from active environment and read the default configuration
@@ -25,61 +26,58 @@ source("R/default_configuration.R")
 config_names <- ls()
 if (length(config_names) == 0) {stop("Default configuration is absent! Please restore the default configuration. It is required for configuration checking, also when providing a separate configuration file.")}
 config_types <- lapply(lapply(config_names, get), typeof)
+# Can now add to the active environment
 
-# Can now pollute the name space, load libraries
+# Point to the customized configuration file
+configuration_file <- "R/configuration.R"
 
+# Load packages
 library(gdxrrw)
 library(gdxtools)
 suppressWarnings(library(tidyverse))
 library(stringr)
 
-# Presence of Config settings is obligatory in a config file other then for the settings listed here
+# Presence of configuraiton settings is obligatory other than for the settings listed here
 OPTIONAL_CONFIG_SETTINGS <- c(
 )
 
-# Read config file if specified via an argument, check presence and types.
-args <- commandArgs(trailingOnly=TRUE)
-if (length(args) == 0) {
-  warning("No config file argument supplied, using default run settings.")
-} else if (length(args) == 1) {
-  # Remove mandatory config defaults from the global scope
-  rm(list=config_names[!(config_names %in% OPTIONAL_CONFIG_SETTINGS)])
-  
-  # Source the config file, should add mandatory config settings to the global scope
-  source(args[1], local=TRUE, echo=FALSE)
-  
-  # Check that all config settings exist, this catches mandatory settings missing in the config file
-  for (i in seq_along(config_names))  {
-    name <- config_names[i]
-    if (!exists(name)) stop(str_glue("Mandatory config setting {name} is not set in config file {args[1]}!"))
-    type <- typeof(get(name))
-    if (type != config_types[[i]] &&
-        name != "RESOLUTION_DOWNSCALING" && # R has no stable numerical type
-        type != "NULL" && # allow for configured vector being empty
-        config_types[[i]] != "NULL" # allow for default vector being empty
-    ) stop(str_glue("{name} set to wrong type in {args[1]}, type should be {config_types[[i]]}"))
-  }
-} else {
-  stop("Multiple arguments provided! Expecting at most a single config file argument.")
+# Remove mandatory config defaults from the global scope
+rm(list=config_names[!(config_names %in% OPTIONAL_CONFIG_SETTINGS)])
+
+# Source the config file, should add mandatory config settings to the global scope
+source(configuration_file, local=TRUE, echo=FALSE)
+
+# Check that all config settings exist, this catches mandatory settings missing in the config file
+for (i in seq_along(config_names))  {
+  name <- config_names[i]
+  if (!exists(name)) stop(str_glue("Mandatory config setting {name} is not set in config file {args[1]}!"))
+  type <- typeof(get(name))
+  if (type != config_types[[i]] &&
+      name != "RESOLUTION_DOWNSCALING" && # R has no stable numerical type
+      type != "NULL" && # allow for configured vector being empty
+      config_types[[i]] != "NULL" # allow for default vector being empty
+  ) stop(str_glue("{name} set to wrong type in {configuration_file}, type should be {config_types[[i]]}"))
 }
-rm(args, config_names, config_types)
+rm(config_names, config_types)
+```
+
+## Set up directories and functions
+
+```{r}
+
+# Cache working directory
+cd <- getwd()
 
 # Determine temporary directory for this R session
-
 td <- tempdir()
 fsep <- ifelse(str_detect(td, fixed("\\") ), "\\", ".Platform$file.sep") # Get the platform file separator: .Platform$file.sep is set to / on Windows
 TEMP_DIR <- str_replace_all(td, fixed(fsep), .Platform$file.sep)
 rm(td, fsep)
-```
 
-## Cache working directory and load support functions
-
-```{r}
-cd <- getwd()
+# Source support functions
 source("R/globiom_g4m_functions.R")
 source("R/helper_functions.R")
 ```
-
 
 ## Perform the initial GLOBIOM run
 

@@ -4,3 +4,4 @@
 .Ruserdata
 *.Rproj
 GLOBIOM/
+R/configuration.R
