@@ -1,17 +1,18 @@
 ---
 title: "GLOBIOM-G4M-link"
+subtitle: R notebook for automatizing the link between GLOBIOM and G4M.
+author:
+- Andrey L. D. Augustynczik
+- Albert Brouwer 
+date: "`r format(Sys.time(), '%d %B %Y')`"
 output: html_notebook
 ---
 
-5/5/21 Andrey L. D. Augustynczik adapted the limpopo configuration file
-and post-processing gams 8_merged_output scripts to automatize the link
-between GLOBIOM and G4M 
+To run the link, load this notebook in RStudio, read the documentation before each chunk, and run the chunks in first-to-last order. You can have RStudio run all chunks in one go, but to configure and test your setup---and because some chunks take a long time to run---it is advisable to start out by running chunks one-by-one at least until you have verified that everything is working smoothly.
 
-In the first block, the code reads in and edit the limpopo submission 
-scripts and launches GLOBIOM scenarios, post-processing and downscaling 
-scripts in sequence. In the second block,... to be done
-the code calls G4M. In the third block,... to be done
+Carefully check the output of each chunk for errors, and if present make adjustments and re-run the chunk that failed.
 
+This notebook has a default configuration `R/default_configuration.R`. Adjust the configuration to your requirements. Do not edit the default configuration file, but instead copy it to a separate `.R` configuration file with a name of your choosing and edit the copy. 
 
 ## Process the configuration.
 
