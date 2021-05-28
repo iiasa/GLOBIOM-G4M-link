@@ -1,10 +1,10 @@
-# GLOBIOM-G4M-link
+# GLOBIOM-G4M-link.Rmd
 
-R script to automatize the link between GLOBIOM and G4M.
+R notebook to automatize the link between GLOBIOM and G4M.
 
 - [Getting set](#getting-set)
 - [R Dependencies](#r-dependencies)
-- [Run the script](#run-the-script)
+- [Running the notebook](#running-the-notebook)
 
 ## Getting set
 
@@ -22,8 +22,8 @@ R script to automatize the link between GLOBIOM and G4M.
 3. Checkout a GLOBIOM branch from subversion by running the `checkout.bat` script from
    the command prompt or your bash shell. This requires the `svn` Subversion command line
    client to be accessible via your PATH environment variable (on-path). You may wish
-   to change the Subversion URL in the script to check out a different branch. The branch
-   should be close to the Trunk version of GLOBIOM.
+   to change the Subversion URL in `checkout.bat` to check out a different branch. The
+   branch should be close to the Trunk version of GLOBIOM.
    
    If you don't have `svn` on-path, perform the `svn` step in `checkout.bat` with a
    graphical client like TortoiseSVN, making sure the working copy goes into a `GLOBIOM`
@@ -32,13 +32,15 @@ R script to automatize the link between GLOBIOM and G4M.
 4. Run the GLOBIOM precompilation `GLOBIOM/Data/0_executebatch_total.gms` and thereafter
    the model `GLOBIOM/Model/0_executebatch.gms` up to the scenarios stage 6 (comment
    out the stages >= 6). This will provide a restart file in the `GLOBIOM/Model/t`
-   directory that can be used by the script to perform parallel scenario (stage 6)
+   directory that is used by the notebook to perform parallel scenario (stage 6)
    runs on the Limpopo cluster.
-5. Install the R dependencies if needed.
+5. To preview the notebook and its possible output, load `GLOBIOM-G4M-link.html` into
+   a web browser.
+6. Install the R dependencies if needed.
 
 ## R Dependencies
 
-The script depends on:
+The notebook depends on:
 - The [tidyverse](https://www.tidyverse.org/) curated R package collection.
 - [**gdxrrw**](https://github.com/GAMS-dev/gdxrrw), an R package for
   reading/writing GDX files from R. For a list of which binary package versions
@@ -53,11 +55,7 @@ The script depends on:
     and b are digits and a < b), though possibly with some warnings.
 - [**gdxtools**](https://github.com/lolow/gdxtools).
 
-## Run the script
+## Running the notebook
 
-The `call_limpopo.R` script has a default configuration `R/default_configuration.R`. Adjust the configuration to your requirements. Do not edit the default configuration file, but instead copy it to a separate `.R` configuration file with a name of your choosing and edit the copy. Below we will use `my_config.R` as the example name.
+Open `GLOBIOM-G4M-link.Rmd` in RStudio and, read the instructions contained in the notebook, and run the chunks. Typically, you will run the chunks in first-to-last order, but if a chunk fails, you may need to re-run it.
 
-To invoke the script from the command line or shell, make sure that the repository root directory (the directory containing the script) is the current working directory, and then invoke it through `Rscript`, passing your configuration file path as only command line parameter:  
-`Rscript call_limpopo.R R/my_config.R`
-
-To invoke the script from Rstudio, create a project for the repository root directory. When that project is open, the default current working directory should already match the repository root. You can verify this via `getwd()` in the Console tab of RStudio and if needed correct it via `setwd()`. Next, load the `call_limpopo.R` script in a tab and source it.
