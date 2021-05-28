@@ -13,7 +13,7 @@ scripts in sequence. In the second block,... to be done
 the code calls G4M. In the third block,... to be done
 
 
-# Process the configuration.
+## Process the configuration.
 
 ```{r}
 # Remove any objects from active environment and read the default configuration
@@ -61,7 +61,7 @@ if (length(args) == 0) {
 } else {
   stop("Multiple arguments provided! Expecting at most a single config file argument.")
 }
-rm(args, name, type, config_names, config_types)
+rm(args, config_names, config_types)
 
 # Determine temporary directory for this R session
 
@@ -71,62 +71,51 @@ TEMP_DIR <- str_replace_all(td, fixed(fsep), .Platform$file.sep)
 rm(td, fsep)
 ```
 
-# Load link functions
+## Cache working directory and load support functions
 
 ```{r}
 cd <- getwd()
 source("R/globiom_g4m_functions.R")
 source("R/helper_functions.R")
-
-run_link <- function()
-{
-  
-  # Initial globiom run
-  if (GLOBIOM_INITIAL) 
-  {
-    
-    # Run GLOBIOM
-    run_globiom_initial(cd)
-    
-    print("Initial GLOBIOM run complete")
-  }
-  
-  if (DOWNSCALING_INITIAL) 
-  {
-    # Run Initial downscaling
-    
-    if (!file.exists(str_glue(WD_DOWNSCALING,"/input/","output_landcover_",PROJECT,"_",DATE_LABEL,".gdx"))) stop("File for downscaling not found! Please call the intial GLOBIOM run before downscaling")
-  
-    run_downscaling(cd)
-    
-    print("Initial downscaling complete")
-  }
-  
-  if (G4M) 
-  {
-    if (!file.exists(str_glue(PATH_FOR_G4M,"/",GDX_OUTPUT_NAME,"_output_",PROJECT,"_",DATE_LABEL))) stop("File for G4M run not found! Please call the intial downscaling before the G4M run")
-    
-    # Run G4M
-
-  }
-  
-  if (GLOBIOM_FINAL) 
-  {
-    # Run GLOBIOM
-
-  }
-  
-  if (DOWNSCALING_FINAL) 
-  {
-    # Run GLOBIOM
-    
-  }
-}
-
 ```
 
-# Run link
+
+## Perform the initial GLOBIOM run
 
 ```{r}
-run_link()
+# Run GLOBIOM
+run_globiom_initial(cd)
+
+print("Initial GLOBIOM run complete.")
+```
+
+## Perform the initial downscaling - needs data from the initial GLOBIOM run
+
+```{r}
+if (!file.exists(str_glue(WD_DOWNSCALING,"/input/","output_landcover_",PROJECT,"_",DATE_LABEL,".gdx"))) stop("File for downscaling not found! Please call the intial GLOBIOM run before downscaling")
+
+run_downscaling(cd)
+
+print("Initial downscaling complete")
+```
+
+## TODO: Run G4M - needs data from the intial downscaling
+
+```{r}
+if (!file.exists(str_glue(PATH_FOR_G4M,"/",GDX_OUTPUT_NAME,"_output_",PROJECT,"_",DATE_LABEL))) stop("File for G4M run not found! Please call the intial downscaling before the G4M run")
+    
+# Run G4M
+```
+
+## TODO: Perform the final GLOBIOM run - needs data from the G4M run
+
+```{r}
+# Run GLOBIOM
+```
+
+## TODO: Perform the final downscaling - needs data from the final GLOBIOM run
+
+
+```{r}
+# Run final downscaling
 ```
