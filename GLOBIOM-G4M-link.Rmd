@@ -29,7 +29,7 @@ config_types <- lapply(lapply(config_names, get), typeof)
 
 library(gdxrrw)
 library(gdxtools)
-library(tidyverse)
+suppressWarnings(library(tidyverse))
 library(stringr)
 
 # Presence of Config settings is obligatory in a config file other then for the settings listed here
