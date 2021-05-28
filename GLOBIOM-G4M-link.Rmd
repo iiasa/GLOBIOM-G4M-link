@@ -1,17 +1,21 @@
-#' 5/5/21 Andrey L. D. Augustynczik adapted the limpopo configuration file
-#' and post-processing gams 8_merged_output scripts to automatize the link
-#' between GLOBIOM and G4M 
-#' 
-#' In the first block, the code reads in and edit the limpopo submission 
-#' scripts and launches GLOBIOM scenarios, post-processing and downscaling 
-#' scripts in sequence. In the second block,... to be done
-#' the code calls G4M. In the third block,... to be done
+---
+title: "GLOBIOM-G4M-link"
+output: html_notebook
+---
+
+5/5/21 Andrey L. D. Augustynczik adapted the limpopo configuration file
+and post-processing gams 8_merged_output scripts to automatize the link
+between GLOBIOM and G4M 
+
+In the first block, the code reads in and edit the limpopo submission 
+scripts and launches GLOBIOM scenarios, post-processing and downscaling 
+scripts in sequence. In the second block,... to be done
+the code calls G4M. In the third block,... to be done
 
 
-################################################################################
-#                        CONFIGURATION PROCESSING
-################################################################################
+# Process the configuration.
 
+```{r}
 # Remove any objects from active environment and read the default configuration
 rm(list=ls())
 source("R/default_configuration.R")
@@ -65,14 +69,11 @@ td <- tempdir()
 fsep <- ifelse(str_detect(td, fixed("\\") ), "\\", ".Platform$file.sep") # Get the platform file separator: .Platform$file.sep is set to / on Windows
 TEMP_DIR <- str_replace_all(td, fixed(fsep), .Platform$file.sep)
 rm(td, fsep)
-
-################################################################################
-#                                GLOBIOM-G4M-LINK
-################################################################################
-
+```
 
 # Load link functions
 
+```{r}
 cd <- getwd()
 source("R/globiom_g4m_functions.R")
 source("R/helper_functions.R")
@@ -122,4 +123,10 @@ run_link <- function()
   }
 }
 
+```
+
+# Run link
+
+```{r}
 run_link()
+```
