@@ -34,8 +34,9 @@ R notebook to automatize the link between GLOBIOM and G4M.
    out the stages >= 6). This will provide a restart file in the `GLOBIOM/Model/t`
    directory that is used by the notebook to perform parallel scenario (stage 6)
    runs on the Limpopo cluster.
-5. To preview the notebook and its possible output, load `GLOBIOM-G4M-link.html` into
-   a web browser.
+5. To preview the notebook and its possible output, visit
+   [this page](https://iiasa.github.io/GLOBIOM-G4M-link/GLOBIOM-G4M-link.nb.html)
+   or load `GLOBIOM-G4M-link.html` into a web browser.
 6. Install the R dependencies if needed.
 
 ## R Dependencies
