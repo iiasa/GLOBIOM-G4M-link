@@ -19,7 +19,7 @@ run_globiom_initial <- function(cd)
 
   cluster_number_log <- file.path(TEMP_DIR, "cluster_number.log")
   config_template <- c(
-    'EXPERIMENT = "{PROJECT}_glob"',
+    'EXPERIMENT = "{PROJECT}"',
     'PREFIX = "_globiom"',
     'JOBS = c({SCENARIOS})',
     'HOST_REGEXP = "^limpopo"',
@@ -67,7 +67,7 @@ run_globiom_initial <- function(cd)
   tempString <- read_lines("./Model/8_merge_output.gms")
   tempString <- str_replace(tempString,"\\$set\\s+limpopo\\s+[:print:]+",str_glue("$set limpopo ",LIMPOPO_RUN))
   tempString <- str_replace(tempString,"\\$set\\s+limpopo_nr\\s+[:print:]+",str_glue("$set limpopo_nr ",cluster_nr))
-  tempString <- str_replace(tempString,"\\$set\\s+project\\s+[:print:]+",str_glue("$set project ",PROJECT))
+  tempString <- str_replace(tempString,"\\$set\\s+project\\s+[:print:]+",str_glue("$set project {PROJECT}"))
   tempString <- str_replace(tempString,"\\$set\\s+region\\s+[:print:]+",str_glue("$set region ",RESOLUTION))
   tempString <- str_replace(tempString,"\\$set\\s+lab\\s+[:print:]+",str_glue("$set lab ",DATE_LABEL))
   tempString <- str_replace(tempString,"\\$set\\s+rep_g4m\\s+[:print:]+",str_glue("$set rep_g4m ",REPORTING_G4M))
@@ -131,7 +131,7 @@ run_downscaling <- function(cd)
     tempString <- c("$setLocal X %system.dirSep%",tempString)
   }
   
-  tempString <- str_replace(tempString,"\\$setglobal\\s+project\\s+[:print:]+",str_glue("$setglobal project ",PROJECT))
+  tempString <- str_replace(tempString,"\\$setglobal\\s+project\\s+[:print:]+",str_glue("$setglobal project {PROJECT}"))
   tempString <- str_replace(tempString,"\\$setglobal\\s+lab\\s+[:print:]+",str_glue("$setglobal lab     ",DATE_LABEL))
   tempString <- str_replace(tempString,"execute_unload[:print:]+",str_glue("execute_unload 'gdx%X%",GDX_OUTPUT_NAME, ".gdx',"))  
   
@@ -174,7 +174,7 @@ run_downscaling <- function(cd)
 
   cluster_number_log <- file.path(TEMP_DIR, "cluster_number.log")
   config_template <- c(
-    'EXPERIMENT = "{PROJECT}_down"',
+    'EXPERIMENT = "{PROJECT}"',
     'PREFIX = "_globiom"',
     'JOBS = c({scen_string})',
     'HOST_REGEXP = "^limpopo"',
@@ -228,8 +228,8 @@ run_downscaling <- function(cd)
   if (MERGE_GDX_DOWNSCALING){
     
     # Save merged output to G4M folder
-    f <- str_glue("./gdx/downscaled_",PROJECT,"_",cluster_nr,"_merged.gdx")
-    source <- str_glue("./gdx/downscaled_","output_",PROJECT,"_",DATE_LABEL,".gdx")
+    f <- str_glue("gdx/downscaled_{PROJECT}_{cluster_nr}_merged.gdx")
+    source <- str_glue("gdx/downscaled_output_{PROJECT}_{DATE_LABEL}.gdx")
     
     # Rename merged output file
     file.rename(from=f,to=source)
