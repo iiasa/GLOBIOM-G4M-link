@@ -48,9 +48,10 @@ run_globiom_initial <- function(cd)
     'CLUSTER_NUMBER_LOG = "{cluster_number_log}"'
   )
   config_path <- file.path(TEMP_DIR, "config_glob.R")
-  write_lines(lapply(config_template, str_glue), config_path)
-  rm(config_template)
-  
+  current_env <- environment()
+  write_lines(lapply(config_template, .envir=current_env, str_glue), config_path)
+  rm(config_template, current_env)
+
   # Define wd
   setwd(WD)
               
@@ -201,8 +202,9 @@ run_downscaling <- function(cd)
     'CLUSTER_NUMBER_LOG = "{cluster_number_log}"'
   )
   config_path <- file.path(TEMP_DIR, "config_down.R")
-  write_lines(lapply(config_template, str_glue), config_path)
-  rm(config_template)
+  current_env <- environment()
+  write_lines(lapply(config_template, .envir=current_env, str_glue), config_path)
+  rm(config_template, current_env)
 
   # Create gdx folder in downscaling directory if absent
   if (!dir.exists(file.path(str_glue("./",WD_DOWNSCALING,"/gdx")))) dir.create(file.path(str_glue("./",WD_DOWNSCALING,"/gdx")))
