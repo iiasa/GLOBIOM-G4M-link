@@ -34,7 +34,6 @@ run_globiom_initial <- function(cd)
     'BUNDLE_EXCLUDE_DIRS = c(".git", ".svn", "225*", "doc")',
     'BUNDLE_EXCLUDE_FILES = c("**/*.~*", "**/*.log", "**/*.log~*", "**/*.lxi", "**/*.lst")',
     'BUNDLE_ADDITIONAL_FILES = c()',
-    'RETAIN_BUNDLE = FALSE',
     'RESTART_FILE_PATH = "t/a4_r1.g00"',
     'G00_OUTPUT_DIR = "t"',
     'G00_OUTPUT_FILE = "a6_out.g00"',
@@ -44,7 +43,6 @@ run_globiom_initial <- function(cd)
     'GET_GDX_OUTPUT = TRUE',
     'MERGE_GDX_OUTPUT = {MERGE_GDX}',
     'WAIT_FOR_RUN_COMPLETION = TRUE',
-    'NICE_USER = FALSE',
     'CLUSTER_NUMBER_LOG = "{cluster_number_log}"'
   )
   config_path <- file.path(TEMP_DIR, "config_glob.R")
@@ -52,8 +50,9 @@ run_globiom_initial <- function(cd)
   write_lines(lapply(config_template, .envir=current_env, str_glue), config_path)
   rm(config_template, current_env)
 
-  # Define wd
+  # Set working directory to GLOBIOM root and ensure that a Condor sub directory for run logs exists
   setwd(WD)
+  if (!dir.exists('Condor')) dir.create("Condor")
 
   # Submit run to Limpopo and retrieve the run's Condor cluster number on completion
   rc <- system(str_glue("Rscript --vanilla {cd}/Condor_run_R/Condor_run.R {config_path}"))
@@ -180,16 +179,13 @@ run_downscaling <- function(cd)
     'HOST_REGEXP = "^limpopo"',
     'REQUEST_MEMORY = 2500',
     'REQUEST_CPUS = 1',
-    '#GAMS_CURDIR = "Model"',
     'GAMS_FILE_PATH = "1_downscaling_tmp.gms"',
     'GAMS_VERSION = "32.2"',
     'GAMS_ARGUMENTS = "//nsim=\'%1\'"',
-    '#BUNDLE_INCLUDE = "Model"',
     'BUNDLE_INCLUDE_DIRS = c("include")',
     'BUNDLE_EXCLUDE_DIRS = c(".git", ".svn", "225*", "doc")',
     'BUNDLE_EXCLUDE_FILES = c("**/*.~*", "**/*.log", "**/*.log~*", "**/*.lxi", "**/*.lst")',
     'BUNDLE_ADDITIONAL_FILES = c()',
-    'RETAIN_BUNDLE = FALSE',
     'G00_OUTPUT_DIR = "t"',
     'G00_OUTPUT_FILE = "d1_out.g00"',
     'GET_G00_OUTPUT = FALSE',
@@ -198,7 +194,6 @@ run_downscaling <- function(cd)
     'GET_GDX_OUTPUT = TRUE',
     'MERGE_GDX_OUTPUT = TRUE',
     'WAIT_FOR_RUN_COMPLETION = TRUE',
-    'NICE_USER = FALSE',
     'CLUSTER_NUMBER_LOG = "{cluster_number_log}"'
   )
   config_path <- file.path(TEMP_DIR, "config_down.R")
