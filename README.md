@@ -55,6 +55,6 @@ The notebook depends on:
 
 ## Running the notebook
 
-Open `GLOBIOM-G4M-link.Rmd` in RStudio and, read the instructions contained in the notebook, and run the chunks. Typically, you will run the chunks in first-to-last order, but if a chunk fails, you may need to re-run it.
+Double click on `GLOBIOM-G4M-link.Rproj` to open the project in RStudio. In the 'Files' tab, double click `GLOBIOM-G4M-link.Rmd` to open the notebook. Read the instructions contained in the notebook, and run its chunks. Typically, you will run the chunks in first-to-last order, but if a chunk fails, you may need to re-run it.
 
-When you run the notebook, the output HTML file (`GLOBIOM-G4M-link.nb.html`) in your working tree will be updated.
+When you run the notebook, the output HTML file (`GLOBIOM-G4M-link.nb.html`) will be updated.
