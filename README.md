@@ -8,11 +8,11 @@ Automatize the link between GLOBIOM and G4M. The stages of the link are document
 
 ## Getting set
 
-1. Clone this repository to a working directory able to hold some gigabytes. For example
-   somewhere on your H: drive. If you use the Git command line client use  
+1. Clone the repository to a working directory able to hold some gigabytes. If you use the
+   Git command line client use  
    `git clone --recursive <repository URL>`  
-   to also clone the `Condor_run_R` and `DownScale` submodules. You can obtain the repository
-   URL by clicking on the 'Code' drop-down menu at the top right of the
+   to also clone the `Condor_run_R` and `DownScale` submodules. You can access the repository
+   URL and other clone options by clicking on the 'Code' drop-down menu at the top right of the
    [GitHub repository page](https://github.com/iiasa/GLOBIOM-G4M-link).
 2. Check that the `Condor_run_R` and `DownScale` subdirectories have content. If not, the
    clone did not clone the Git submodule that lives there. To still get it, with the command
