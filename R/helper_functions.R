@@ -20,37 +20,37 @@ batch_extract_tib <- function(items,files=NULL,gdxs=NULL){
 
 # Merge gdx files if not set in the sample_config file
 merge_gdx <- function(PROJECT,WD,c_nr){
-  
+
   prior_wd <- getwd()
   # Set wd to gdx folder
-  
+
   setwd(WD)
-  
+
   merge_args <- c()
   merge_args <- c(merge_args, str_glue("output_",PROJECT,"_",c_nr,".*.gdx"))
   merge_args <- c(merge_args, str_glue("output=output_",PROJECT,"_",c_nr,"_merged.gdx"))
-  
+
   # Invoke GDX merge
-  
+
   error_code <- tryCatch(
     system2("gdxmerge", args=merge_args),
     error=function(e) e
   )
-  
+
   if(error_code != 0){
     setwd(prior_wd)
     stop("Bad return from gams")
   }
-  
+
   setwd(prior_wd)
-  
+
 }
 
 
 # Merge gdx files from downscaling according to the scenario number
 merge_gdx_down <- function(wd_out,s_list,s_cnt,c_nr,path_out){
   prior_wd <- getwd()
-  
+
   setwd(wd_out)
   s_list <-  sprintf("%06d", s_list)
   merge_args <- c()
@@ -58,16 +58,16 @@ merge_gdx_down <- function(wd_out,s_list,s_cnt,c_nr,path_out){
   merge_args <- c(merge_args, str_glue(str_glue("output=",path_out,"output_landcover_",PROJECT,"_",s_cnt,"_merged.gdx")))
 
   # Invoke GDX merge
-  
+
   error_code <- tryCatch(
     system2("gdxmerge", args=merge_args),
     error=function(e) e
   )
-  
+
   if(error_code != 0){
     setwd(prior_wd)
     stop("Bad return from gams")
   }
-  
+
   setwd(prior_wd)
 }
