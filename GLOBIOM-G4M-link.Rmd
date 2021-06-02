@@ -8,7 +8,7 @@ date: "`r format(Sys.time(), '%d %B %Y')`"
 output: html_notebook
 ---
 
-For an introduction and requirements, [read the README](https://github.com/iiasa/GLOBIOM-G4M-link/blob/main/README.md). To run the link, load this notebook in RStudio, read the documentation before each chunk, and run the chunks in first-to-last order. You can have RStudio run all chunks in one go, but to configure and test your setup---and because some chunks take a long time to run---it is advisable to start out by running chunks one-by-one at least until you have verified that everything is working smoothly.
+For an introduction and requirements, [read the README](https://github.com/iiasa/GLOBIOM-G4M-link/blob/main/README.md). Run the code chunks in first-to-last order. You can have RStudio run all chunks in one go, but to configure and test your setup---and because some chunks take a long time to run---it is advisable to start out by running chunks one-by-one at least until you have verified that everything is working smoothly.
 
 Carefully check the output of each chunk for errors, and if present make adjustments and re-run the chunk that failed.
 
@@ -20,26 +20,23 @@ adapted copy will be checked against the defaults.
 ```{r}
 # Remove any objects from active environment and read the default configuration
 rm(list=ls())
-source("R/default_configuration.R")
+source("R/configuration/default.R")
 
 # Collect the names and types of the default config parameters
 config_names <- ls()
 if (length(config_names) == 0) {stop("Default configuration is absent! Please restore the default configuration. It is required for configuration checking, also when providing a separate configuration file.")}
 config_types <- lapply(lapply(config_names, get), typeof)
 # Can now add to the active environment
+source("R/configuration/optional.R")
 
 # Point to the customized configuration file
-configuration_file <- "R/configuration.R"
+configuration_file <- "R/configuration/custom.R"
 
 # Load packages
 library(gdxrrw)
 library(gdxtools)
 suppressWarnings(library(tidyverse))
 library(stringr)
-
-# Presence of configuraiton settings is obligatory other than for the settings listed here
-OPTIONAL_CONFIG_SETTINGS <- c(
-)
 
 # Remove mandatory config defaults from the global scope
 rm(list=config_names[!(config_names %in% OPTIONAL_CONFIG_SETTINGS)])
