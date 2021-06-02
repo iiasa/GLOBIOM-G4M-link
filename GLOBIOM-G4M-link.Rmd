@@ -12,13 +12,10 @@ For an introduction and requirements, [read the README](https://github.com/iiasa
 
 Carefully check the output of each chunk for errors, and if present make adjustments and re-run the chunk that failed.
 
-The repository includes a default configuration file `R/default_configuration.R`. To adjust the configuration to your requirements, copy the default configuration file to a new file at `R/configuration.R` and edit that copy. Your
-adapted copy will be checked against the defaults.
-
-## Process the configuration
+## Read the default configuration and list of optional configuration settings
 
 ```{r}
-# Remove any objects from active environment and read the default configuration
+# Remove any objects from environment and read the default configuration
 rm(list=ls())
 source("R/configuration/default.R")
 
@@ -26,23 +23,40 @@ source("R/configuration/default.R")
 config_names <- ls()
 if (length(config_names) == 0) {stop("Default configuration is absent! Please restore the default configuration. It is required for configuration checking, also when providing a separate configuration file.")}
 config_types <- lapply(lapply(config_names, get), typeof)
-# Can now add to the active environment
+
+# Read list of optional config settings and remove mandatory settings form the environment
 source("R/configuration/optional.R")
+rm(list=config_names[!(config_names %in% OPTIONAL_CONFIG_SETTINGS)])
+```
 
-# Point to the customized configuration file
-configuration_file <- "R/configuration/custom.R"
+## Load required packages
 
-# Load packages
+```{r}
 library(gdxrrw)
 library(gdxtools)
 suppressWarnings(library(tidyverse))
 library(stringr)
+library(fs)
+```
 
-# Remove mandatory config defaults from the global scope
-rm(list=config_names[!(config_names %in% OPTIONAL_CONFIG_SETTINGS)])
+## Customize configuration
 
-# Source the config file, should add mandatory config settings to the global scope
-source(configuration_file, local=TRUE, echo=FALSE)
+```{r}
+custom_configuration_file <- "R/configuration/custom.R"
+
+# Check that custom configuraiton exists, edit a new one otherwise.
+if (!fs::file_exists(custom_configuration_file)) {
+  warning("Custom configuration file missing, please customize.")
+  fs::file_copy("R/configuration/default.R", custom_configuration_file)
+  rstudioapi::navigateToFile(custom_configuration_file)
+}
+```
+
+## Load custom configuration settings and check them against the default settings.
+
+```{r}
+# Source the custom config file, should add mandatory config settings to the environment
+source(custom_configuration_file, local=TRUE, echo=FALSE)
 
 # Check that all config settings exist, this catches mandatory settings missing in the config file
 for (i in seq_along(config_names))  {
