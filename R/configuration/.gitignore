@@ -1,0 +1,7 @@
+# Ignore everything in this directory
+*
+
+# But not these files....
+!.gitignore
+!default.R
+!optional.R
