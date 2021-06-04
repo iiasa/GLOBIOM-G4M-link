@@ -6,7 +6,7 @@
 #-------------------------------------------------------------------------------
 
 # Limpopo scenario configuration - may include all sample_config options
-WD_GLOBIOM = "GLOBIOM" # working directory for GLOBIOM relative to current path
+WD_GLOBIOM = "GLOBIOM" # optional, working directory for GLOBIOM relative to current path
 PROJECT = "test_EPA" # project name
 SCENARIOS = "0" # scenarios to run
 MERGE_GDX = TRUE # merge gdx output on limpopo
@@ -22,7 +22,7 @@ REGIONAL_AG = "ggi" # regional aggregation level
 PATH_FOR_DOWNSCALING = "H:/Downscaling/Model/input/" # path to save gdx for downscaling
 
 # Downscaling configuration
-WD_DOWNSCALING = "DownScale" # working directory for downscaling relative to current path
+WD_DOWNSCALING = "DownScale" # optional, working directory for downscaling relative to current path
 MERGE_GDX_DOWNSCALING = TRUE # merge all gdx outputs on limpopo
 GDX_OUTPUT_NAME = "downscaled" # prefix of downscaled gdx file
 MERGE_REGIONS = FALSE # merge gdx locally by scenario
