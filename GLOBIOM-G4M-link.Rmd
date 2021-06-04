@@ -8,7 +8,7 @@ date: "`r format(Sys.time(), '%d %B %Y')`"
 output: html_notebook
 ---
 
-For an introduction and requirements, [read the README](https://github.com/iiasa/GLOBIOM-G4M-link/blob/main/README.md). Run the code chunks in first-to-last order. You can have RStudio run all chunks in one go, but to configure and test your setup---and because some chunks take a long time to run---it is advisable to start out by running chunks one-by-one at least until you have verified that everything is working smoothly.
+Before using this notebook, please first read the [introductory documentation](https://iiasa.github.io/GLOBIOM-G4M-link). Run the code chunks in first-to-last order. You can have RStudio run all chunks in one go, but to configure and test your setup---and because some chunks take a long time to run---it is advisable to start out by running chunks one-by-one at least until you have verified that everything is working smoothly.
 
 Carefully check the output of each chunk for errors, and if present make adjustments and re-run the chunk that failed.
 
