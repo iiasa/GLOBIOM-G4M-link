@@ -35,7 +35,7 @@ rm(list=config_names[!(config_names %in% OPTIONAL_CONFIG_SETTINGS)])
 library(gdxrrw)
 library(gdxtools)
 suppressWarnings(library(tidyverse))
-library(stringr)
+library(stringr) # part of the tidyverse, but not attached by default
 library(fs)
 ```
 
@@ -70,6 +70,14 @@ for (i in seq_along(config_names))  {
   ) stop(str_glue("{name} set to wrong type in {configuration_file}, type should be {config_types[[i]]}"))
 }
 rm(config_names, config_types)
+```
+
+## Check that submodules and a GLOBIOM branch are available
+
+```{r}
+if (!file_exists(path("Condor_run_R", "Condor_run.R"))) stop ("Condor_run_R submodule content is missing!")
+if (!file_exists(path(WD_DOWNSCALING, "README.md"))) stop ("DownScaling submodule content is missing!")
+if (!dir_exists(path(WD_GLOBIOM, "Model"))) stop ("No GLOBIOM branch has been checked out!")
 ```
 
 ## Set up directories and functions
