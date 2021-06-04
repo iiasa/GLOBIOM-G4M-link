@@ -40,6 +40,7 @@ Automatize the link between GLOBIOM and G4M. The stages of the link are document
 
 The notebook depends on:
 - The [tidyverse](https://www.tidyverse.org/) curated R package collection.
+- [**fs**](https://fs.r-lib.org/), for smooth file system handling.
 - [**gdxrrw**](https://github.com/GAMS-dev/gdxrrw), an R package for
   reading/writing GDX files from R. For a list of which binary package versions
   match what R versions, see the [**gdxrrw** wiki](https://github.com/GAMS-dev/gdxrrw/wiki).
