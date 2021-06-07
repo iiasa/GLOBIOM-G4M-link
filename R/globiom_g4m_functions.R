@@ -186,11 +186,14 @@ run_postproc_initial <- function(WD)
 
 #' Function to edit the downscaling script according to scenarios and project
 
-edit_downscaling <- function(cd)
+edit_downscaling <- function(WD)
 {
 
+  setwd(WD)
+  
   # Configure downscaling script
-  tempString <- read_lines(str_glue("./",WD_DOWNSCALING,"/1_downscaling.gms"))
+  tempString <- read_lines("./1_downscaling.gms")
+  
   if (!any(str_detect(tempString,"%system.dirSep%"))) {
     tempString <- c("$setLocal X %system.dirSep%",tempString)
   }
@@ -200,8 +203,9 @@ edit_downscaling <- function(cd)
   tempString <- string_replace(tempString,"execute_unload[:print:]+",str_glue("execute_unload 'gdx%X%",GDX_OUTPUT_NAME, ".gdx',"))
 
    # Save file
-  write_lines(tempString,str_glue("./",WD_DOWNSCALING,"/1_downscaling_tmp.gms"))
-
+  write_lines(tempString,"./1_downscaling_tmp.gms")
+  
+  setwd(cd)
 }
 
 #' Function to transfer the downscaling output to G4M folder. Merges the downscaled
