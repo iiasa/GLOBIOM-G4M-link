@@ -99,7 +99,15 @@ source("R/helper_functions.R")
 
 ```{r}
 # Run GLOBIOM
-run_globiom_initial(cd)
+
+# Set wd 
+WD <- path_wd(WD_GLOBIOM)
+
+# Run GLOBIOM scenarios
+call_condor_run(WD)
+
+# Edit and run post-processing script
+run_postproc_initial(WD)
 
 print("Initial GLOBIOM run complete.")
 ```
@@ -110,7 +118,17 @@ print("Initial GLOBIOM run complete.")
 if (!file_exists(path(WD_DOWNSCALING,"input",str_glue("output_landcover_{PROJECT}_{DATE_LABEL}.gdx"))))
   stop("File for downscaling not found! Please call the intial GLOBIOM run before downscaling")
 
-run_downscaling(cd)
+# Set wd 
+WD <- path_wd(WD_DOWNSCALING)
+
+# Edit Downscaling script
+edit_downscaling(WD)
+
+# Run Dwonscaling scenarios
+call_condor_run(WD)
+
+# Transfer outputs to G4M folder
+merge_and_transfer(WD)
 
 print("Initial downscaling complete")
 ```
@@ -127,7 +145,8 @@ if (!file_exists(path(PATH_FOR_G4M,str_glue("{GDX_OUTPUT_NAME}_output_{PROJECT}_
 ## TODO: Perform the final GLOBIOM run - needs data from the G4M run
 
 ```{r}
-# Run GLOBIOM
+# Edit and run post-processing script
+run_postproc_final
 ```
 
 ## TODO: Perform the final downscaling - needs data from the final GLOBIOM run
