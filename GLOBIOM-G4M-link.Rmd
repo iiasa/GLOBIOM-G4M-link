@@ -21,7 +21,6 @@ source("R/configuration/default.R")
 
 # Collect the names and types of the default config parameters
 config_names <- ls()
-if (length(config_names) == 0) {stop("Default configuration is absent! Please restore the default configuration. It is required for configuration checking, also when providing a separate configuration file.")}
 config_types <- lapply(lapply(config_names, get), typeof)
 
 # Read list of optional config settings and remove mandatory settings form the environment
