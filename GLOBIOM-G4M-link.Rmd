@@ -51,7 +51,7 @@ if (!file_exists(custom_configuration_file)) {
 }
 ```
 
-## Load custom configuration settings and check them against the default settings.
+## Load custom configuration settings and check them against the default settings
 
 ```{r}
 # Source the custom config file, should add mandatory config settings to the environment
@@ -124,13 +124,16 @@ WD <- path_wd(WD_DOWNSCALING)
 # Edit Downscaling script
 edit_downscaling(WD)
 
-# Run Dwonscaling scenarios
+# Run Downscaling scenarios
 call_condor_run(WD)
 
-# Transfer outputs to G4M folder
-merge_and_transfer(WD)
-
 print("Initial downscaling complete")
+```
+
+## Merge downscaling outputs and transfer them to G4M
+
+```{r}
+merge_and_transfer(WD)
 ```
 
 ## TODO: Run G4M - needs data from the intial downscaling
