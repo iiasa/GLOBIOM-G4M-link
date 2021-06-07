@@ -5,18 +5,18 @@
 
 
 #' Perform the initial GLOBIOM scenarios or Downscaling run. The function submits the
-#' desired scenarios for parallel execution on Limpopo. 
+#' desired scenarios for parallel execution on Limpopo.
 
 call_condor_run <- function(WD){
-  
-  dowscaling_run <- any(str_detect(WD,WD_DOWNSCALING))
+
+  downscaling_run <- any(str_detect(WD,WD_DOWNSCALING))
 
   # Configure and run scenarios using Condor_run.R
-  
-  if (!dowscaling_run) {
-    
+
+  if (!downscaling_run) {
+
   cluster_number_log <- path(TEMP_DIR, "cluster_number.log")
-  
+
   config_template <- c(
     'EXPERIMENT = "{PROJECT}"',
     'PREFIX = "_globiom"',
@@ -44,15 +44,15 @@ call_condor_run <- function(WD){
     'WAIT_FOR_RUN_COMPLETION = TRUE',
     'CLUSTER_NUMBER_LOG = "{cluster_number_log}"'
   )
-  
+
   config_path <- path(TEMP_DIR, "config_glob.R")
-  
+
   } else {
-    
+
     # Define list of scenarios and predict downscaling scenarios
     scenario_mapping <- rep(0:max(eval(parse(text=SCENARIOS_FOR_DOWNSCALING))),each=RESOLUTION_DOWNSCALING)
-    
-    # Define dwoscaling scenarios for limpopo run
+
+    # Define downscaling scenarios for limpopo run
     scen_string <- "c("
     for (i in 1: length(SCENARIOS_FOR_DOWNSCALING)){
       scenarios_idx <- which(scenario_mapping %in% SCENARIOS_FOR_DOWNSCALING[i]) - 1
@@ -60,9 +60,9 @@ call_condor_run <- function(WD){
         scen_string <- str_glue(scen_string,",",str_glue(min(scenarios_idx),":",max(scenarios_idx)))}
     }
     scen_string <- str_glue(scen_string,")")
-    
+
     cluster_number_log <- path(TEMP_DIR, "cluster_number.log")
-    
+
     config_template <- c(
       'EXPERIMENT = "{PROJECT}"',
       'PREFIX = "_globiom"',
@@ -89,18 +89,18 @@ call_condor_run <- function(WD){
     )
     config_path <- file.path(TEMP_DIR, "config_down.R")
   }
-  
+
   current_env <- environment()
   write_lines(lapply(config_template, .envir=current_env, str_glue), config_path)
   rm(config_template, current_env)
-  
-  # Set working directory to GLOBIOM or Downscaling root 
+
+  # Set working directory to GLOBIOM or Downscaling root
   setwd(WD)
-  
+
   # Ensure that a sub directories for run logs and outputs exist
   if (!dir_exists('Condor')) dir_create("Condor")
-  
-  if (dowscaling_run) {
+
+  if (downscaling_run) {
     if (!dir_exists('gdx')) dir_create("gdx")
     if (!dir_exists('output')) dir_create("output")
     if (!dir_exists('t')) dir_create("t")
@@ -110,23 +110,23 @@ call_condor_run <- function(WD){
   rc <- system(str_glue("Rscript --vanilla {cd}/Condor_run_R/Condor_run.R {config_path}"))
   if (rc != 0) stop("GLOBIOM parallel Condor run on Limpopo failed!")
   cluster_nr <- readr::parse_number(read_file(cluster_number_log))
-  
+
   # Back to prior dir
   setwd(cd)
 }
 
 
 
-#' Function to edit the post-processing script 8_merge_ouput, to match the current 
+#' Function to edit the post-processing script 8_merge_ouput, to match the current
 #' project and label, and export its #' outputs to the Downscaling folder for further processing
 
 run_postproc_initial <- function(WD)
 {
   setwd(WD)
-  
+
   # create output path string
   path_for_g4m2 <- str_replace_all(PATH_FOR_G4M,"/","%X%")
-  
+
   # Configure merged output file
   tempString <- read_lines("./Model/8_merge_output.gms")
   tempString <- string_replace(tempString,"\\$set\\s+limpopo\\s+[:print:]+",str_glue("$set limpopo ",LIMPOPO_RUN))
@@ -140,31 +140,31 @@ run_postproc_initial <- function(WD)
   tempString <- string_replace(tempString,"\\$set\\s+g4mfile\\s+[:print:]+",str_glue("$set g4mfile ",G4M_FEEDBACK_FILE))
   tempString <- string_replace(tempString,"\\$set\\s+regionagg\\s+[:print:]+",str_glue("$set regionagg ",REGIONAL_AG))
   tempString <- string_replace(tempString,"\\$include\\s+8a_rep_g4m","$include 8a_rep_g4m_tmp")
-  
+
   # Save file
   write_lines(tempString, "./Model/8_merge_output_tmp.gms")
-  
+
   # Point gdx output to downscaling folder
   tempString <- read_lines("./Model/8a_rep_g4m.gms")
-  
+
   # Create downscaling input folder if absent
   if (!dir_exists(path(str_glue(cd,"/",WD_DOWNSCALING,"/input/")))) dir_create(path(str_glue(cd,"/",WD_DOWNSCALING,"/input/")))
-  
+
   path_for_downscaling2 <- str_replace_all(str_glue(cd,"/",WD_DOWNSCALING,"/input/"),"/","%X%")
-  
+
   tempString <- str_replace(tempString,"execute_unload[:print:]+output_landcover[:print:]+",
                             str_glue("execute_unload \"",path_for_downscaling2,"output_landcover_%project%_%lab%\"LANDCOVER_COMPARE_SCEN, LUC_COMPARE_SCEN0, Price_compare2,MacroScen, IEA_SCEN, BioenScen, ScenYear, REGION, COUNTRY,REGION_MAP"))
-  
+
   tempString <- str_replace(tempString,"execute_unload[:print:]+output_globiom4g4mm[:print:]+",
                             str_glue("execute_unload \"",path_for_g4m2,"output_globiom4g4mm_%project%_%lab%\" G4Mm_SupplyResidues, G4Mm_SupplyWood, G4Mm_Wood_price, G4Mm_LandRent,G4Mm_CO2PRICE, MacroScen, IEA_SCEN, BioenScen, ScenYear"))
-  
+
   # Save file
   write_lines(tempString, "./Model/8a_rep_g4m_tmp.gms")
-  
+
   # Change wd to run post-processing file
   wd_model <- str_glue(WD,"/Model/")
   setwd(wd_model)
-  
+
   # Run post-processing script
   rc <- tryCatch(
     system("gams 8_merge_output_tmp.gms"),
@@ -174,10 +174,10 @@ run_postproc_initial <- function(WD)
     setwd(WD)
     stop("Bad return from gams")
   }
-  
+
   #Back to prior wd
   setwd(cd)
-  
+
 }
 
 # Create condor configuration file
@@ -210,12 +210,12 @@ edit_downscaling <- function(cd)
 merge_and_transfer <- function(WD){
   # Transfer gdx to G4M folder - in case files were merged on limpopo
   if (MERGE_GDX_DOWNSCALING){
-    
+
     # Save merged output to G4M folder
     f <- str_glue(WD,"/gdx/downscaled_{PROJECT}_{cluster_nr}_merged.gdx")
     file_copy(f,str_glue(PATH_FOR_G4M,"downscaled_output_{PROJECT}_{DATE_LABEL}.gdx"),overwrite = TRUE)
   }
-  
+
   if (!MERGE_GDX_DOWNSCALING & MERGE_REGIONS){
     for (i in 1:length(SCENARIOS_FOR_DOWNSCALING)){
       scenarios_idx <- which(scenario_mapping %in% SCENARIOS_FOR_DOWNSCALING[i]) - 1
@@ -223,12 +223,12 @@ merge_and_transfer <- function(WD){
                      SCENARIOS_FOR_DOWNSCALING[i],cluster_nr,PATH_FOR_G4M)
     }
   }
-  
+
   setwd(cd)
 }
 
 
-#' Final post-processing. The function reads, edits and executes the 
+#' Final post-processing. The function reads, edits and executes the
 #' 8_merged_output.gms script #' to generate reports for IAMC
 #'
 run_postproc_final <- function(WD){
