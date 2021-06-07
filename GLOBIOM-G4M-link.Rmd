@@ -44,10 +44,10 @@ library(fs)
 ```{r}
 custom_configuration_file <- "R/configuration/custom.R"
 
-# Check that custom configuraiton exists, edit a new one otherwise.
-if (!fs::file_exists(custom_configuration_file)) {
+# Check that custom configuration exists, edit a new one otherwise.
+if (!file_exists(custom_configuration_file)) {
   warning("Custom configuration file missing, please customize.")
-  fs::file_copy("R/configuration/default.R", custom_configuration_file)
+  file_copy("R/configuration/default.R", custom_configuration_file)
   rstudioapi::navigateToFile(custom_configuration_file)
 }
 ```
@@ -74,6 +74,8 @@ rm(config_names, config_types)
 
 ## Check that submodules and a GLOBIOM branch are available
 
+When executing this chunk fails, [read this](https://iiasa.github.io/GLOBIOM-G4M-link/#getting-set).
+
 ```{r}
 if (!file_exists(path("Condor_run_R", "Condor_run.R"))) stop ("Condor_run_R submodule content is missing!")
 if (!file_exists(path(WD_DOWNSCALING, "README.md"))) stop ("DownScaling submodule content is missing!")
@@ -83,15 +85,11 @@ if (!dir_exists(path(WD_GLOBIOM, "Model"))) stop ("No GLOBIOM branch has been ch
 ## Set up directories and functions
 
 ```{r}
-
 # Cache working directory
 cd <- getwd()
 
-# Determine temporary directory for this R session
-td <- tempdir()
-fsep <- ifelse(str_detect(td, fixed("\\") ), "\\", ".Platform$file.sep") # Get the platform file separator: .Platform$file.sep is set to / on Windows
-TEMP_DIR <- str_replace_all(td, fixed(fsep), .Platform$file.sep)
-rm(td, fsep)
+# Canonicalize path to temporary directory for this R session
+TEMP_DIR <- path(tempdir())
 
 # Source support functions
 source("R/globiom_g4m_functions.R")
@@ -110,7 +108,8 @@ print("Initial GLOBIOM run complete.")
 ## Perform the initial downscaling - needs data from the initial GLOBIOM run
 
 ```{r}
-if (!file.exists(str_glue(WD_DOWNSCALING,"/input/","output_landcover_",PROJECT,"_",DATE_LABEL,".gdx"))) stop("File for downscaling not found! Please call the intial GLOBIOM run before downscaling")
+if (!file_exists(path(WD_DOWNSCALING,"input",str_glue("output_landcover_{PROJECT}_{DATE_LABEL}.gdx"))))
+  stop("File for downscaling not found! Please call the intial GLOBIOM run before downscaling")
 
 run_downscaling(cd)
 
@@ -120,7 +119,8 @@ print("Initial downscaling complete")
 ## TODO: Run G4M - needs data from the intial downscaling
 
 ```{r}
-if (!file.exists(str_glue(PATH_FOR_G4M,"/",GDX_OUTPUT_NAME,"_output_",PROJECT,"_",DATE_LABEL))) stop("File for G4M run not found! Please call the intial downscaling before the G4M run")
+if (!file_exists(path(PATH_FOR_G4M,str_glue("{GDX_OUTPUT_NAME}_output_{PROJECT}_{DATE_LABEL}"))))
+  stop("File for G4M run not found! Please call the intial downscaling before the G4M run")
     
 # Run G4M
 ```
