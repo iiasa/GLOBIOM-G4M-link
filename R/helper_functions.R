@@ -76,10 +76,9 @@ merge_gdx_down <- function(wd_out,s_list,s_cnt,c_nr,path_out){
 # Search and replace function for adapting GLOBIOM scripts
 string_replace <- function(full_str,search_str,replace_str){
   # Search and replace using stringr
-  if (any(str_detect(full_str,search_str))) {
-    return(str_replace(full_str,search_str,replace_str))
+  if (any(str_detect(full_str,regex(search_str,ignore_case = T)))) {
+    return(str_replace(full_str,regex(search_str,ignore_case = T),replace_str))
   } else {
     stop("Pattern not found, file configuration failed")
   }
-
 }
