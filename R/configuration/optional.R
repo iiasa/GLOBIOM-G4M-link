@@ -2,5 +2,5 @@
 # other than for the settings listed here
 OPTIONAL_CONFIG_SETTINGS <- c(
   "WD_DOWNSCALING",
-  "WD_GLOBIOM",
+  "WD_GLOBIOM"
 )
