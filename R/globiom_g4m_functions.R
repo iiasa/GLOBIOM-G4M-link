@@ -147,12 +147,12 @@ run_postproc_initial <- function(wd, cluster_nr)
   tempString <- read_lines("./Model/8a_rep_g4m.gms")
 
   # Create downscaling input folder if absent
-  if (!dir_exists(path(str_glue(CD,"/",WD_DOWNSCALING,"/input/")))) dir_create(path(str_glue(CD,"/",WD_DOWNSCALING,"/input/")))
+  if (!dir_exists(path(CD,"/",WD_DOWNSCALING,"/input/"))) dir_create(path(CD,"/",WD_DOWNSCALING,"/input/"))
  
   # Create G4M output folder if absent
   if (!dir_exists(PATH_FOR_G4M)) dir_create(PATH_FOR_G4M)
   
-  path_for_downscaling2 <- str_replace_all(str_glue(CD,"/",WD_DOWNSCALING,"/input/"),"/","%X%")
+  path_for_downscaling2 <- str_replace_all(path(CD,"/",WD_DOWNSCALING,"/input/"),"/","%X%")
 
   tempString <- str_replace(tempString,"execute_unload[:print:]+output_landcover[:print:]+",
                             str_glue("execute_unload \"",path_for_downscaling2,"output_landcover_%project%_%lab%\"LANDCOVER_COMPARE_SCEN, LUC_COMPARE_SCEN0, Price_compare2,MacroScen, IEA_SCEN, BioenScen, ScenYear, REGION, COUNTRY,REGION_MAP"))
@@ -164,7 +164,7 @@ run_postproc_initial <- function(wd, cluster_nr)
   write_lines(tempString, "./Model/8a_rep_g4m_tmp.gms")
 
   # Change wd to run post-processing file
-  wd_model <- str_glue(wd,"/Model/")
+  wd_model <- path(wd,"/Model/")
   setwd(wd_model)
 
   # Run post-processing script
@@ -279,13 +279,13 @@ run_postproc_final <- function(wd){
   # Create scenario mapping string
   for (i in 1:length(scen)){
 
-    if (i==1) map_string <- str_glue(scen[i]," . ", scen_globiom_map[i,macro_idx], " . ",
-                                     scen_globiom_map[i,bioen_idx], " . ",scen_globiom_map[i,iea_idx])
+    if (i==1) { map_string <- str_glue(scen[i]," . ", scen_globiom_map[i,macro_idx], " . ",
+                                     scen_globiom_map[i,bioen_idx], " . ",scen_globiom_map[i,iea_idx]) } else {
     map_string <- c(map_string,str_glue(scen[i]," . ", scen_globiom_map[i,macro_idx], " . ",
-                                        scen_globiom_map[i,bioen_idx], " . ",scen_globiom_map[i,iea_idx]))
+                                        scen_globiom_map[i,bioen_idx], " . ",scen_globiom_map[i,iea_idx]))}
   }
 
-
+  
   # Define sets for mapping
   g4m_globiom_map <- c("SETS","G4MScen2","/",scen,"/","","G4M_SCEN_MAP(G4MScen2,*,*,*)",
                   "/",map_string,"/",";")
@@ -304,7 +304,7 @@ run_postproc_final <- function(wd){
   write_lines(tempString, "./Model/8c_rep_iamc_g4m_tmp.gms")
 
   # Change wd to run post-processing file
-  wd_model <- str_glue(wd,"/Model/")
+  wd_model <- path(wd,"/Model/")
   setwd(wd_model)
 
   # Run post-processing script
