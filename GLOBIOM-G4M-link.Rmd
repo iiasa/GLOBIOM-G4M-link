@@ -86,6 +86,7 @@ if (!dir_exists(path(WD_GLOBIOM, "Model"))) stop ("No GLOBIOM branch has been ch
 ```{r}
 # Cache working directory
 CD <- path(dirname(rstudioapi::getSourceEditorContext()$path))
+setwd(CD)
 
 # Canonicalize path to temporary directory for this R session
 TEMP_DIR <- path(tempdir())
