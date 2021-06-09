@@ -13,7 +13,7 @@ MERGE_GDX = TRUE # merge gdx output on limpopo
 
 # Post-processing script configuration (8_merged_output)
 LIMPOPO_RUN = "yes" # Run on limpopo yes/no
-RESOLUTION = "region37" # Set GLOBIOM region "resolution"
+#RESOLUTION = "region37" # Set GLOBIOM region "resolution"
 DATE_LABEL = format(Sys.Date(), "%d%m%Y") # Date of run
 REPORTING_G4M = "yes" #Reporting to G4M yes/no
 REPORTING_IAMC = "yes" #Reporting to IAMC yes/no
