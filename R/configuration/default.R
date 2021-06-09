@@ -26,7 +26,7 @@ WD_DOWNSCALING = "DownScale" # optional, working directory for downscaling relat
 MERGE_GDX_DOWNSCALING = TRUE # merge all gdx outputs on limpopo
 GDX_OUTPUT_NAME = "downscaled" # prefix of downscaled gdx file
 MERGE_REGIONS = FALSE # merge gdx locally by scenario
-PATH_FOR_G4M = "H:/Downscaling/Model/output/" # path to save gdx for G4M run
+PATH_FOR_G4M = "H:/Downscaling/Model/G4M/output/" # path to save gdx for G4M run, not yet known - meanwhile use an absolute path
 SCENARIOS_FOR_DOWNSCALING = "0" # full set or subset of scenarios defined previously
 RESOLUTION_DOWNSCALING = 37 # number of regions specified in the downscaling
 
