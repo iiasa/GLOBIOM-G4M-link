@@ -85,7 +85,7 @@ if (!dir_exists(path(WD_GLOBIOM, "Model"))) stop ("No GLOBIOM branch has been ch
 
 ```{r}
 # Cache working directory
-cd <- getwd()
+CD <- path(dirname(rstudioapi::getSourceEditorContext()$path))
 
 # Canonicalize path to temporary directory for this R session
 TEMP_DIR <- path(tempdir())
@@ -99,10 +99,10 @@ source("R/helper_functions.R")
 
 ```{r}
 # Set wd 
-WD <- path_wd(WD_GLOBIOM)
+wd <- path_wd(WD_GLOBIOM)
 
 # Run GLOBIOM scenarios
-cluster_nr <- call_condor_run(WD)
+cluster_nr <- call_condor_run(wd)
 
 print("Initial GLOBIOM run complete.")
 ```
@@ -110,7 +110,8 @@ print("Initial GLOBIOM run complete.")
 ## Edit and run post-processing script
 
 ```{r}
-run_postproc_initial(WD, cluster_nr)
+
+run_postproc_initial(wd, cluster_nr)
 
 ```
 
@@ -121,13 +122,13 @@ if (!file_exists(path(WD_DOWNSCALING,"input",str_glue("output_landcover_{PROJECT
   stop("File for downscaling not found! Please call the intial GLOBIOM run before downscaling")
 
 # Set wd 
-WD <- path_wd(WD_DOWNSCALING)
+wd <- path_wd(WD_DOWNSCALING)
 
 # Edit Downscaling script
-edit_downscaling(WD)
+edit_downscaling(wd)
 
 # Run Downscaling scenarios
-call_condor_run(WD)
+cluster_nr <- call_condor_run(wd)
 
 print("Initial downscaling complete")
 ```
@@ -135,7 +136,7 @@ print("Initial downscaling complete")
 ## Merge downscaling outputs and transfer them to G4M
 
 ```{r}
-merge_and_transfer(WD)
+merge_and_transfer(wd,cluster_nr)
 ```
 
 ## TODO: Run G4M - needs data from the intial downscaling
@@ -151,7 +152,9 @@ if (!file_exists(path(PATH_FOR_G4M,str_glue("{GDX_OUTPUT_NAME}_output_{PROJECT}_
 
 ```{r}
 # Edit and run post-processing script
-run_postproc_final
+# Set wd 
+wd <- path_wd(WD_GLOBIOM)
+run_postproc_final(wd)
 ```
 
 ## TODO: Perform the final downscaling - needs data from the final GLOBIOM run
