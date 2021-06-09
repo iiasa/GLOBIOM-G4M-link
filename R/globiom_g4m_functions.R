@@ -7,9 +7,9 @@
 #' Perform the initial GLOBIOM scenarios or Downscaling run. The function submits the
 #' desired scenarios for parallel execution on Limpopo.
 
-call_condor_run <- function(WD){
+call_condor_run <- function(wd){
 
-  downscaling_run <- any(str_detect(WD,WD_DOWNSCALING))
+  downscaling_run <- any(str_detect(wd,WD_DOWNSCALING))
 
   # Configure and run scenarios using Condor_run.R
 
@@ -95,7 +95,7 @@ call_condor_run <- function(WD){
   rm(config_template, current_env)
 
   # Set working directory to GLOBIOM or Downscaling root
-  setwd(WD)
+  setwd(wd)
 
   # Ensure that a sub directories for run logs and outputs exist
   if (!dir_exists('Condor')) dir_create("Condor")
@@ -107,12 +107,12 @@ call_condor_run <- function(WD){
   }
 
     # Submit run to Limpopo and retrieve the run's Condor cluster number on completion
-  rc <- system(str_glue("Rscript --vanilla {cd}/Condor_run_R/Condor_run.R {config_path}"))
+  rc <- system(str_glue("Rscript --vanilla {CD}/Condor_run_R/Condor_run.R {config_path}"))
   if (rc != 0) stop("GLOBIOM parallel Condor run on Limpopo failed!")
   cluster_nr <- readr::parse_number(read_file(cluster_number_log))
 
   # Back to prior dir
-  setwd(cd)
+  setwd(CD)
 
   return(cluster_nr)
 }
@@ -120,9 +120,9 @@ call_condor_run <- function(WD){
 #' Function to edit the post-processing script 8_merge_output, to match the current
 #' project and label, and export its #' outputs to the Downscaling folder for further processing
 
-run_postproc_initial <- function(WD, cluster_nr)
+run_postproc_initial <- function(wd, cluster_nr)
 {
-  setwd(WD)
+  setwd(wd)
 
   # create output path string
   path_for_g4m2 <- str_replace_all(PATH_FOR_G4M,"/","%X%")
@@ -132,7 +132,6 @@ run_postproc_initial <- function(WD, cluster_nr)
   tempString <- string_replace(tempString,"\\$set\\s+limpopo\\s+[:print:]+",str_glue("$set limpopo ",LIMPOPO_RUN))
   tempString <- string_replace(tempString,"\\$set\\s+limpopo_nr\\s+[:print:]+",str_glue("$set limpopo_nr ",cluster_nr))
   tempString <- string_replace(tempString,"\\$set\\s+project\\s+[:print:]+",str_glue("$set project {PROJECT}"))
-  tempString <- string_replace(tempString,"\\$set\\s+region\\s+[:print:]+",str_glue("$set region ",RESOLUTION))
   tempString <- string_replace(tempString,"\\$set\\s+lab\\s+[:print:]+",str_glue("$set lab ",DATE_LABEL))
   tempString <- string_replace(tempString,"\\$set\\s+rep_g4m\\s+[:print:]+",str_glue("$set rep_g4m ",REPORTING_G4M))
   tempString <- string_replace(tempString,"\\$set\\s+rep_iamc_glo\\s+[:print:]+",str_glue("$set rep_iamc_glo ",REPORTING_IAMC))
@@ -148,9 +147,12 @@ run_postproc_initial <- function(WD, cluster_nr)
   tempString <- read_lines("./Model/8a_rep_g4m.gms")
 
   # Create downscaling input folder if absent
-  if (!dir_exists(path(str_glue(cd,"/",WD_DOWNSCALING,"/input/")))) dir_create(path(str_glue(cd,"/",WD_DOWNSCALING,"/input/")))
-
-  path_for_downscaling2 <- str_replace_all(str_glue(cd,"/",WD_DOWNSCALING,"/input/"),"/","%X%")
+  if (!dir_exists(path(str_glue(CD,"/",WD_DOWNSCALING,"/input/")))) dir_create(path(str_glue(CD,"/",WD_DOWNSCALING,"/input/")))
+ 
+  # Create G4M output folder if absent
+  if (!dir_exists(PATH_FOR_G4M)) dir_create(PATH_FOR_G4M)
+  
+  path_for_downscaling2 <- str_replace_all(str_glue(CD,"/",WD_DOWNSCALING,"/input/"),"/","%X%")
 
   tempString <- str_replace(tempString,"execute_unload[:print:]+output_landcover[:print:]+",
                             str_glue("execute_unload \"",path_for_downscaling2,"output_landcover_%project%_%lab%\"LANDCOVER_COMPARE_SCEN, LUC_COMPARE_SCEN0, Price_compare2,MacroScen, IEA_SCEN, BioenScen, ScenYear, REGION, COUNTRY,REGION_MAP"))
@@ -162,7 +164,7 @@ run_postproc_initial <- function(WD, cluster_nr)
   write_lines(tempString, "./Model/8a_rep_g4m_tmp.gms")
 
   # Change wd to run post-processing file
-  wd_model <- str_glue(WD,"/Model/")
+  wd_model <- str_glue(wd,"/Model/")
   setwd(wd_model)
 
   # Run post-processing script
@@ -171,12 +173,12 @@ run_postproc_initial <- function(WD, cluster_nr)
     error=function(e) e
   )
   if(rc != 0){
-    setwd(WD)
+    setwd(CD)
     stop("Bad return from gams")
   }
 
   #Back to prior wd
-  setwd(cd)
+  setwd(CD)
 
 }
 
@@ -186,10 +188,10 @@ run_postproc_initial <- function(WD, cluster_nr)
 
 #' Function to edit the downscaling script according to scenarios and project
 
-edit_downscaling <- function(WD)
+edit_downscaling <- function(wd)
 {
 
-  setwd(WD)
+  setwd(wd)
 
   # Configure downscaling script
   tempString <- read_lines("./1_downscaling.gms")
@@ -205,18 +207,18 @@ edit_downscaling <- function(WD)
    # Save file
   write_lines(tempString,"./1_downscaling_tmp.gms")
 
-  setwd(cd)
+  setwd(CD)
 }
 
 #' Function to transfer the downscaling output to G4M folder. Merges the downscaled
 #' regions if required
 
-merge_and_transfer <- function(WD){
+merge_and_transfer <- function(wd,cluster_nr){
   # Transfer gdx to G4M folder - in case files were merged on limpopo
   if (MERGE_GDX_DOWNSCALING){
 
     # Save merged output to G4M folder
-    f <- str_glue(WD,"/gdx/downscaled_{PROJECT}_{cluster_nr}_merged.gdx")
+    f <- str_glue(wd,"/gdx/downscaled_{PROJECT}_{cluster_nr}_merged.gdx")
     file_copy(f,str_glue(PATH_FOR_G4M,"downscaled_output_{PROJECT}_{DATE_LABEL}.gdx"),overwrite = TRUE)
   }
 
@@ -228,17 +230,17 @@ merge_and_transfer <- function(WD){
     }
   }
 
-  setwd(cd)
+  setwd(CD)
 }
 
 
 #' Final post-processing. The function reads, edits and executes the
 #' 8_merged_output.gms script #' to generate reports for IAMC
 #'
-run_postproc_final <- function(WD){
+run_postproc_final <- function(wd){
 
   # Define wd
-  setwd(WD)
+  setwd(wd)
 
   # Configure merged output file
   tempString <- read_lines("./Model/8_merge_output_tmp.gms")
@@ -246,7 +248,7 @@ run_postproc_final <- function(WD){
   tempString <- string_replace(tempString,"\\$set\\s+rep_iamc_glo\\s+[:print:]+",str_glue("$set rep_iamc_glo ",REPORTING_IAMC_FINAL))
   tempString <- string_replace(tempString,"\\$set\\s+rep_iamc_g4m\\s+[:print:]+",str_glue("$set rep_iamc_g4m ",REPORTING_IAMC_G4M_FINAL))
   tempString <- string_replace(tempString,"\\$set\\s+g4mfile\\s+[:print:]+",str_glue("$set g4mfile ",G4M_FEEDBACK_FILE))
-  tempString <- string_replace(tempString,"\\$include\\s+8c_rep_iamc_g4m","$include 8c_rep_iamc_g4m_tmp")
+  tempString <- string_replace(tempString,"\\$include\\s+8c_rep_iamc_g4m.gms","$include 8c_rep_iamc_g4m_tmp.gms")
 
   # Save file
   write_lines(tempString, "./Model/8_merge_output_tmp.gms")
@@ -261,7 +263,8 @@ run_postproc_final <- function(WD){
 
   # Split G4M scenarios into GLOBIOM dimensions
   scen_globiom_map <- str_split_fixed(scen,"__",3)
-
+  
+  
   # Check if scenario name must be treated as string
   if (any(str_detect(scen,"%"))) special_char <- TRUE
   if(special_char)  scen <- unlist(lapply(scen,function(x) str_glue("\"",x,"\"")))
@@ -289,19 +292,19 @@ run_postproc_final <- function(WD){
 
   # Configure merged output file
   tempString <- read_file("./Model/8c_rep_iamc_g4m.gms")
-  tempString <- str_replace(tempString,regex('SET[[:print:]*|[\r\n]*]*G4M_SCEN_MAP[[:print:]*|[\r\n]*]*/[\r\n\\s]+;'),
+  tempString <- str_replace(tempString,regex('SET[[:print:]*|[\r\n]*]*G4M_SCEN_MAP[[:print:]*|[\r\n]*]*/[\r\n\\s]+;',ignore_case = T),
                             str_c(g4m_globiom_map,collapse="\n"))
 
   path_for_feedback2 <- str_replace_all(PATH_FOR_FEEDBACK,"/","%X%")
 
-  tempString <- str_replace(tempString,"\\$include\\s+[:print:]*X[:print:]*",
+  tempString <- string_replace(tempString,"\\$include\\s+[:print:]*X[:print:]*",
                            str_glue("$include ",path_for_feedback2,G4M_FEEDBACK_FILE))
 
   # Save file
   write_lines(tempString, "./Model/8c_rep_iamc_g4m_tmp.gms")
 
   # Change wd to run post-processing file
-  wd_model <- str_glue(WD,"Model/")
+  wd_model <- str_glue(wd,"/Model/")
   setwd(wd_model)
 
   # Run post-processing script
@@ -310,11 +313,11 @@ run_postproc_final <- function(WD){
     error=function(e) e
   )
   if(rc != 0){
-    setwd(WD)
+    setwd(CD)
     stop("Bad return from gams")
   }
 
   # Return to previous wd
-  setwd(cd)
+  setwd(CD)
 }
 
