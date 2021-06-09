@@ -98,18 +98,20 @@ source("R/helper_functions.R")
 ## Perform the initial GLOBIOM run
 
 ```{r}
-# Run GLOBIOM
-
 # Set wd 
 WD <- path_wd(WD_GLOBIOM)
 
 # Run GLOBIOM scenarios
-call_condor_run(WD)
-
-# Edit and run post-processing script
-run_postproc_initial(WD)
+cluster_nr <- call_condor_run(WD)
 
 print("Initial GLOBIOM run complete.")
+```
+
+## Edit and run post-processing script
+
+```{r}
+run_postproc_initial(WD, cluster_nr)
+
 ```
 
 ## Perform the initial downscaling - needs data from the initial GLOBIOM run

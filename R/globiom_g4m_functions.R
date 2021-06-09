@@ -113,14 +113,14 @@ call_condor_run <- function(WD){
 
   # Back to prior dir
   setwd(cd)
+
+  return(cluster_nr)
 }
 
-
-
-#' Function to edit the post-processing script 8_merge_ouput, to match the current
+#' Function to edit the post-processing script 8_merge_output, to match the current
 #' project and label, and export its #' outputs to the Downscaling folder for further processing
 
-run_postproc_initial <- function(WD)
+run_postproc_initial <- function(WD, cluster_nr)
 {
   setwd(WD)
 
@@ -190,10 +190,10 @@ edit_downscaling <- function(WD)
 {
 
   setwd(WD)
-  
+
   # Configure downscaling script
   tempString <- read_lines("./1_downscaling.gms")
-  
+
   if (!any(str_detect(tempString,"%system.dirSep%"))) {
     tempString <- c("$setLocal X %system.dirSep%",tempString)
   }
@@ -204,7 +204,7 @@ edit_downscaling <- function(WD)
 
    # Save file
   write_lines(tempString,"./1_downscaling_tmp.gms")
-  
+
   setwd(cd)
 }
 
