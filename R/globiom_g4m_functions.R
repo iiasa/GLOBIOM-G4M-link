@@ -287,17 +287,17 @@ run_postproc_final <- function(wd){
 
   
   # Define sets for mapping
-  g4m_globiom_map <- c("SETS","G4MScen2","/",scen,"/","","G4M_SCEN_MAP(G4MScen2,*,*,*)",
+  g4m_globiom_map <- c("G4MScen2","/",scen,"/","","G4M_SCEN_MAP(G4MScen2,*,*,*)",
                   "/",map_string,"/",";")
 
   # Configure merged output file
   tempString <- read_file("./Model/8c_rep_iamc_g4m.gms")
-  tempString <- str_replace(tempString,regex('SET[[:print:]*|[\r\n]*]*G4M_SCEN_MAP[[:print:]*|[\r\n]*]*/[\r\n\\s]+;',ignore_case = T),
+  tempString <- str_replace(tempString,regex('G4MScen2[[:print:]*|[\r\n]*]*G4M_SCEN_MAP[[:print:]*|[\r\n]*]*/[\r\n\\s]+;',ignore_case = T),
                             str_c(g4m_globiom_map,collapse="\n"))
 
   path_for_feedback2 <- str_replace_all(PATH_FOR_FEEDBACK,"/","%X%")
 
-  tempString <- string_replace(tempString,"\\$include\\s+[:print:]*X[:print:]*",
+  tempString <- str_replace(tempString,"\\$include\\s+[:print:]*X[:print:]*",
                            str_glue("$include ",path_for_feedback2,G4M_FEEDBACK_FILE))
 
   # Save file
