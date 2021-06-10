@@ -152,7 +152,7 @@ run_postproc_initial <- function(wd, cluster_nr)
   # Create G4M output folder if absent
   if (!dir_exists(PATH_FOR_G4M)) dir_create(PATH_FOR_G4M)
   
-  path_for_downscaling2 <- str_replace_all(path(CD,"/",WD_DOWNSCALING,"/input/"),"/","%X%")
+  path_for_downscaling2 <- str_glue(str_replace_all(path(CD,"/",WD_DOWNSCALING,"/input/"),"/","%X%"),"%X%")
 
   tempString <- str_replace(tempString,"execute_unload[:print:]+output_landcover[:print:]+",
                             str_glue("execute_unload \"",path_for_downscaling2,"output_landcover_%project%_%lab%\"LANDCOVER_COMPARE_SCEN, LUC_COMPARE_SCEN0, Price_compare2,MacroScen, IEA_SCEN, BioenScen, ScenYear, REGION, COUNTRY,REGION_MAP"))
@@ -248,7 +248,7 @@ run_postproc_final <- function(wd){
   tempString <- string_replace(tempString,"\\$set\\s+rep_iamc_glo\\s+[:print:]+",str_glue("$set rep_iamc_glo ",REPORTING_IAMC_FINAL))
   tempString <- string_replace(tempString,"\\$set\\s+rep_iamc_g4m\\s+[:print:]+",str_glue("$set rep_iamc_g4m ",REPORTING_IAMC_G4M_FINAL))
   tempString <- string_replace(tempString,"\\$set\\s+g4mfile\\s+[:print:]+",str_glue("$set g4mfile ",G4M_FEEDBACK_FILE))
-  tempString <- string_replace(tempString,"\\$include\\s+8c_rep_iamc_g4m.gms","$include 8c_rep_iamc_g4m_tmp.gms")
+  if (!any(str_detect(tempString,"8c_rep_iamc_g4m_tmp.gms"))) tempString <- string_replace(tempString,"\\$include\\s+8c_rep_iamc_g4m.gms","$include 8c_rep_iamc_g4m_tmp.gms")
 
   # Save file
   write_lines(tempString, "./Model/8_merge_output_tmp.gms")
@@ -292,12 +292,12 @@ run_postproc_final <- function(wd){
 
   # Configure merged output file
   tempString <- read_file("./Model/8c_rep_iamc_g4m.gms")
-  tempString <- str_replace(tempString,regex('G4MScen2[[:print:]*|[\r\n]*]*G4M_SCEN_MAP[[:print:]*|[\r\n]*]*/[\r\n\\s]+;',ignore_case = T),
+  tempString <- string_replace(tempString,regex('G4MScen2[[:print:]*|[\r\n]*]*G4M_SCEN_MAP[[:print:]*|[\r\n]*]*/[\r\n\\s]+;'),
                             str_c(g4m_globiom_map,collapse="\n"))
 
   path_for_feedback2 <- str_replace_all(PATH_FOR_FEEDBACK,"/","%X%")
 
-  tempString <- str_replace(tempString,"\\$include\\s+[:print:]*X[:print:]*",
+  tempString <- string_replace(tempString,"\\$include\\s+[:print:]*X[:print:]*",
                            str_glue("$include ",path_for_feedback2,G4M_FEEDBACK_FILE))
 
   # Save file
