@@ -12,7 +12,7 @@
 <meta name="author" content="Andrey L. D. Augustynczik" />
 <meta name="author" content="Albert Brouwer" />
 
-<meta name="date" content="2021-05-28" />
+<meta name="date" content="2021-06-11" />
 
 <title>GLOBIOM-G4M-link</title>
 
@@ -216,48 +216,101 @@ pre code {
 <h3 class="subtitle">R notebook for automatizing the link between GLOBIOM and G4M.</h3>
 <h4 class="author">Andrey L. D. Augustynczik</h4>
 <h4 class="author">Albert Brouwer</h4>
-<h4 class="date">28 May 2021</h4>
+<h4 class="date">11 June 2021</h4>
 
 </div>
 
 
 <!-- rnb-text-begin -->
-<p>To run the link, load this notebook in RStudio, read the documentation before each chunk, and run the chunks in first-to-last order. You can have RStudio run all chunks in one go, but to configure and test your setup—and because some chunks take a long time to run—it is advisable to start out by running chunks one-by-one at least until you have verified that everything is working smoothly.</p>
+<p>Before using this notebook, please first read the <a href="https://iiasa.github.io/GLOBIOM-G4M-link">introductory documentation</a>. Run the code chunks in first-to-last order. You can have RStudio run all chunks in one go, but to configure and test your setup—and because some chunks take a long time to run—it is advisable to start out by running chunks one-by-one at least until you have verified that everything is working smoothly.</p>
 <p>Carefully check the output of each chunk for errors, and if present make adjustments and re-run the chunk that failed.</p>
-<p>The repository includes a default configuration file <code>R/default_configuration.R</code>. To adjust the configuration to your requirements, copy the default configuration file to a new file at <code>R/configuration.R</code> and edit that copy. Your adapted copy will be checked against the defaults.</p>
-<div id="process-the-configuration" class="section level2">
-<h2>Process the configuration</h2>
+<div id="read-the-default-configuration-and-list-of-optional-configuration-settings" class="section level2">
+<h2>Read the default configuration and list of optional configuration settings</h2>
 <!-- rnb-text-end -->
 <!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuIyBSZW1vdmUgYW55IG9iamVjdHMgZnJvbSBhY3RpdmUgZW52aXJvbm1lbnQgYW5kIHJlYWQgdGhlIGRlZmF1bHQgY29uZmlndXJhdGlvblxucm0obGlzdD1scygpKVxuc291cmNlKFwiUi9kZWZhdWx0X2NvbmZpZ3VyYXRpb24uUlwiKVxuXG4jIENvbGxlY3QgdGhlIG5hbWVzIGFuZCB0eXBlcyBvZiB0aGUgZGVmYXVsdCBjb25maWcgcGFyYW1ldGVyc1xuY29uZmlnX25hbWVzIDwtIGxzKClcbmlmIChsZW5ndGgoY29uZmlnX25hbWVzKSA9PSAwKSB7c3RvcChcIkRlZmF1bHQgY29uZmlndXJhdGlvbiBpcyBhYnNlbnQhIFBsZWFzZSByZXN0b3JlIHRoZSBkZWZhdWx0IGNvbmZpZ3VyYXRpb24uIEl0IGlzIHJlcXVpcmVkIGZvciBjb25maWd1cmF0aW9uIGNoZWNraW5nLCBhbHNvIHdoZW4gcHJvdmlkaW5nIGEgc2VwYXJhdGUgY29uZmlndXJhdGlvbiBmaWxlLlwiKX1cbmNvbmZpZ190eXBlcyA8LSBsYXBwbHkobGFwcGx5KGNvbmZpZ19uYW1lcywgZ2V0KSwgdHlwZW9mKVxuIyBDYW4gbm93IGFkZCB0byB0aGUgYWN0aXZlIGVudmlyb25tZW50XG5cbiMgUG9pbnQgdG8gdGhlIGN1c3RvbWl6ZWQgY29uZmlndXJhdGlvbiBmaWxlXG5jb25maWd1cmF0aW9uX2ZpbGUgPC0gXCJSL2NvbmZpZ3VyYXRpb24uUlwiXG5cbiMgTG9hZCBwYWNrYWdlc1xubGlicmFyeShnZHhycncpXG5saWJyYXJ5KGdkeHRvb2xzKVxuc3VwcHJlc3NXYXJuaW5ncyhsaWJyYXJ5KHRpZHl2ZXJzZSkpXG5saWJyYXJ5KHN0cmluZ3IpXG5cbiMgUHJlc2VuY2Ugb2YgY29uZmlndXJhaXRvbiBzZXR0aW5ncyBpcyBvYmxpZ2F0b3J5IG90aGVyIHRoYW4gZm9yIHRoZSBzZXR0aW5ncyBsaXN0ZWQgaGVyZVxuT1BUSU9OQUxfQ09ORklHX1NFVFRJTkdTIDwtIGMoXG4pXG5cbiMgUmVtb3ZlIG1hbmRhdG9yeSBjb25maWcgZGVmYXVsdHMgZnJvbSB0aGUgZ2xvYmFsIHNjb3BlXG5ybShsaXN0PWNvbmZpZ19uYW1lc1shKGNvbmZpZ19uYW1lcyAlaW4lIE9QVElPTkFMX0NPTkZJR19TRVRUSU5HUyldKVxuXG4jIFNvdXJjZSB0aGUgY29uZmlnIGZpbGUsIHNob3VsZCBhZGQgbWFuZGF0b3J5IGNvbmZpZyBzZXR0aW5ncyB0byB0aGUgZ2xvYmFsIHNjb3BlXG5zb3VyY2UoY29uZmlndXJhdGlvbl9maWxlLCBsb2NhbD1UUlVFLCBlY2hvPUZBTFNFKVxuXG4jIENoZWNrIHRoYXQgYWxsIGNvbmZpZyBzZXR0aW5ncyBleGlzdCwgdGhpcyBjYXRjaGVzIG1hbmRhdG9yeSBzZXR0aW5ncyBtaXNzaW5nIGluIHRoZSBjb25maWcgZmlsZVxuZm9yIChpIGluIHNlcV9hbG9uZyhjb25maWdfbmFtZXMpKSAge1xuICBuYW1lIDwtIGNvbmZpZ19uYW1lc1tpXVxuICBpZiAoIWV4aXN0cyhuYW1lKSkgc3RvcChzdHJfZ2x1ZShcIk1hbmRhdG9yeSBjb25maWcgc2V0dGluZyB7bmFtZX0gaXMgbm90IHNldCBpbiBjb25maWcgZmlsZSB7YXJnc1sxXX0hXCIpKVxuICB0eXBlIDwtIHR5cGVvZihnZXQobmFtZSkpXG4gIGlmICh0eXBlICE9IGNvbmZpZ190eXBlc1tbaV1dICYmXG4gICAgICBuYW1lICE9IFwiUkVTT0xVVElPTl9ET1dOU0NBTElOR1wiICYmICMgUiBoYXMgbm8gc3RhYmxlIG51bWVyaWNhbCB0eXBlXG4gICAgICB0eXBlICE9IFwiTlVMTFwiICYmICMgYWxsb3cgZm9yIGNvbmZpZ3VyZWQgdmVjdG9yIGJlaW5nIGVtcHR5XG4gICAgICBjb25maWdfdHlwZXNbW2ldXSAhPSBcIk5VTExcIiAjIGFsbG93IGZvciBkZWZhdWx0IHZlY3RvciBiZWluZyBlbXB0eVxuICApIHN0b3Aoc3RyX2dsdWUoXCJ7bmFtZX0gc2V0IHRvIHdyb25nIHR5cGUgaW4ge2NvbmZpZ3VyYXRpb25fZmlsZX0sIHR5cGUgc2hvdWxkIGJlIHtjb25maWdfdHlwZXNbW2ldXX1cIikpXG59XG5ybShjb25maWdfbmFtZXMsIGNvbmZpZ190eXBlcylcbmBgYCJ9 -->
-<pre class="r"><code># Remove any objects from active environment and read the default configuration
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuIyBSZW1vdmUgYW55IG9iamVjdHMgZnJvbSBlbnZpcm9ubWVudCBhbmQgcmVhZCB0aGUgZGVmYXVsdCBjb25maWd1cmF0aW9uXG5ybShsaXN0PWxzKCkpXG5zb3VyY2UoXCJSL2NvbmZpZ3VyYXRpb24vZGVmYXVsdC5SXCIpXG5cbiMgQ29sbGVjdCB0aGUgbmFtZXMgYW5kIHR5cGVzIG9mIHRoZSBkZWZhdWx0IGNvbmZpZyBwYXJhbWV0ZXJzXG5jb25maWdfbmFtZXMgPC0gbHMoKVxuY29uZmlnX3R5cGVzIDwtIGxhcHBseShsYXBwbHkoY29uZmlnX25hbWVzLCBnZXQpLCB0eXBlb2YpXG5cbiMgUmVhZCBsaXN0IG9mIG9wdGlvbmFsIGNvbmZpZyBzZXR0aW5ncyBhbmQgcmVtb3ZlIG1hbmRhdG9yeSBzZXR0aW5ncyBmb3JtIHRoZSBlbnZpcm9ubWVudFxuc291cmNlKFwiUi9jb25maWd1cmF0aW9uL29wdGlvbmFsLlJcIilcbnJtKGxpc3Q9Y29uZmlnX25hbWVzWyEoY29uZmlnX25hbWVzICVpbiUgT1BUSU9OQUxfQ09ORklHX1NFVFRJTkdTKV0pXG5gYGAifQ== -->
+<pre class="r"><code># Remove any objects from environment and read the default configuration
 rm(list=ls())
-source(&quot;R/default_configuration.R&quot;)
+source(&quot;R/configuration/default.R&quot;)
 
 # Collect the names and types of the default config parameters
 config_names &lt;- ls()
-if (length(config_names) == 0) {stop(&quot;Default configuration is absent! Please restore the default configuration. It is required for configuration checking, also when providing a separate configuration file.&quot;)}
 config_types &lt;- lapply(lapply(config_names, get), typeof)
-# Can now add to the active environment
 
-# Point to the customized configuration file
-configuration_file &lt;- &quot;R/configuration.R&quot;
+# Read list of optional config settings and remove mandatory settings form the environment
+source(&quot;R/configuration/optional.R&quot;)
+rm(list=config_names[!(config_names %in% OPTIONAL_CONFIG_SETTINGS)])</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+</div>
+<div id="load-required-packages" class="section level2">
+<h2>Load required packages</h2>
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxubGlicmFyeShnZHhycncpXG5saWJyYXJ5KGdkeHRvb2xzKVxuYGBgIn0= -->
+<pre class="r"><code>library(gdxrrw)
+library(gdxtools)</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-output-begin eyJkYXRhIjoiZ2R4dG9vbHMgMC42LjBcbkdEWCBsaWJyYXJ5IGxvYWQgcGF0aDogQzpcXEdBTVNcXDM0XG5cbkF0dGFjaGluZyBwYWNrYWdlOiDjpLzjuLFnZHh0b29sc+OkvOO4slxuXG5UaGUgZm9sbG93aW5nIG9iamVjdHMgYXJlIG1hc2tlZCBmcm9tIOOkvOO4sXBhY2thZ2U6Z2R4cnJ346S847iyOlxuXG4gICAgZ2FtcywgZ2R4SW5mbywgaWdkeCwgcmdkeCwgcmdkeC5wYXJhbSwgcmdkeC5zY2FsYXIsIHJnZHguc2V0LCB3Z2R4XG4ifQ== -->
+<pre><code>gdxtools 0.6.0
+GDX library load path: C:\GAMS\34
 
-# Load packages
-library(gdxrrw)
-library(gdxtools)
-suppressWarnings(library(tidyverse))
-library(stringr)
+Attaching package: 㤼㸱gdxtools㤼㸲
 
-# Presence of configuraiton settings is obligatory other than for the settings listed here
-OPTIONAL_CONFIG_SETTINGS &lt;- c(
-)
+The following objects are masked from 㤼㸱package:gdxrrw㤼㸲:
 
-# Remove mandatory config defaults from the global scope
-rm(list=config_names[!(config_names %in% OPTIONAL_CONFIG_SETTINGS)])
+    gams, gdxInfo, igdx, rgdx, rgdx.param, rgdx.scalar, rgdx.set, wgdx</code></pre>
+<!-- rnb-output-end -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuc3VwcHJlc3NXYXJuaW5ncyhsaWJyYXJ5KHRpZHl2ZXJzZSkpXG5gYGAifQ== -->
+<pre class="r"><code>suppressWarnings(library(tidyverse))</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-output-begin eyJkYXRhIjoiUmVnaXN0ZXJlZCBTMyBtZXRob2RzIG92ZXJ3cml0dGVuIGJ5ICdkYnBseXInOlxuICBtZXRob2QgICAgICAgICBmcm9tXG4gIHByaW50LnRibF9sYXp5ICAgICBcbiAgcHJpbnQudGJsX3NxbCAgICAgIFxuLS0gQXR0YWNoaW5nIHBhY2thZ2VzIC0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0gdGlkeXZlcnNlIDEuMy4wIC0tXG52IGdncGxvdDIgMy4zLjIgICAgIHYgcHVycnIgICAwLjMuNFxudiB0aWJibGUgIDMuMC40ICAgICB2IGRwbHlyICAgMS4wLjJcbnYgdGlkeXIgICAxLjEuMiAgICAgdiBzdHJpbmdyIDEuNC4wXG52IHJlYWRyICAgMS40LjAgICAgIHYgZm9yY2F0cyAwLjUuMFxuLS0gQ29uZmxpY3RzIC0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0gdGlkeXZlcnNlX2NvbmZsaWN0cygpIC0tXG54IHRpZHlyOjpleHRyYWN0KCkgbWFza3MgZ2R4dG9vbHM6OmV4dHJhY3QoKVxueCBkcGx5cjo6ZmlsdGVyKCkgIG1hc2tzIHN0YXRzOjpmaWx0ZXIoKVxueCBkcGx5cjo6bGFnKCkgICAgIG1hc2tzIHN0YXRzOjpsYWcoKVxuIn0= -->
+<pre><code>Registered S3 methods overwritten by &#39;dbplyr&#39;:
+  method         from
+  print.tbl_lazy     
+  print.tbl_sql      
+-- Attaching packages ------------------------------------------------------- tidyverse 1.3.0 --
+v ggplot2 3.3.2     v purrr   0.3.4
+v tibble  3.0.4     v dplyr   1.0.2
+v tidyr   1.1.2     v stringr 1.4.0
+v readr   1.4.0     v forcats 0.5.0
+-- Conflicts ---------------------------------------------------------- tidyverse_conflicts() --
+x tidyr::extract() masks gdxtools::extract()
+x dplyr::filter()  masks stats::filter()
+x dplyr::lag()     masks stats::lag()</code></pre>
+<!-- rnb-output-end -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxubGlicmFyeShzdHJpbmdyKSAjIHBhcnQgb2YgdGhlIHRpZHl2ZXJzZSwgYnV0IG5vdCBhdHRhY2hlZCBieSBkZWZhdWx0XG5saWJyYXJ5KGZzKVxuYGBgIn0= -->
+<pre class="r"><code>library(stringr) # part of the tidyverse, but not attached by default
+library(fs)</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+</div>
+<div id="customize-configuration" class="section level2">
+<h2>Customize configuration</h2>
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuY3VzdG9tX2NvbmZpZ3VyYXRpb25fZmlsZSA8LSBcIlIvY29uZmlndXJhdGlvbi9jdXN0b20uUlwiXG5cbiMgQ2hlY2sgdGhhdCBjdXN0b20gY29uZmlndXJhdGlvbiBleGlzdHMsIGVkaXQgYSBuZXcgb25lIG90aGVyd2lzZS5cbmlmICghZmlsZV9leGlzdHMoY3VzdG9tX2NvbmZpZ3VyYXRpb25fZmlsZSkpIHtcbiAgd2FybmluZyhcIkN1c3RvbSBjb25maWd1cmF0aW9uIGZpbGUgbWlzc2luZywgcGxlYXNlIGN1c3RvbWl6ZS5cIilcbiAgZmlsZV9jb3B5KFwiUi9jb25maWd1cmF0aW9uL2RlZmF1bHQuUlwiLCBjdXN0b21fY29uZmlndXJhdGlvbl9maWxlKVxuICByc3R1ZGlvYXBpOjpuYXZpZ2F0ZVRvRmlsZShjdXN0b21fY29uZmlndXJhdGlvbl9maWxlKVxufVxuYGBgIn0= -->
+<pre class="r"><code>custom_configuration_file &lt;- &quot;R/configuration/custom.R&quot;
 
-# Source the config file, should add mandatory config settings to the global scope
-source(configuration_file, local=TRUE, echo=FALSE)
+# Check that custom configuration exists, edit a new one otherwise.
+if (!file_exists(custom_configuration_file)) {
+  warning(&quot;Custom configuration file missing, please customize.&quot;)
+  file_copy(&quot;R/configuration/default.R&quot;, custom_configuration_file)
+  rstudioapi::navigateToFile(custom_configuration_file)
+}</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+</div>
+<div id="load-custom-configuration-settings-and-check-them-against-the-default-settings" class="section level2">
+<h2>Load custom configuration settings and check them against the default settings</h2>
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuIyBTb3VyY2UgdGhlIGN1c3RvbSBjb25maWcgZmlsZSwgc2hvdWxkIGFkZCBtYW5kYXRvcnkgY29uZmlnIHNldHRpbmdzIHRvIHRoZSBlbnZpcm9ubWVudFxuc291cmNlKGN1c3RvbV9jb25maWd1cmF0aW9uX2ZpbGUsIGxvY2FsPVRSVUUsIGVjaG89RkFMU0UpXG5cbiMgQ2hlY2sgdGhhdCBhbGwgY29uZmlnIHNldHRpbmdzIGV4aXN0LCB0aGlzIGNhdGNoZXMgbWFuZGF0b3J5IHNldHRpbmdzIG1pc3NpbmcgaW4gdGhlIGNvbmZpZyBmaWxlXG5mb3IgKGkgaW4gc2VxX2Fsb25nKGNvbmZpZ19uYW1lcykpICB7XG4gIG5hbWUgPC0gY29uZmlnX25hbWVzW2ldXG4gIGlmICghZXhpc3RzKG5hbWUpKSBzdG9wKHN0cl9nbHVlKFwiTWFuZGF0b3J5IGNvbmZpZyBzZXR0aW5nIHtuYW1lfSBpcyBub3Qgc2V0IGluIGNvbmZpZyBmaWxlIHthcmdzWzFdfSFcIikpXG4gIHR5cGUgPC0gdHlwZW9mKGdldChuYW1lKSlcbiAgaWYgKHR5cGUgIT0gY29uZmlnX3R5cGVzW1tpXV0gJiZcbiAgICAgIG5hbWUgIT0gXCJSRVNPTFVUSU9OX0RPV05TQ0FMSU5HXCIgJiYgIyBSIGhhcyBubyBzdGFibGUgbnVtZXJpY2FsIHR5cGVcbiAgICAgIHR5cGUgIT0gXCJOVUxMXCIgJiYgIyBhbGxvdyBmb3IgY29uZmlndXJlZCB2ZWN0b3IgYmVpbmcgZW1wdHlcbiAgICAgIGNvbmZpZ190eXBlc1tbaV1dICE9IFwiTlVMTFwiICMgYWxsb3cgZm9yIGRlZmF1bHQgdmVjdG9yIGJlaW5nIGVtcHR5XG4gICkgc3RvcChzdHJfZ2x1ZShcIntuYW1lfSBzZXQgdG8gd3JvbmcgdHlwZSBpbiB7Y29uZmlndXJhdGlvbl9maWxlfSwgdHlwZSBzaG91bGQgYmUge2NvbmZpZ190eXBlc1tbaV1dfVwiKSlcbn1cbnJtKGNvbmZpZ19uYW1lcywgY29uZmlnX3R5cGVzKVxuYGBgIn0= -->
+<pre class="r"><code># Source the custom config file, should add mandatory config settings to the environment
+source(custom_configuration_file, local=TRUE, echo=FALSE)
 
 # Check that all config settings exist, this catches mandatory settings missing in the config file
 for (i in seq_along(config_names))  {
@@ -275,20 +328,29 @@ rm(config_names, config_types)</code></pre>
 <!-- rnb-chunk-end -->
 <!-- rnb-text-begin -->
 </div>
+<div id="check-that-submodules-and-a-globiom-branch-are-available" class="section level2">
+<h2>Check that submodules and a GLOBIOM branch are available</h2>
+<p>When executing this chunk fails, <a href="https://iiasa.github.io/GLOBIOM-G4M-link/#getting-set">read this</a>.</p>
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuaWYgKCFmaWxlX2V4aXN0cyhwYXRoKFwiQ29uZG9yX3J1bl9SXCIsIFwiQ29uZG9yX3J1bi5SXCIpKSkgc3RvcCAoXCJDb25kb3JfcnVuX1Igc3VibW9kdWxlIGNvbnRlbnQgaXMgbWlzc2luZyFcIilcbmlmICghZmlsZV9leGlzdHMocGF0aChXRF9ET1dOU0NBTElORywgXCJSRUFETUUubWRcIikpKSBzdG9wIChcIkRvd25TY2FsaW5nIHN1Ym1vZHVsZSBjb250ZW50IGlzIG1pc3NpbmchXCIpXG5pZiAoIWRpcl9leGlzdHMocGF0aChXRF9HTE9CSU9NLCBcIk1vZGVsXCIpKSkgc3RvcCAoXCJObyBHTE9CSU9NIGJyYW5jaCBoYXMgYmVlbiBjaGVja2VkIG91dCFcIilcbmBgYCJ9 -->
+<pre class="r"><code>if (!file_exists(path(&quot;Condor_run_R&quot;, &quot;Condor_run.R&quot;))) stop (&quot;Condor_run_R submodule content is missing!&quot;)
+if (!file_exists(path(WD_DOWNSCALING, &quot;README.md&quot;))) stop (&quot;DownScaling submodule content is missing!&quot;)
+if (!dir_exists(path(WD_GLOBIOM, &quot;Model&quot;))) stop (&quot;No GLOBIOM branch has been checked out!&quot;)</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+</div>
 <div id="set-up-directories-and-functions" class="section level2">
 <h2>Set up directories and functions</h2>
 <!-- rnb-text-end -->
 <!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuXG4jIENhY2hlIHdvcmtpbmcgZGlyZWN0b3J5XG5jZCA8LSBnZXR3ZCgpXG5cbiMgRGV0ZXJtaW5lIHRlbXBvcmFyeSBkaXJlY3RvcnkgZm9yIHRoaXMgUiBzZXNzaW9uXG50ZCA8LSB0ZW1wZGlyKClcbmZzZXAgPC0gaWZlbHNlKHN0cl9kZXRlY3QodGQsIGZpeGVkKFwiXFxcXFwiKSApLCBcIlxcXFxcIiwgXCIuUGxhdGZvcm0kZmlsZS5zZXBcIikgIyBHZXQgdGhlIHBsYXRmb3JtIGZpbGUgc2VwYXJhdG9yOiAuUGxhdGZvcm0kZmlsZS5zZXAgaXMgc2V0IHRvIC8gb24gV2luZG93c1xuVEVNUF9ESVIgPC0gc3RyX3JlcGxhY2VfYWxsKHRkLCBmaXhlZChmc2VwKSwgLlBsYXRmb3JtJGZpbGUuc2VwKVxucm0odGQsIGZzZXApXG5cbiMgU291cmNlIHN1cHBvcnQgZnVuY3Rpb25zXG5zb3VyY2UoXCJSL2dsb2Jpb21fZzRtX2Z1bmN0aW9ucy5SXCIpXG5zb3VyY2UoXCJSL2hlbHBlcl9mdW5jdGlvbnMuUlwiKVxuYGBgIn0= -->
-<pre class="r"><code>
-# Cache working directory
-cd &lt;- getwd()
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuIyBDYWNoZSB3b3JraW5nIGRpcmVjdG9yeVxuQ0QgPC0gZ2V0d2QoKVxuXG4jIENhbm9uaWNhbGl6ZSBwYXRoIHRvIHRlbXBvcmFyeSBkaXJlY3RvcnkgZm9yIHRoaXMgUiBzZXNzaW9uXG5URU1QX0RJUiA8LSBwYXRoKHRlbXBkaXIoKSlcblxuIyBTb3VyY2Ugc3VwcG9ydCBmdW5jdGlvbnNcbnNvdXJjZShcIlIvZ2xvYmlvbV9nNG1fZnVuY3Rpb25zLlJcIilcbnNvdXJjZShcIlIvaGVscGVyX2Z1bmN0aW9ucy5SXCIpXG5gYGAifQ== -->
+<pre class="r"><code># Cache working directory
+CD &lt;- getwd()
 
-# Determine temporary directory for this R session
-td &lt;- tempdir()
-fsep &lt;- ifelse(str_detect(td, fixed(&quot;\\&quot;) ), &quot;\\&quot;, &quot;.Platform$file.sep&quot;) # Get the platform file separator: .Platform$file.sep is set to / on Windows
-TEMP_DIR &lt;- str_replace_all(td, fixed(fsep), .Platform$file.sep)
-rm(td, fsep)
+# Canonicalize path to temporary directory for this R session
+TEMP_DIR &lt;- path(tempdir())
 
 # Source support functions
 source(&quot;R/globiom_g4m_functions.R&quot;)
@@ -301,12 +363,150 @@ source(&quot;R/helper_functions.R&quot;)</code></pre>
 <h2>Perform the initial GLOBIOM run</h2>
 <!-- rnb-text-end -->
 <!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuIyBSdW4gR0xPQklPTVxucnVuX2dsb2Jpb21faW5pdGlhbChjZClcblxucHJpbnQoXCJJbml0aWFsIEdMT0JJT00gcnVuIGNvbXBsZXRlLlwiKVxuYGBgIn0= -->
-<pre class="r"><code># Run GLOBIOM
-run_globiom_initial(cd)
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuIyBTZXQgd2QgXG53ZCA8LSBwYXRoX3dkKFdEX0dMT0JJT00pXG5cbiMgUnVuIEdMT0JJT00gc2NlbmFyaW9zXG5jbHVzdGVyX25yIDwtIGNhbGxfY29uZG9yX3J1bih3ZClcbmBgYCJ9 -->
+<pre class="r"><code># Set wd 
+wd &lt;- path_wd(WD_GLOBIOM)
 
-print(&quot;Initial GLOBIOM run complete.&quot;)</code></pre>
+# Run GLOBIOM scenarios
+cluster_nr &lt;- call_condor_run(wd)</code></pre>
 <!-- rnb-source-end -->
+<!-- rnb-output-begin eyJkYXRhIjoiTWFjaGluZSAgICAgICAgICAgICAgUGxhdGZvcm0gICAgICAgU2xvdHMgQ3B1cyBHcHVzICBUb3RhbEdiIEZyZUNwdSAgRnJlZUdiICBDcHVMb2FkIFNUIEpvYnMvTWluIE1heFNsb3RHYlxuXG5saW1wb3BvMS5paWFzYS5hYy5hdCB4NjQvV2luVW5rbm93biAgICAgMCAgIDMyICAgICAgICAyNTUuOTYgICAgICA4ICAgIDYzLjk5ICAgIDAuMTIgVWkgICAgIDAuMDAgKiAgICAgICAgXG5saW1wb3BvMi5paWFzYS5hYy5hdCB4NjQvV2luVW5rbm93biAgICAgMSAgIDMyICAgICAgICAyNTUuOTYgICAgICA3ICAgIDU2LjM2ICAgIDAuMDggKiogICAgIDAuMDAgICAgICA3LjYzXG5saW1wb3BvMy5paWFzYS5hYy5hdCB4NjQvV2luVW5rbm93biAgICAgMCAgIDMyICAgICAgICAyNTUuOTYgICAgICA4ICAgIDYzLjk5ICAgIDAuMDEgVWkgICAgIDAuMDAgKiAgICAgICAgXG5saW1wb3BvNC5paWFzYS5hYy5hdCB4NjQvV2luMTAgICAgICAgICAgMCAgIDMyICAgICAgICAyNTUuOTYgICAgICA4ICAgIDYzLjk5ICAgIDAuMDEgVWkgICAgIDAuMDAgKiAgICAgICAgXG5saW1wb3BvNS5paWFzYS5hYy5hdCB4NjQvV2luVW5rbm93biAgICAgMCAgIDMyICAgICAgICAyNTUuOTEgICAgICA4ICAgIDYzLjk4ICAgIDAuMDAgVWkgICAgIDAuMDAgKiAgICAgICAgXG5saW1wb3BvNi5paWFzYS5hYy5hdCB4NjQvV2luMTAgICAgICAgICAgMCAgMTI4ICAgICAgIDEwMTEuNjAgICAgIDY0ICAxMDAzLjcwICAgIDAuMDAgVWkgICAgIDAuMDAgKiAgICAgICAgXG5cbiAgICAgICAgICAgICAgIFRvdGFsIE93bmVyIENsYWltZWQgVW5jbGFpbWVkIE1hdGNoZWQgUHJlZW1wdGluZyBCYWNrZmlsbCAgRHJhaW5cblxuICAgICB4NjQvV2luMTAgICAgIDcgICAgIDAgICAgICAgMCAgICAgICAgIDcgICAgICAgMCAgICAgICAgICAwICAgICAgICAwICAgICAgMFxueDY0L1dpblVua25vd24gICAgMjIgICAgIDAgICAgICAgMiAgICAgICAgMjAgICAgICAgMCAgICAgICAgICAwICAgICAgICAwICAgICAgMFxuXG4gICAgICAgICBUb3RhbCAgICAyOSAgICAgMCAgICAgICAyICAgICAgICAyNyAgICAgICAwICAgICAgICAgIDAgICAgICAgIDAgICAgICAwXG5cbkNvbXByZXNzaW5nIG1vZGVsIGZpbGVzIGludG8gYnVuZGxlLi4uXG4xMCBmb2xkZXJzLCAyMTAgZmlsZXMsIDgyOTk2NzY4NSBieXRlcyAoNzkyIE1pQilcbkFyY2hpdmUgc2l6ZTogMTc3MTkwODk3IGJ5dGVzICgxNjkgTWlCKVxuXG5CdW5kbGluZyBhZGRpdGlvbmFsIGZpbGVzLi4uXG4xIGZpbGUsIDMxNzM0MzkyNyBieXRlcyAoMzAzIE1pQilcbkFyY2hpdmUgc2l6ZTogMjY0NDQ5MDg1IGJ5dGVzICgyNTMgTWlCKVxuXG5TdGFydGluZyB0cmFuc2ZlciBvZiBidW5kbGUgdG8gbGltcG9wbzEuXG5TdGFydGluZyB0cmFuc2ZlciBvZiBidW5kbGUgdG8gbGltcG9wbzIuXG5TdGFydGluZyB0cmFuc2ZlciBvZiBidW5kbGUgdG8gbGltcG9wbzMuXG5TdGFydGluZyB0cmFuc2ZlciBvZiBidW5kbGUgdG8gbGltcG9wbzQuXG5TdGFydGluZyB0cmFuc2ZlciBvZiBidW5kbGUgdG8gbGltcG9wbzUuXG5TdGFydGluZyB0cmFuc2ZlciBvZiBidW5kbGUgdG8gbGltcG9wbzYuXG5XYWl0aW5nIGZvciBidW5kbGUgc2VlZGluZyB0byBjb21wbGV0ZS4uLlxuNSBqb2JzOiA1IGlkbGUgKHF1ZXVlZClcbjUgam9iczogNSBydW5uaW5nXG4zIGpvYnM6IDMgcnVubmluZ1xuMSBqb2JzOiAxIHJ1bm5pbmdcbjAgam9ic1xuV2FybmluZyBtZXNzYWdlczpcbjE6IEluIHN5c3RlbTIoXCJjb25kb3JfcmVzY2hlZHVsZVwiLCBzdGRvdXQgPSBUUlVFLCBzdGRlcnIgPSBUUlVFKSA6XG4gIHJ1bm5pbmcgY29tbWFuZCAnXCJjb25kb3JfcmVzY2hlZHVsZVwiJyBoYWQgc3RhdHVzIDFcbjI6IEluIHN5c3RlbTIoXCJjb25kb3JfcmVzY2hlZHVsZVwiLCBzdGRvdXQgPSBUUlVFLCBzdGRlcnIgPSBUUlVFKSA6XG4gIHJ1bm5pbmcgY29tbWFuZCAnXCJjb25kb3JfcmVzY2hlZHVsZVwiJyBoYWQgc3RhdHVzIDFcblNlZWRpbmcgZG9uZTogZXhlY3V0ZSBob3N0cyBsaW1wb3BvMSwgbGltcG9wbzIsIGxpbXBvcG8zLCBsaW1wb3BvNCwgbGltcG9wbzUsIGxpbXBvcG82IGhhdmUgcmVjZWl2ZWQgYW5kIGNhY2hlZCB0aGUgYnVuZGxlLlxuU3VibWl0dGluZyBqb2IocykuXG4xIGpvYihzKSBzdWJtaXR0ZWQgdG8gY2x1c3RlciAzNDE3LlxuUnVuIFwidGVzdF9FUEFcIiB3aXRoIGNsdXN0ZXIgbnVtYmVyIDM0MTcgaGFzIGJlZW4gc3VibWl0dGVkLCBpdCBpcyBub3cgcG9zc2libGUgdG8gc3VibWl0IGFkZGl0aW9uYWwgcnVucyB3aGlsZSB3YWl0aW5nIGZvciBpdCB0byBjb21wbGV0ZS5cbldhaXRpbmcgZm9yIHJ1biBcInRlc3RfRVBBXCIgdG8gY29tcGxldGUuLi5cbjEgam9iczogMSBpZGxlIChxdWV1ZWQpXG4xIGpvYnM6IDEgcnVubmluZ1xuMCBqb2JzXG5BbGwgam9icyBhcmUgZG9uZS5cbk1lcmdpbmcgdGhlIHJldHVybmVkIEdEWCBmaWxlcy4uLlxuT3V0cHV0IGZpbGU6IG91dHB1dF90ZXN0X0VQQV8zNDE3X21lcmdlZC5nZHhcblJlYWRpbmcgZmlsZTogb3V0cHV0X3Rlc3RfRVBBXzM0MTcuMDAwMDAwLmdkeFxuXG5NZXJnZSBjb21wbGV0ZSwgMSBpbnB1dCBmaWxlcyBtZXJnZWRcblx1MDAwN1x1MDAwN1dhcm5pbmcgbWVzc2FnZTpcbkluIHN5c3RlbTIoXCJjb25kb3JfcmVzY2hlZHVsZVwiLCBzdGRvdXQgPSBUUlVFLCBzdGRlcnIgPSBUUlVFKSA6XG4gIHJ1bm5pbmcgY29tbWFuZCAnXCJjb25kb3JfcmVzY2hlZHVsZVwiJyBoYWQgc3RhdHVzIDFcbiJ9 -->
+<pre><code>Machine              Platform       Slots Cpus Gpus  TotalGb FreCpu  FreeGb  CpuLoad ST Jobs/Min MaxSlotGb
+
+limpopo1.iiasa.ac.at x64/WinUnknown     0   32        255.96      8    63.99    0.12 Ui     0.00 *        
+limpopo2.iiasa.ac.at x64/WinUnknown     1   32        255.96      7    56.36    0.08 **     0.00      7.63
+limpopo3.iiasa.ac.at x64/WinUnknown     0   32        255.96      8    63.99    0.01 Ui     0.00 *        
+limpopo4.iiasa.ac.at x64/Win10          0   32        255.96      8    63.99    0.01 Ui     0.00 *        
+limpopo5.iiasa.ac.at x64/WinUnknown     0   32        255.91      8    63.98    0.00 Ui     0.00 *        
+limpopo6.iiasa.ac.at x64/Win10          0  128       1011.60     64  1003.70    0.00 Ui     0.00 *        
+
+               Total Owner Claimed Unclaimed Matched Preempting Backfill  Drain
+
+     x64/Win10     7     0       0         7       0          0        0      0
+x64/WinUnknown    22     0       2        20       0          0        0      0
+
+         Total    29     0       2        27       0          0        0      0
+
+Compressing model files into bundle...
+10 folders, 210 files, 829967685 bytes (792 MiB)
+Archive size: 177190897 bytes (169 MiB)
+
+Bundling additional files...
+1 file, 317343927 bytes (303 MiB)
+Archive size: 264449085 bytes (253 MiB)
+
+Starting transfer of bundle to limpopo1.
+Starting transfer of bundle to limpopo2.
+Starting transfer of bundle to limpopo3.
+Starting transfer of bundle to limpopo4.
+Starting transfer of bundle to limpopo5.
+Starting transfer of bundle to limpopo6.
+Waiting for bundle seeding to complete...
+5 jobs: 5 idle (queued)
+5 jobs: 5 running
+3 jobs: 3 running
+1 jobs: 1 running
+0 jobs
+Warning messages:
+1: In system2(&quot;condor_reschedule&quot;, stdout = TRUE, stderr = TRUE) :
+  running command &#39;&quot;condor_reschedule&quot;&#39; had status 1
+2: In system2(&quot;condor_reschedule&quot;, stdout = TRUE, stderr = TRUE) :
+  running command &#39;&quot;condor_reschedule&quot;&#39; had status 1
+Seeding done: execute hosts limpopo1, limpopo2, limpopo3, limpopo4, limpopo5, limpopo6 have received and cached the bundle.
+Submitting job(s).
+1 job(s) submitted to cluster 3417.
+Run &quot;test_EPA&quot; with cluster number 3417 has been submitted, it is now possible to submit additional runs while waiting for it to complete.
+Waiting for run &quot;test_EPA&quot; to complete...
+1 jobs: 1 idle (queued)
+1 jobs: 1 running
+0 jobs
+All jobs are done.
+Merging the returned GDX files...
+Output file: output_test_EPA_3417_merged.gdx
+Reading file: output_test_EPA_3417.000000.gdx
+
+Merge complete, 1 input files merged
+Warning message:
+In system2(&quot;condor_reschedule&quot;, stdout = TRUE, stderr = TRUE) :
+  running command &#39;&quot;condor_reschedule&quot;&#39; had status 1</code></pre>
+<!-- rnb-output-end -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxucHJpbnQoXCJJbml0aWFsIEdMT0JJT00gcnVuIGNvbXBsZXRlLlwiKVxuYGBgIn0= -->
+<pre class="r"><code>print(&quot;Initial GLOBIOM run complete.&quot;)</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-output-begin eyJkYXRhIjoiWzFdIFwiSW5pdGlhbCBHTE9CSU9NIHJ1biBjb21wbGV0ZS5cIlxuIn0= -->
+<pre><code>[1] &quot;Initial GLOBIOM run complete.&quot;</code></pre>
+<!-- rnb-output-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+</div>
+<div id="edit-and-run-post-processing-script" class="section level2">
+<h2>Edit and run post-processing script</h2>
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuXG5ydW5fcG9zdHByb2NfaW5pdGlhbCh3ZCwgY2x1c3Rlcl9ucilcbmBgYCJ9 -->
+<pre class="r"><code>
+run_postproc_initial(wd, cluster_nr)</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-output-begin eyJkYXRhIjoiLS0tIEpvYiA4X21lcmdlX291dHB1dF90bXAuZ21zIFN0YXJ0IDA2LzEwLzIxIDE3OjQ1OjIxIDM0LjMuMCByYWMzNTVmMyBXRVgtV0VJIHg4NiA2NGJpdC9NUyBXaW5kb3dzXG4tLS0gQXBwbHlpbmc6XG4gICAgQzpcXEdBTVNcXDM0XFxnbXNwcm1OVC50eHRcbi0tLSBHQU1TIFBhcmFtZXRlcnMgZGVmaW5lZFxuICAgIElucHV0IEU6XFx3b3JrXFxHTE9CSU9NXFxsaW5rc1xcR0xPQklPTS1HNE0tbGlua1xcR0xPQklPTVxcTW9kZWxcXDhfbWVyZ2Vfb3V0cHV0X3RtcC5nbXNcbiAgICBTY3JEaXIgRTpcXHdvcmtcXEdMT0JJT01cXGxpbmtzXFxHTE9CSU9NLUc0TS1saW5rXFxHTE9CSU9NXFxNb2RlbFxcMjI1YVxcXG4gICAgU3lzRGlyIEM6XFxHQU1TXFwzNFxcXG5MaWNlbnNlZTogU21hbGwgTVVEIC0gNSBVc2VyIExpY2Vuc2UgICAgICAgICAgICAgICAgICAgICBTMjAwOTE4LzAwMDFBUC1HRU5cbiAgICAgICAgICBJSUFTQSwgSW5mb3JtYXRpb24gYW5kIENvbW11bmljYXRpb24gVGVjaG5vbG9naWVzIERlcC4gICAgICBEQzIxNlxuICAgICAgICAgIEM6XFxVc2Vyc1xcYnJvdXdlclxcRG9jdW1lbnRzXFxHQU1TXFxnYW1zbGljZS50eHRcbkdBTVMgMzQuMy4wICAgQ29weXJpZ2h0IChDKSAxOTg3LTIwMjEgR0FNUyBEZXZlbG9wbWVudC4gQWxsIHJpZ2h0cyByZXNlcnZlZFxuLS0tIFN0YXJ0aW5nIGNvbXBpbGF0aW9uXG4tLS0gOF9tZXJnZV9vdXRwdXRfdG1wLmdtcyg0NSkgMiBNYlxuLS0tIC4gZGVjbF9yZWdpb25zZXQuZ21zKDEyNDUpIDMgTWJcbi0tLSA4X21lcmdlX291dHB1dF90bXAuZ21zKDQ2KSAzIE1iXG4tLS0gLiBkZWNsX3NldHMuZ21zKDE1OTEpIDQgTWJcbi0tLSA4X21lcmdlX291dHB1dF90bXAuZ21zKDQ3KSA0IE1iXG4tLS0gLiBkZWNsX1JzZXRzLmdtcyg2MTMpIDQgTWJcbi0tLSA4X21lcmdlX291dHB1dF90bXAuZ21zKDQ4KSA0IE1iXG4tLS0gLiBzZXRzX2l0ZW1fcmVwb3J0aW5nLmdtcygzNjUpIDQgTWJcbi0tLSA4X21lcmdlX291dHB1dF90bXAuZ21zKDkyKSA0IE1iXG4tLS0gR0RYaW49RTpcXHdvcmtcXEdMT0JJT01cXGxpbmtzXFxHTE9CSU9NLUc0TS1saW5rXFxHTE9CSU9NXFxNb2RlbFxcZ2R4XFxvdXRwdXRfdGVzdF9FUEFfMzQxN19tZXJnZWQuZ2R4XG4tLS0gR0RYIEZpbGUgKCRnZHhJbikgRTpcXHdvcmtcXEdMT0JJT01cXGxpbmtzXFxHTE9CSU9NLUc0TS1saW5rXFxHTE9CSU9NXFxNb2RlbFxcZ2R4XFxvdXRwdXRfdGVzdF9FUEFfMzQxN19tZXJnZWQuZ2R4XG4tLS0gOF9tZXJnZV9vdXRwdXRfdG1wLmdtcyg5NSkgNCBNYlxuLS0tIDhfbWVyZ2Vfb3V0cHV0X3RtcC5nbXMoOTUpIDMzIE1iXG4tLS0gOF9tZXJnZV9vdXRwdXRfdG1wLmdtcygxNjEpIDM1IE1iXG4tLS0gLiA4YV9yZXBfZzRtX3RtcC5nbXMoMjUwKSAzNSBNYlxuLS0tIDhfbWVyZ2Vfb3V0cHV0X3RtcC5nbXMoMTY2KSAzNSBNYlxuLS0tIC4gc2V0c19pYW1jX3RlbXBsYXRlLmdtcygxODgpIDM1IE1iXG4tLS0gOF9tZXJnZV9vdXRwdXRfdG1wLmdtcygxNzApIDM1IE1iXG4tLS0gLiA4Yl9yZXBfaWFtY19nbG9iaW9tLmdtcyg3OCkgMzUgTWJcbi0tLSAuLiBPVVRQVVRfRkFPX1JFR0lPTl9zaW5jZTE5NjEuY3N2KDYyMDk1KSAzNyBNYlxuLS0tIC4uIE9VVFBVVF9GQU9fUkVHSU9OX3NpbmNlMTk2MS5jc3YoODY4NzUpIDM3IE1iXG4tLS0gLi4gT1VUUFVUX0ZBT19SRUdJT05fc2luY2UxOTYxLmNzdigxODE2NTUpIDQxIE1iXG4tLS0gLi4gT1VUUFVUX0ZBT19SRUdJT05fc2luY2UxOTYxLmNzdigyMDk5NTUpIDQyIE1iXG4tLS0gLi4gT1VUUFVUX0ZBT19SRUdJT05fc2luY2UxOTYxLmNzdigzMDEzNzQpIDQ0IE1iXG4tLS0gLi4gT1VUUFVUX0ZBT19SRUdJT05fc2luY2UxOTYxLmNzdigzMjA1NzcpIDQ2IE1iXG4tLS0gLi4gT1VUUFVUX0ZBT19SRUdJT05fc2luY2UxOTYxLmNzdig0MjE0NDgpIDQ5IE1iXG4tLS0gLi4gT1VUUFVUX0ZBT19SRUdJT05fc2luY2UxOTYxLmNzdig0NTUzMzUpIDUwIE1iXG4tLS0gLi4gT1VUUFVUX0ZBT19SRUdJT05fc2luY2UxOTYxLmNzdig0NzM1NzEpIDUxIE1iXG4tLS0gLiA4Yl9yZXBfaWFtY19nbG9iaW9tLmdtcygyMTUpIDUyIE1iXG4tLS0gLi4gY2FsY19waW5kZXhfc3NwLmdtcyg2MCkgNTIgTWJcbi0tLSAuIDhiX3JlcF9pYW1jX2dsb2Jpb20uZ21zKDQ0MykgNTIgTWJcbi0tLSA4X21lcmdlX291dHB1dF90bXAuZ21zKDMwNykgNTIgTWJcbi0tLSBTdGFydGluZyBleGVjdXRpb246IGVsYXBzZWQgMDowMDowMS42MjFcbi0tLSA4X21lcmdlX291dHB1dF90bXAuZ21zKDQxOTEpIDUzIE1iXG4tLS0gR0RYIEZpbGUgKGV4ZWN1dGVfdW5sb2FkKSBFOlxcd29ya1xcR0xPQklPTVxcbGlua3NcXEdMT0JJT00tRzRNLWxpbmtcXERvd25TY2FsZVxcaW5wdXRvdXRwdXRfbGFuZGNvdmVyX3Rlc3RfRVBBXzA5MDYyMDIxLmdkeFxuLS0tIDhfbWVyZ2Vfb3V0cHV0X3RtcC5nbXMoNDE5MykgNTMgTWJcbi0tLSBHRFggRmlsZSAoZXhlY3V0ZV91bmxvYWQpIEU6XFx3b3JrXFxHTE9CSU9NXFxsaW5rc1xcRG93bnNjYWxpbmdcXE1vZGVsXFxHNE1cXG91dHB1dFxcb3V0cHV0X2dsb2Jpb200ZzRtbV90ZXN0X0VQQV8wOTA2MjAyMS5nZHhcbi0tLSA4X21lcmdlX291dHB1dF90bXAuZ21zKDQ3ODU5NSkgNTMgTWJcbi0tLSBHRFggRmlsZSAoZXhlY3V0ZV91bmxvYWQpIEU6XFx3b3JrXFxHTE9CSU9NXFxsaW5rc1xcR0xPQklPTS1HNE0tbGlua1xcR0xPQklPTVxcTW9kZWxcXG91dHB1dFxcaWFtY1xcT3V0cHV0NF9JQU1DX3RlbXBsYXRlX3Rlc3RfRVBBXzA5MDYyMDIxLmdkeFxuLS0tIFB1dGZpbGUgb3V0cHV0X2dsbzRHNE1tX1N1cHBseVJlc2lkdWVzIEU6XFx3b3JrXFxHTE9CSU9NXFxsaW5rc1xcR0xPQklPTS1HNE0tbGlua1xcR0xPQklPTVxcTW9kZWxcXG91dHB1dFxcZzRtXFxvdXRwdXRfZ2xvNEc0TW1fU3VwcGx5UmVzaWR1ZXNfdGVzdF9FUEFfMDkwNjIwMjEuY3N2XG4tLS0gUHV0ZmlsZSBvdXRwdXRfZ2xvNGc0bW1fU3VwcGx5V29vZCBFOlxcd29ya1xcR0xPQklPTVxcbGlua3NcXEdMT0JJT00tRzRNLWxpbmtcXEdMT0JJT01cXE1vZGVsXFxvdXRwdXRcXGc0bVxcb3V0cHV0X2dsbzRnNG1tX1N1cHBseVdvb2RfdGVzdF9FUEFfMDkwNjIwMjEuY3N2XG4tLS0gUHV0ZmlsZSBvdXRwdXRfZ2xvNGc0bW1fV29vZF9wcmljZV8gRTpcXHdvcmtcXEdMT0JJT01cXGxpbmtzXFxHTE9CSU9NLUc0TS1saW5rXFxHTE9CSU9NXFxNb2RlbFxcb3V0cHV0XFxnNG1cXG91dHB1dF9nbG80ZzRtbV9Xb29kX3ByaWNlX3Rlc3RfRVBBXzA5MDYyMDIxLmNzdlxuLS0tIFB1dGZpbGUgb3V0cHV0X2dsbzRnNG1tX0xhbmRSZW50IEU6XFx3b3JrXFxHTE9CSU9NXFxsaW5rc1xcR0xPQklPTS1HNE0tbGlua1xcR0xPQklPTVxcTW9kZWxcXG91dHB1dFxcZzRtXFxvdXRwdXRfZ2xvNGc0bW1fTGFuZFJlbnRfdGVzdF9FUEFfMDkwNjIwMjEuY3N2XG4tLS0gUHV0ZmlsZSBvdXRwdXRfZ2xvNGc0bW1fQ08ycHJpY2UgRTpcXHdvcmtcXEdMT0JJT01cXGxpbmtzXFxHTE9CSU9NLUc0TS1saW5rXFxHTE9CSU9NXFxNb2RlbFxcb3V0cHV0XFxnNG1cXG91dHB1dF9nbG80ZzRtbV9DTzJwcmljZV90ZXN0X0VQQV8wOTA2MjAyMS5jc3ZcbioqKiBTdGF0dXM6IE5vcm1hbCBjb21wbGV0aW9uXG4tLS0gSm9iIDhfbWVyZ2Vfb3V0cHV0X3RtcC5nbXMgU3RvcCAwNi8xMC8yMSAxNzo0NToyMiBlbGFwc2VkIDA6MDA6MDEuNjMyXG4ifQ== -->
+<pre><code>--- Job 8_merge_output_tmp.gms Start 06/10/21 17:45:21 34.3.0 rac355f3 WEX-WEI x86 64bit/MS Windows
+--- Applying:
+    C:\GAMS\34\gmsprmNT.txt
+--- GAMS Parameters defined
+    Input E:\work\GLOBIOM\links\GLOBIOM-G4M-link\GLOBIOM\Model\8_merge_output_tmp.gms
+    ScrDir E:\work\GLOBIOM\links\GLOBIOM-G4M-link\GLOBIOM\Model\225a\
+    SysDir C:\GAMS\34\
+Licensee: Small MUD - 5 User License                     S200918/0001AP-GEN
+          IIASA, Information and Communication Technologies Dep.      DC216
+          C:\Users\brouwer\Documents\GAMS\gamslice.txt
+GAMS 34.3.0   Copyright (C) 1987-2021 GAMS Development. All rights reserved
+--- Starting compilation
+--- 8_merge_output_tmp.gms(45) 2 Mb
+--- . decl_regionset.gms(1245) 3 Mb
+--- 8_merge_output_tmp.gms(46) 3 Mb
+--- . decl_sets.gms(1591) 4 Mb
+--- 8_merge_output_tmp.gms(47) 4 Mb
+--- . decl_Rsets.gms(613) 4 Mb
+--- 8_merge_output_tmp.gms(48) 4 Mb
+--- . sets_item_reporting.gms(365) 4 Mb
+--- 8_merge_output_tmp.gms(92) 4 Mb
+--- GDXin=E:\work\GLOBIOM\links\GLOBIOM-G4M-link\GLOBIOM\Model\gdx\output_test_EPA_3417_merged.gdx
+--- GDX File ($gdxIn) E:\work\GLOBIOM\links\GLOBIOM-G4M-link\GLOBIOM\Model\gdx\output_test_EPA_3417_merged.gdx
+--- 8_merge_output_tmp.gms(95) 4 Mb
+--- 8_merge_output_tmp.gms(95) 33 Mb
+--- 8_merge_output_tmp.gms(161) 35 Mb
+--- . 8a_rep_g4m_tmp.gms(250) 35 Mb
+--- 8_merge_output_tmp.gms(166) 35 Mb
+--- . sets_iamc_template.gms(188) 35 Mb
+--- 8_merge_output_tmp.gms(170) 35 Mb
+--- . 8b_rep_iamc_globiom.gms(78) 35 Mb
+--- .. OUTPUT_FAO_REGION_since1961.csv(62095) 37 Mb
+--- .. OUTPUT_FAO_REGION_since1961.csv(86875) 37 Mb
+--- .. OUTPUT_FAO_REGION_since1961.csv(181655) 41 Mb
+--- .. OUTPUT_FAO_REGION_since1961.csv(209955) 42 Mb
+--- .. OUTPUT_FAO_REGION_since1961.csv(301374) 44 Mb
+--- .. OUTPUT_FAO_REGION_since1961.csv(320577) 46 Mb
+--- .. OUTPUT_FAO_REGION_since1961.csv(421448) 49 Mb
+--- .. OUTPUT_FAO_REGION_since1961.csv(455335) 50 Mb
+--- .. OUTPUT_FAO_REGION_since1961.csv(473571) 51 Mb
+--- . 8b_rep_iamc_globiom.gms(215) 52 Mb
+--- .. calc_pindex_ssp.gms(60) 52 Mb
+--- . 8b_rep_iamc_globiom.gms(443) 52 Mb
+--- 8_merge_output_tmp.gms(307) 52 Mb
+--- Starting execution: elapsed 0:00:01.621
+--- 8_merge_output_tmp.gms(4191) 53 Mb
+--- GDX File (execute_unload) E:\work\GLOBIOM\links\GLOBIOM-G4M-link\DownScale\inputoutput_landcover_test_EPA_09062021.gdx
+--- 8_merge_output_tmp.gms(4193) 53 Mb
+--- GDX File (execute_unload) E:\work\GLOBIOM\links\Downscaling\Model\G4M\output\output_globiom4g4mm_test_EPA_09062021.gdx
+--- 8_merge_output_tmp.gms(478595) 53 Mb
+--- GDX File (execute_unload) E:\work\GLOBIOM\links\GLOBIOM-G4M-link\GLOBIOM\Model\output\iamc\Output4_IAMC_template_test_EPA_09062021.gdx
+--- Putfile output_glo4G4Mm_SupplyResidues E:\work\GLOBIOM\links\GLOBIOM-G4M-link\GLOBIOM\Model\output\g4m\output_glo4G4Mm_SupplyResidues_test_EPA_09062021.csv
+--- Putfile output_glo4g4mm_SupplyWood E:\work\GLOBIOM\links\GLOBIOM-G4M-link\GLOBIOM\Model\output\g4m\output_glo4g4mm_SupplyWood_test_EPA_09062021.csv
+--- Putfile output_glo4g4mm_Wood_price_ E:\work\GLOBIOM\links\GLOBIOM-G4M-link\GLOBIOM\Model\output\g4m\output_glo4g4mm_Wood_price_test_EPA_09062021.csv
+--- Putfile output_glo4g4mm_LandRent E:\work\GLOBIOM\links\GLOBIOM-G4M-link\GLOBIOM\Model\output\g4m\output_glo4g4mm_LandRent_test_EPA_09062021.csv
+--- Putfile output_glo4g4mm_CO2price E:\work\GLOBIOM\links\GLOBIOM-G4M-link\GLOBIOM\Model\output\g4m\output_glo4g4mm_CO2price_test_EPA_09062021.csv
+*** Status: Normal completion
+--- Job 8_merge_output_tmp.gms Stop 06/10/21 17:45:22 elapsed 0:00:01.632</code></pre>
+<!-- rnb-output-end -->
 <!-- rnb-chunk-end -->
 <!-- rnb-text-begin -->
 </div>
@@ -314,12 +514,133 @@ print(&quot;Initial GLOBIOM run complete.&quot;)</code></pre>
 <h2>Perform the initial downscaling - needs data from the initial GLOBIOM run</h2>
 <!-- rnb-text-end -->
 <!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuaWYgKCFmaWxlLmV4aXN0cyhzdHJfZ2x1ZShXRF9ET1dOU0NBTElORyxcIi9pbnB1dC9cIixcIm91dHB1dF9sYW5kY292ZXJfXCIsUFJPSkVDVCxcIl9cIixEQVRFX0xBQkVMLFwiLmdkeFwiKSkpIHN0b3AoXCJGaWxlIGZvciBkb3duc2NhbGluZyBub3QgZm91bmQhIFBsZWFzZSBjYWxsIHRoZSBpbnRpYWwgR0xPQklPTSBydW4gYmVmb3JlIGRvd25zY2FsaW5nXCIpXG5cbnJ1bl9kb3duc2NhbGluZyhjZClcblxucHJpbnQoXCJJbml0aWFsIGRvd25zY2FsaW5nIGNvbXBsZXRlXCIpXG5gYGAifQ== -->
-<pre class="r"><code>if (!file.exists(str_glue(WD_DOWNSCALING,&quot;/input/&quot;,&quot;output_landcover_&quot;,PROJECT,&quot;_&quot;,DATE_LABEL,&quot;.gdx&quot;))) stop(&quot;File for downscaling not found! Please call the intial GLOBIOM run before downscaling&quot;)
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuaWYgKCFmaWxlX2V4aXN0cyhwYXRoKFdEX0RPV05TQ0FMSU5HLFwiaW5wdXRcIixzdHJfZ2x1ZShcIm91dHB1dF9sYW5kY292ZXJfe1BST0pFQ1R9X3tEQVRFX0xBQkVMfS5nZHhcIikpKSlcbiAgc3RvcChcIkZpbGUgZm9yIGRvd25zY2FsaW5nIG5vdCBmb3VuZCEgUGxlYXNlIGNhbGwgdGhlIGludGlhbCBHTE9CSU9NIHJ1biBiZWZvcmUgZG93bnNjYWxpbmdcIilcblxuIyBTZXQgd2QgXG53ZCA8LSBwYXRoX3dkKFdEX0RPV05TQ0FMSU5HKVxuXG4jIEVkaXQgRG93bnNjYWxpbmcgc2NyaXB0XG5lZGl0X2Rvd25zY2FsaW5nKHdkKVxuXG4jIFJ1biBEb3duc2NhbGluZyBzY2VuYXJpb3NcbmNsdXN0ZXJfbnIgPC0gY2FsbF9jb25kb3JfcnVuKHdkKVxuYGBgIn0= -->
+<pre class="r"><code>if (!file_exists(path(WD_DOWNSCALING,&quot;input&quot;,str_glue(&quot;output_landcover_{PROJECT}_{DATE_LABEL}.gdx&quot;))))
+  stop(&quot;File for downscaling not found! Please call the intial GLOBIOM run before downscaling&quot;)
 
-run_downscaling(cd)
+# Set wd 
+wd &lt;- path_wd(WD_DOWNSCALING)
 
-print(&quot;Initial downscaling complete&quot;)</code></pre>
+# Edit Downscaling script
+edit_downscaling(wd)
+
+# Run Downscaling scenarios
+cluster_nr &lt;- call_condor_run(wd)</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-output-begin eyJkYXRhIjoiTWFjaGluZSAgICAgICAgICAgICAgUGxhdGZvcm0gICAgICAgU2xvdHMgQ3B1cyBHcHVzICBUb3RhbEdiIEZyZUNwdSAgRnJlZUdiICBDcHVMb2FkIFNUIEpvYnMvTWluIE1heFNsb3RHYlxuXG5saW1wb3BvMS5paWFzYS5hYy5hdCB4NjQvV2luVW5rbm93biAgICAgMCAgIDMyICAgICAgICAyNTUuOTYgICAgICA4ICAgIDYzLjk5ICAgIDAuMDkgVWkgICAgIDAuMDAgKiAgICAgICAgXG5saW1wb3BvMi5paWFzYS5hYy5hdCB4NjQvV2luVW5rbm93biAgICAgMSAgIDMyICAgICAgICAyNTUuOTYgICAgICA3ICAgIDUxLjI0ICAgIDAuMDggKiogICAgIDAuMDAgICAgIDEyLjc1XG5saW1wb3BvMy5paWFzYS5hYy5hdCB4NjQvV2luVW5rbm93biAgICAgMCAgIDMyICAgICAgICAyNTUuOTYgICAgICA4ICAgIDYzLjk5ICAgIDAuMDEgVWkgICAgIDAuMDAgKiAgICAgICAgXG5saW1wb3BvNC5paWFzYS5hYy5hdCB4NjQvV2luMTAgICAgICAgICAgMCAgIDMyICAgICAgICAyNTUuOTYgICAgICA4ICAgIDYzLjk5ICAgIDAuMDEgVWkgICAgIDAuMDAgKiAgICAgICAgXG5saW1wb3BvNS5paWFzYS5hYy5hdCB4NjQvV2luVW5rbm93biAgICAgMCAgIDMyICAgICAgICAyNTUuOTEgICAgICA4ICAgIDYzLjk4ICAgIDAuMDAgVWkgICAgIDAuMDAgKiAgICAgICAgXG5saW1wb3BvNi5paWFzYS5hYy5hdCB4NjQvV2luMTAgICAgICAgICAgMCAgMTI4ICAgICAgIDEwMTEuNjAgICAgIDY0ICAxMDAzLjcwICAgIDAuMDAgVWkgICAgIDAuMDAgKiAgICAgICAgXG5cbiAgICAgICAgICAgICAgIFRvdGFsIE93bmVyIENsYWltZWQgVW5jbGFpbWVkIE1hdGNoZWQgUHJlZW1wdGluZyBCYWNrZmlsbCAgRHJhaW5cblxuICAgICB4NjQvV2luMTAgICAgIDcgICAgIDAgICAgICAgMCAgICAgICAgIDcgICAgICAgMCAgICAgICAgICAwICAgICAgICAwICAgICAgMFxueDY0L1dpblVua25vd24gICAgMjEgICAgIDAgICAgICAgMSAgICAgICAgMjAgICAgICAgMCAgICAgICAgICAwICAgICAgICAwICAgICAgMFxuXG4gICAgICAgICBUb3RhbCAgICAyOCAgICAgMCAgICAgICAxICAgICAgICAyNyAgICAgICAwICAgICAgICAgIDAgICAgICAgIDAgICAgICAwXG5cbkNvbXByZXNzaW5nIG1vZGVsIGZpbGVzIGludG8gYnVuZGxlLi4uXG4zIGZvbGRlcnMsIDMwIGZpbGVzLCA1NjM2ODQ0MTYgYnl0ZXMgKDUzOCBNaUIpXG5BcmNoaXZlIHNpemU6IDIzNDQyMjMwNCBieXRlcyAoMjI0IE1pQilcblxuU3RhcnRpbmcgdHJhbnNmZXIgb2YgYnVuZGxlIHRvIGxpbXBvcG8xLlxuU3RhcnRpbmcgdHJhbnNmZXIgb2YgYnVuZGxlIHRvIGxpbXBvcG8yLlxuU3RhcnRpbmcgdHJhbnNmZXIgb2YgYnVuZGxlIHRvIGxpbXBvcG8zLlxuU3RhcnRpbmcgdHJhbnNmZXIgb2YgYnVuZGxlIHRvIGxpbXBvcG80LlxuU3RhcnRpbmcgdHJhbnNmZXIgb2YgYnVuZGxlIHRvIGxpbXBvcG81LlxuU3RhcnRpbmcgdHJhbnNmZXIgb2YgYnVuZGxlIHRvIGxpbXBvcG82LlxuV2FpdGluZyBmb3IgYnVuZGxlIHNlZWRpbmcgdG8gY29tcGxldGUuLi5cbjYgam9iczogNSBpZGxlIChxdWV1ZWQpLCAxIHJ1bm5pbmdcbjUgam9iczogNSBpZGxlIChxdWV1ZWQpXG41IGpvYnM6IDUgcnVubmluZ1xuNSBqb2JzOiAyIGNvbXBsZXRlZCwgMyBydW5uaW5nXG4xIGpvYnM6IDEgcnVubmluZ1xuMCBqb2JzXG5XYXJuaW5nIG1lc3NhZ2VzOlxuMTogSW4gc3lzdGVtMihcImNvbmRvcl9yZXNjaGVkdWxlXCIsIHN0ZG91dCA9IFRSVUUsIHN0ZGVyciA9IFRSVUUpIDpcbiAgcnVubmluZyBjb21tYW5kICdcImNvbmRvcl9yZXNjaGVkdWxlXCInIGhhZCBzdGF0dXMgMVxuMjogSW4gc3lzdGVtMihcImNvbmRvcl9yZXNjaGVkdWxlXCIsIHN0ZG91dCA9IFRSVUUsIHN0ZGVyciA9IFRSVUUpIDpcbiAgcnVubmluZyBjb21tYW5kICdcImNvbmRvcl9yZXNjaGVkdWxlXCInIGhhZCBzdGF0dXMgMVxuMzogSW4gc3lzdGVtMihcImNvbmRvcl9yZXNjaGVkdWxlXCIsIHN0ZG91dCA9IFRSVUUsIHN0ZGVyciA9IFRSVUUpIDpcbiAgcnVubmluZyBjb21tYW5kICdcImNvbmRvcl9yZXNjaGVkdWxlXCInIGhhZCBzdGF0dXMgMVxuU2VlZGluZyBkb25lOiBleGVjdXRlIGhvc3RzIGxpbXBvcG8xLCBsaW1wb3BvMiwgbGltcG9wbzMsIGxpbXBvcG80LCBsaW1wb3BvNSwgbGltcG9wbzYgaGF2ZSByZWNlaXZlZCBhbmQgY2FjaGVkIHRoZSBidW5kbGUuXG5TdWJtaXR0aW5nIGpvYihzKS4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi4uLi5cbjM3IGpvYihzKSBzdWJtaXR0ZWQgdG8gY2x1c3RlciAzNDI0LlxuUnVuIFwidGVzdF9FUEFcIiB3aXRoIGNsdXN0ZXIgbnVtYmVyIDM0MjQgaGFzIGJlZW4gc3VibWl0dGVkLCBpdCBpcyBub3cgcG9zc2libGUgdG8gc3VibWl0IGFkZGl0aW9uYWwgcnVucyB3aGlsZSB3YWl0aW5nIGZvciBpdCB0byBjb21wbGV0ZS5cbldhaXRpbmcgZm9yIHJ1biBcInRlc3RfRVBBXCIgdG8gY29tcGxldGUuLi5cbjM3IGpvYnM6IDM3IGlkbGUgKHF1ZXVlZClcbjM3IGpvYnM6IDI5IGlkbGUgKHF1ZXVlZCksIDggcnVubmluZ1xuMzcgam9iczogMzcgcnVubmluZ1xuMzQgam9iczogMzQgcnVubmluZ1xuMjMgam9iczogMSBjb21wbGV0ZWQsIDIyIHJ1bm5pbmdcbjExIGpvYnM6IDEgY29tcGxldGVkLCAxMCBydW5uaW5nXG4wIGpvYnNcbkFsbCBqb2JzIGFyZSBkb25lLlxuTWVyZ2luZyB0aGUgcmV0dXJuZWQgR0RYIGZpbGVzLi4uXG5PdXRwdXQgZmlsZTogZG93bnNjYWxlZF90ZXN0X0VQQV8zNDI0X21lcmdlZC5nZHhcblJlYWRpbmcgZmlsZTogZG93bnNjYWxlZF90ZXN0X0VQQV8zNDI0LjAwMDAwMC5nZHhcblJlYWRpbmcgZmlsZTogZG93bnNjYWxlZF90ZXN0X0VQQV8zNDI0LjAwMDAwMS5nZHhcblJlYWRpbmcgZmlsZTogZG93bnNjYWxlZF90ZXN0X0VQQV8zNDI0LjAwMDAwMi5nZHhcblJlYWRpbmcgZmlsZTogZG93bnNjYWxlZF90ZXN0X0VQQV8zNDI0LjAwMDAwMy5nZHhcblJlYWRpbmcgZmlsZTogZG93bnNjYWxlZF90ZXN0X0VQQV8zNDI0LjAwMDAwNC5nZHhcblJlYWRpbmcgZmlsZTogZG93bnNjYWxlZF90ZXN0X0VQQV8zNDI0LjAwMDAwNS5nZHhcblJlYWRpbmcgZmlsZTogZG93bnNjYWxlZF90ZXN0X0VQQV8zNDI0LjAwMDAwNi5nZHhcblJlYWRpbmcgZmlsZTogZG93bnNjYWxlZF90ZXN0X0VQQV8zNDI0LjAwMDAwNy5nZHhcblJlYWRpbmcgZmlsZTogZG93bnNjYWxlZF90ZXN0X0VQQV8zNDI0LjAwMDAwOC5nZHhcblJlYWRpbmcgZmlsZTogZG93bnNjYWxlZF90ZXN0X0VQQV8zNDI0LjAwMDAwOS5nZHhcblJlYWRpbmcgZmlsZTogZG93bnNjYWxlZF90ZXN0X0VQQV8zNDI0LjAwMDAxMC5nZHhcblJlYWRpbmcgZmlsZTogZG93bnNjYWxlZF90ZXN0X0VQQV8zNDI0LjAwMDAxMS5nZHhcblJlYWRpbmcgZmlsZTogZG93bnNjYWxlZF90ZXN0X0VQQV8zNDI0LjAwMDAxMi5nZHhcblJlYWRpbmcgZmlsZTogZG93bnNjYWxlZF90ZXN0X0VQQV8zNDI0LjAwMDAxMy5nZHhcblJlYWRpbmcgZmlsZTogZG93bnNjYWxlZF90ZXN0X0VQQV8zNDI0LjAwMDAxNC5nZHhcblJlYWRpbmcgZmlsZTogZG93bnNjYWxlZF90ZXN0X0VQQV8zNDI0LjAwMDAxNS5nZHhcblJlYWRpbmcgZmlsZTogZG93bnNjYWxlZF90ZXN0X0VQQV8zNDI0LjAwMDAxNi5nZHhcblJlYWRpbmcgZmlsZTogZG93bnNjYWxlZF90ZXN0X0VQQV8zNDI0LjAwMDAxNy5nZHhcblJlYWRpbmcgZmlsZTogZG93bnNjYWxlZF90ZXN0X0VQQV8zNDI0LjAwMDAxOC5nZHhcblJlYWRpbmcgZmlsZTogZG93bnNjYWxlZF90ZXN0X0VQQV8zNDI0LjAwMDAxOS5nZHhcblJlYWRpbmcgZmlsZTogZG93bnNjYWxlZF90ZXN0X0VQQV8zNDI0LjAwMDAyMC5nZHhcblJlYWRpbmcgZmlsZTogZG93bnNjYWxlZF90ZXN0X0VQQV8zNDI0LjAwMDAyMS5nZHhcblJlYWRpbmcgZmlsZTogZG93bnNjYWxlZF90ZXN0X0VQQV8zNDI0LjAwMDAyMi5nZHhcblJlYWRpbmcgZmlsZTogZG93bnNjYWxlZF90ZXN0X0VQQV8zNDI0LjAwMDAyMy5nZHhcblJlYWRpbmcgZmlsZTogZG93bnNjYWxlZF90ZXN0X0VQQV8zNDI0LjAwMDAyNC5nZHhcblJlYWRpbmcgZmlsZTogZG93bnNjYWxlZF90ZXN0X0VQQV8zNDI0LjAwMDAyNS5nZHhcblJlYWRpbmcgZmlsZTogZG93bnNjYWxlZF90ZXN0X0VQQV8zNDI0LjAwMDAyNi5nZHhcblJlYWRpbmcgZmlsZTogZG93bnNjYWxlZF90ZXN0X0VQQV8zNDI0LjAwMDAyNy5nZHhcblJlYWRpbmcgZmlsZTogZG93bnNjYWxlZF90ZXN0X0VQQV8zNDI0LjAwMDAyOC5nZHhcblJlYWRpbmcgZmlsZTogZG93bnNjYWxlZF90ZXN0X0VQQV8zNDI0LjAwMDAyOS5nZHhcblJlYWRpbmcgZmlsZTogZG93bnNjYWxlZF90ZXN0X0VQQV8zNDI0LjAwMDAzMC5nZHhcblJlYWRpbmcgZmlsZTogZG93bnNjYWxlZF90ZXN0X0VQQV8zNDI0LjAwMDAzMS5nZHhcblJlYWRpbmcgZmlsZTogZG93bnNjYWxlZF90ZXN0X0VQQV8zNDI0LjAwMDAzMi5nZHhcblJlYWRpbmcgZmlsZTogZG93bnNjYWxlZF90ZXN0X0VQQV8zNDI0LjAwMDAzMy5nZHhcblJlYWRpbmcgZmlsZTogZG93bnNjYWxlZF90ZXN0X0VQQV8zNDI0LjAwMDAzNC5nZHhcblJlYWRpbmcgZmlsZTogZG93bnNjYWxlZF90ZXN0X0VQQV8zNDI0LjAwMDAzNS5nZHhcblJlYWRpbmcgZmlsZTogZG93bnNjYWxlZF90ZXN0X0VQQV8zNDI0LjAwMDAzNi5nZHhcblxuTWVyZ2UgY29tcGxldGUsIDM3IGlucHV0IGZpbGVzIG1lcmdlZFxuXHUwMDA3XHUwMDA3V2FybmluZyBtZXNzYWdlOlxuSW4gc3lzdGVtMihcImNvbmRvcl9yZXNjaGVkdWxlXCIsIHN0ZG91dCA9IFRSVUUsIHN0ZGVyciA9IFRSVUUpIDpcbiAgcnVubmluZyBjb21tYW5kICdcImNvbmRvcl9yZXNjaGVkdWxlXCInIGhhZCBzdGF0dXMgMVxuIn0= -->
+<pre><code>Machine              Platform       Slots Cpus Gpus  TotalGb FreCpu  FreeGb  CpuLoad ST Jobs/Min MaxSlotGb
+
+limpopo1.iiasa.ac.at x64/WinUnknown     0   32        255.96      8    63.99    0.09 Ui     0.00 *        
+limpopo2.iiasa.ac.at x64/WinUnknown     1   32        255.96      7    51.24    0.08 **     0.00     12.75
+limpopo3.iiasa.ac.at x64/WinUnknown     0   32        255.96      8    63.99    0.01 Ui     0.00 *        
+limpopo4.iiasa.ac.at x64/Win10          0   32        255.96      8    63.99    0.01 Ui     0.00 *        
+limpopo5.iiasa.ac.at x64/WinUnknown     0   32        255.91      8    63.98    0.00 Ui     0.00 *        
+limpopo6.iiasa.ac.at x64/Win10          0  128       1011.60     64  1003.70    0.00 Ui     0.00 *        
+
+               Total Owner Claimed Unclaimed Matched Preempting Backfill  Drain
+
+     x64/Win10     7     0       0         7       0          0        0      0
+x64/WinUnknown    21     0       1        20       0          0        0      0
+
+         Total    28     0       1        27       0          0        0      0
+
+Compressing model files into bundle...
+3 folders, 30 files, 563684416 bytes (538 MiB)
+Archive size: 234422304 bytes (224 MiB)
+
+Starting transfer of bundle to limpopo1.
+Starting transfer of bundle to limpopo2.
+Starting transfer of bundle to limpopo3.
+Starting transfer of bundle to limpopo4.
+Starting transfer of bundle to limpopo5.
+Starting transfer of bundle to limpopo6.
+Waiting for bundle seeding to complete...
+6 jobs: 5 idle (queued), 1 running
+5 jobs: 5 idle (queued)
+5 jobs: 5 running
+5 jobs: 2 completed, 3 running
+1 jobs: 1 running
+0 jobs
+Warning messages:
+1: In system2(&quot;condor_reschedule&quot;, stdout = TRUE, stderr = TRUE) :
+  running command &#39;&quot;condor_reschedule&quot;&#39; had status 1
+2: In system2(&quot;condor_reschedule&quot;, stdout = TRUE, stderr = TRUE) :
+  running command &#39;&quot;condor_reschedule&quot;&#39; had status 1
+3: In system2(&quot;condor_reschedule&quot;, stdout = TRUE, stderr = TRUE) :
+  running command &#39;&quot;condor_reschedule&quot;&#39; had status 1
+Seeding done: execute hosts limpopo1, limpopo2, limpopo3, limpopo4, limpopo5, limpopo6 have received and cached the bundle.
+Submitting job(s).....................................
+37 job(s) submitted to cluster 3424.
+Run &quot;test_EPA&quot; with cluster number 3424 has been submitted, it is now possible to submit additional runs while waiting for it to complete.
+Waiting for run &quot;test_EPA&quot; to complete...
+37 jobs: 37 idle (queued)
+37 jobs: 29 idle (queued), 8 running
+37 jobs: 37 running
+34 jobs: 34 running
+23 jobs: 1 completed, 22 running
+11 jobs: 1 completed, 10 running
+0 jobs
+All jobs are done.
+Merging the returned GDX files...
+Output file: downscaled_test_EPA_3424_merged.gdx
+Reading file: downscaled_test_EPA_3424.000000.gdx
+Reading file: downscaled_test_EPA_3424.000001.gdx
+Reading file: downscaled_test_EPA_3424.000002.gdx
+Reading file: downscaled_test_EPA_3424.000003.gdx
+Reading file: downscaled_test_EPA_3424.000004.gdx
+Reading file: downscaled_test_EPA_3424.000005.gdx
+Reading file: downscaled_test_EPA_3424.000006.gdx
+Reading file: downscaled_test_EPA_3424.000007.gdx
+Reading file: downscaled_test_EPA_3424.000008.gdx
+Reading file: downscaled_test_EPA_3424.000009.gdx
+Reading file: downscaled_test_EPA_3424.000010.gdx
+Reading file: downscaled_test_EPA_3424.000011.gdx
+Reading file: downscaled_test_EPA_3424.000012.gdx
+Reading file: downscaled_test_EPA_3424.000013.gdx
+Reading file: downscaled_test_EPA_3424.000014.gdx
+Reading file: downscaled_test_EPA_3424.000015.gdx
+Reading file: downscaled_test_EPA_3424.000016.gdx
+Reading file: downscaled_test_EPA_3424.000017.gdx
+Reading file: downscaled_test_EPA_3424.000018.gdx
+Reading file: downscaled_test_EPA_3424.000019.gdx
+Reading file: downscaled_test_EPA_3424.000020.gdx
+Reading file: downscaled_test_EPA_3424.000021.gdx
+Reading file: downscaled_test_EPA_3424.000022.gdx
+Reading file: downscaled_test_EPA_3424.000023.gdx
+Reading file: downscaled_test_EPA_3424.000024.gdx
+Reading file: downscaled_test_EPA_3424.000025.gdx
+Reading file: downscaled_test_EPA_3424.000026.gdx
+Reading file: downscaled_test_EPA_3424.000027.gdx
+Reading file: downscaled_test_EPA_3424.000028.gdx
+Reading file: downscaled_test_EPA_3424.000029.gdx
+Reading file: downscaled_test_EPA_3424.000030.gdx
+Reading file: downscaled_test_EPA_3424.000031.gdx
+Reading file: downscaled_test_EPA_3424.000032.gdx
+Reading file: downscaled_test_EPA_3424.000033.gdx
+Reading file: downscaled_test_EPA_3424.000034.gdx
+Reading file: downscaled_test_EPA_3424.000035.gdx
+Reading file: downscaled_test_EPA_3424.000036.gdx
+
+Merge complete, 37 input files merged
+Warning message:
+In system2(&quot;condor_reschedule&quot;, stdout = TRUE, stderr = TRUE) :
+  running command &#39;&quot;condor_reschedule&quot;&#39; had status 1</code></pre>
+<!-- rnb-output-end -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxucHJpbnQoXCJJbml0aWFsIGRvd25zY2FsaW5nIGNvbXBsZXRlXCIpXG5gYGAifQ== -->
+<pre class="r"><code>print(&quot;Initial downscaling complete&quot;)</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-output-begin eyJkYXRhIjoiWzFdIFwiSW5pdGlhbCBkb3duc2NhbGluZyBjb21wbGV0ZVwiXG4ifQ== -->
+<pre><code>[1] &quot;Initial downscaling complete&quot;</code></pre>
+<!-- rnb-output-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+</div>
+<div id="merge-downscaling-outputs-and-transfer-them-to-g4m" class="section level2">
+<h2>Merge downscaling outputs and transfer them to G4M</h2>
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxubWVyZ2VfYW5kX3RyYW5zZmVyKHdkLGNsdXN0ZXJfbnIpXG5gYGAifQ== -->
+<pre class="r"><code>merge_and_transfer(wd,cluster_nr)</code></pre>
 <!-- rnb-source-end -->
 <!-- rnb-chunk-end -->
 <!-- rnb-text-begin -->
@@ -328,8 +649,9 @@ print(&quot;Initial downscaling complete&quot;)</code></pre>
 <h2>TODO: Run G4M - needs data from the intial downscaling</h2>
 <!-- rnb-text-end -->
 <!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuaWYgKCFmaWxlLmV4aXN0cyhzdHJfZ2x1ZShQQVRIX0ZPUl9HNE0sXCIvXCIsR0RYX09VVFBVVF9OQU1FLFwiX291dHB1dF9cIixQUk9KRUNULFwiX1wiLERBVEVfTEFCRUwpKSkgc3RvcChcIkZpbGUgZm9yIEc0TSBydW4gbm90IGZvdW5kISBQbGVhc2UgY2FsbCB0aGUgaW50aWFsIGRvd25zY2FsaW5nIGJlZm9yZSB0aGUgRzRNIHJ1blwiKVxuICAgIFxuIyBSdW4gRzRNXG5gYGAifQ== -->
-<pre class="r"><code>if (!file.exists(str_glue(PATH_FOR_G4M,&quot;/&quot;,GDX_OUTPUT_NAME,&quot;_output_&quot;,PROJECT,&quot;_&quot;,DATE_LABEL))) stop(&quot;File for G4M run not found! Please call the intial downscaling before the G4M run&quot;)
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuaWYgKCFmaWxlX2V4aXN0cyhwYXRoKFBBVEhfRk9SX0c0TSxzdHJfZ2x1ZShcIntHRFhfT1VUUFVUX05BTUV9X291dHB1dF97UFJPSkVDVH1fe0RBVEVfTEFCRUx9XCIpKSkpXG4gIHN0b3AoXCJGaWxlIGZvciBHNE0gcnVuIG5vdCBmb3VuZCEgUGxlYXNlIGNhbGwgdGhlIGludGlhbCBkb3duc2NhbGluZyBiZWZvcmUgdGhlIEc0TSBydW5cIilcbiAgICBcbiMgUnVuIEc0TVxuYGBgIn0= -->
+<pre class="r"><code>if (!file_exists(path(PATH_FOR_G4M,str_glue(&quot;{GDX_OUTPUT_NAME}_output_{PROJECT}_{DATE_LABEL}&quot;))))
+  stop(&quot;File for G4M run not found! Please call the intial downscaling before the G4M run&quot;)
     
 # Run G4M</code></pre>
 <!-- rnb-source-end -->
@@ -340,8 +662,11 @@ print(&quot;Initial downscaling complete&quot;)</code></pre>
 <h2>TODO: Perform the final GLOBIOM run - needs data from the G4M run</h2>
 <!-- rnb-text-end -->
 <!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuIyBSdW4gR0xPQklPTVxuYGBgIn0= -->
-<pre class="r"><code># Run GLOBIOM</code></pre>
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuIyBFZGl0IGFuZCBydW4gcG9zdC1wcm9jZXNzaW5nIHNjcmlwdFxuIyBTZXQgd2QgXG53ZCA8LSBwYXRoX3dkKFdEX0dMT0JJT00pXG5ydW5fcG9zdHByb2NfZmluYWwod2QpXG5gYGAifQ== -->
+<pre class="r"><code># Edit and run post-processing script
+# Set wd 
+wd &lt;- path_wd(WD_GLOBIOM)
+run_postproc_final(wd)</code></pre>
 <!-- rnb-source-end -->
 <!-- rnb-chunk-end -->
 <!-- rnb-text-begin -->
@@ -356,7 +681,7 @@ print(&quot;Initial downscaling complete&quot;)</code></pre>
 <!-- rnb-chunk-end -->
 </div>
 
-<div id="rmd-source-code">LS0tCnRpdGxlOiAiR0xPQklPTS1HNE0tbGluayIKc3VidGl0bGU6IFIgbm90ZWJvb2sgZm9yIGF1dG9tYXRpemluZyB0aGUgbGluayBiZXR3ZWVuIEdMT0JJT00gYW5kIEc0TS4KYXV0aG9yOgotIEFuZHJleSBMLiBELiBBdWd1c3R5bmN6aWsKLSBBbGJlcnQgQnJvdXdlciAKZGF0ZTogImByIGZvcm1hdChTeXMudGltZSgpLCAnJWQgJUIgJVknKWAiCm91dHB1dDogaHRtbF9ub3RlYm9vawotLS0KClRvIHJ1biB0aGUgbGluaywgbG9hZCB0aGlzIG5vdGVib29rIGluIFJTdHVkaW8sIHJlYWQgdGhlIGRvY3VtZW50YXRpb24gYmVmb3JlIGVhY2ggY2h1bmssIGFuZCBydW4gdGhlIGNodW5rcyBpbiBmaXJzdC10by1sYXN0IG9yZGVyLiBZb3UgY2FuIGhhdmUgUlN0dWRpbyBydW4gYWxsIGNodW5rcyBpbiBvbmUgZ28sIGJ1dCB0byBjb25maWd1cmUgYW5kIHRlc3QgeW91ciBzZXR1cC0tLWFuZCBiZWNhdXNlIHNvbWUgY2h1bmtzIHRha2UgYSBsb25nIHRpbWUgdG8gcnVuLS0taXQgaXMgYWR2aXNhYmxlIHRvIHN0YXJ0IG91dCBieSBydW5uaW5nIGNodW5rcyBvbmUtYnktb25lIGF0IGxlYXN0IHVudGlsIHlvdSBoYXZlIHZlcmlmaWVkIHRoYXQgZXZlcnl0aGluZyBpcyB3b3JraW5nIHNtb290aGx5LgoKQ2FyZWZ1bGx5IGNoZWNrIHRoZSBvdXRwdXQgb2YgZWFjaCBjaHVuayBmb3IgZXJyb3JzLCBhbmQgaWYgcHJlc2VudCBtYWtlIGFkanVzdG1lbnRzIGFuZCByZS1ydW4gdGhlIGNodW5rIHRoYXQgZmFpbGVkLgoKVGhlIHJlcG9zaXRvcnkgaW5jbHVkZXMgYSBkZWZhdWx0IGNvbmZpZ3VyYXRpb24gZmlsZSBgUi9kZWZhdWx0X2NvbmZpZ3VyYXRpb24uUmAuIFRvIGFkanVzdCB0aGUgY29uZmlndXJhdGlvbiB0byB5b3VyIHJlcXVpcmVtZW50cywgY29weSB0aGUgZGVmYXVsdCBjb25maWd1cmF0aW9uIGZpbGUgdG8gYSBuZXcgZmlsZSBhdCBgUi9jb25maWd1cmF0aW9uLlJgIGFuZCBlZGl0IHRoYXQgY29weS4gWW91cgphZGFwdGVkIGNvcHkgd2lsbCBiZSBjaGVja2VkIGFnYWluc3QgdGhlIGRlZmF1bHRzLgoKIyMgUHJvY2VzcyB0aGUgY29uZmlndXJhdGlvbgoKYGBge3J9CiMgUmVtb3ZlIGFueSBvYmplY3RzIGZyb20gYWN0aXZlIGVudmlyb25tZW50IGFuZCByZWFkIHRoZSBkZWZhdWx0IGNvbmZpZ3VyYXRpb24Kcm0obGlzdD1scygpKQpzb3VyY2UoIlIvZGVmYXVsdF9jb25maWd1cmF0aW9uLlIiKQoKIyBDb2xsZWN0IHRoZSBuYW1lcyBhbmQgdHlwZXMgb2YgdGhlIGRlZmF1bHQgY29uZmlnIHBhcmFtZXRlcnMKY29uZmlnX25hbWVzIDwtIGxzKCkKaWYgKGxlbmd0aChjb25maWdfbmFtZXMpID09IDApIHtzdG9wKCJEZWZhdWx0IGNvbmZpZ3VyYXRpb24gaXMgYWJzZW50ISBQbGVhc2UgcmVzdG9yZSB0aGUgZGVmYXVsdCBjb25maWd1cmF0aW9uLiBJdCBpcyByZXF1aXJlZCBmb3IgY29uZmlndXJhdGlvbiBjaGVja2luZywgYWxzbyB3aGVuIHByb3ZpZGluZyBhIHNlcGFyYXRlIGNvbmZpZ3VyYXRpb24gZmlsZS4iKX0KY29uZmlnX3R5cGVzIDwtIGxhcHBseShsYXBwbHkoY29uZmlnX25hbWVzLCBnZXQpLCB0eXBlb2YpCiMgQ2FuIG5vdyBhZGQgdG8gdGhlIGFjdGl2ZSBlbnZpcm9ubWVudAoKIyBQb2ludCB0byB0aGUgY3VzdG9taXplZCBjb25maWd1cmF0aW9uIGZpbGUKY29uZmlndXJhdGlvbl9maWxlIDwtICJSL2NvbmZpZ3VyYXRpb24uUiIKCiMgTG9hZCBwYWNrYWdlcwpsaWJyYXJ5KGdkeHJydykKbGlicmFyeShnZHh0b29scykKc3VwcHJlc3NXYXJuaW5ncyhsaWJyYXJ5KHRpZHl2ZXJzZSkpCmxpYnJhcnkoc3RyaW5ncikKCiMgUHJlc2VuY2Ugb2YgY29uZmlndXJhaXRvbiBzZXR0aW5ncyBpcyBvYmxpZ2F0b3J5IG90aGVyIHRoYW4gZm9yIHRoZSBzZXR0aW5ncyBsaXN0ZWQgaGVyZQpPUFRJT05BTF9DT05GSUdfU0VUVElOR1MgPC0gYygKKQoKIyBSZW1vdmUgbWFuZGF0b3J5IGNvbmZpZyBkZWZhdWx0cyBmcm9tIHRoZSBnbG9iYWwgc2NvcGUKcm0obGlzdD1jb25maWdfbmFtZXNbIShjb25maWdfbmFtZXMgJWluJSBPUFRJT05BTF9DT05GSUdfU0VUVElOR1MpXSkKCiMgU291cmNlIHRoZSBjb25maWcgZmlsZSwgc2hvdWxkIGFkZCBtYW5kYXRvcnkgY29uZmlnIHNldHRpbmdzIHRvIHRoZSBnbG9iYWwgc2NvcGUKc291cmNlKGNvbmZpZ3VyYXRpb25fZmlsZSwgbG9jYWw9VFJVRSwgZWNobz1GQUxTRSkKCiMgQ2hlY2sgdGhhdCBhbGwgY29uZmlnIHNldHRpbmdzIGV4aXN0LCB0aGlzIGNhdGNoZXMgbWFuZGF0b3J5IHNldHRpbmdzIG1pc3NpbmcgaW4gdGhlIGNvbmZpZyBmaWxlCmZvciAoaSBpbiBzZXFfYWxvbmcoY29uZmlnX25hbWVzKSkgIHsKICBuYW1lIDwtIGNvbmZpZ19uYW1lc1tpXQogIGlmICghZXhpc3RzKG5hbWUpKSBzdG9wKHN0cl9nbHVlKCJNYW5kYXRvcnkgY29uZmlnIHNldHRpbmcge25hbWV9IGlzIG5vdCBzZXQgaW4gY29uZmlnIGZpbGUge2FyZ3NbMV19ISIpKQogIHR5cGUgPC0gdHlwZW9mKGdldChuYW1lKSkKICBpZiAodHlwZSAhPSBjb25maWdfdHlwZXNbW2ldXSAmJgogICAgICBuYW1lICE9ICJSRVNPTFVUSU9OX0RPV05TQ0FMSU5HIiAmJiAjIFIgaGFzIG5vIHN0YWJsZSBudW1lcmljYWwgdHlwZQogICAgICB0eXBlICE9ICJOVUxMIiAmJiAjIGFsbG93IGZvciBjb25maWd1cmVkIHZlY3RvciBiZWluZyBlbXB0eQogICAgICBjb25maWdfdHlwZXNbW2ldXSAhPSAiTlVMTCIgIyBhbGxvdyBmb3IgZGVmYXVsdCB2ZWN0b3IgYmVpbmcgZW1wdHkKICApIHN0b3Aoc3RyX2dsdWUoIntuYW1lfSBzZXQgdG8gd3JvbmcgdHlwZSBpbiB7Y29uZmlndXJhdGlvbl9maWxlfSwgdHlwZSBzaG91bGQgYmUge2NvbmZpZ190eXBlc1tbaV1dfSIpKQp9CnJtKGNvbmZpZ19uYW1lcywgY29uZmlnX3R5cGVzKQpgYGAKCiMjIFNldCB1cCBkaXJlY3RvcmllcyBhbmQgZnVuY3Rpb25zCgpgYGB7cn0KCiMgQ2FjaGUgd29ya2luZyBkaXJlY3RvcnkKY2QgPC0gZ2V0d2QoKQoKIyBEZXRlcm1pbmUgdGVtcG9yYXJ5IGRpcmVjdG9yeSBmb3IgdGhpcyBSIHNlc3Npb24KdGQgPC0gdGVtcGRpcigpCmZzZXAgPC0gaWZlbHNlKHN0cl9kZXRlY3QodGQsIGZpeGVkKCJcXCIpICksICJcXCIsICIuUGxhdGZvcm0kZmlsZS5zZXAiKSAjIEdldCB0aGUgcGxhdGZvcm0gZmlsZSBzZXBhcmF0b3I6IC5QbGF0Zm9ybSRmaWxlLnNlcCBpcyBzZXQgdG8gLyBvbiBXaW5kb3dzClRFTVBfRElSIDwtIHN0cl9yZXBsYWNlX2FsbCh0ZCwgZml4ZWQoZnNlcCksIC5QbGF0Zm9ybSRmaWxlLnNlcCkKcm0odGQsIGZzZXApCgojIFNvdXJjZSBzdXBwb3J0IGZ1bmN0aW9ucwpzb3VyY2UoIlIvZ2xvYmlvbV9nNG1fZnVuY3Rpb25zLlIiKQpzb3VyY2UoIlIvaGVscGVyX2Z1bmN0aW9ucy5SIikKYGBgCgojIyBQZXJmb3JtIHRoZSBpbml0aWFsIEdMT0JJT00gcnVuCgpgYGB7cn0KIyBSdW4gR0xPQklPTQpydW5fZ2xvYmlvbV9pbml0aWFsKGNkKQoKcHJpbnQoIkluaXRpYWwgR0xPQklPTSBydW4gY29tcGxldGUuIikKYGBgCgojIyBQZXJmb3JtIHRoZSBpbml0aWFsIGRvd25zY2FsaW5nIC0gbmVlZHMgZGF0YSBmcm9tIHRoZSBpbml0aWFsIEdMT0JJT00gcnVuCgpgYGB7cn0KaWYgKCFmaWxlLmV4aXN0cyhzdHJfZ2x1ZShXRF9ET1dOU0NBTElORywiL2lucHV0LyIsIm91dHB1dF9sYW5kY292ZXJfIixQUk9KRUNULCJfIixEQVRFX0xBQkVMLCIuZ2R4IikpKSBzdG9wKCJGaWxlIGZvciBkb3duc2NhbGluZyBub3QgZm91bmQhIFBsZWFzZSBjYWxsIHRoZSBpbnRpYWwgR0xPQklPTSBydW4gYmVmb3JlIGRvd25zY2FsaW5nIikKCnJ1bl9kb3duc2NhbGluZyhjZCkKCnByaW50KCJJbml0aWFsIGRvd25zY2FsaW5nIGNvbXBsZXRlIikKYGBgCgojIyBUT0RPOiBSdW4gRzRNIC0gbmVlZHMgZGF0YSBmcm9tIHRoZSBpbnRpYWwgZG93bnNjYWxpbmcKCmBgYHtyfQppZiAoIWZpbGUuZXhpc3RzKHN0cl9nbHVlKFBBVEhfRk9SX0c0TSwiLyIsR0RYX09VVFBVVF9OQU1FLCJfb3V0cHV0XyIsUFJPSkVDVCwiXyIsREFURV9MQUJFTCkpKSBzdG9wKCJGaWxlIGZvciBHNE0gcnVuIG5vdCBmb3VuZCEgUGxlYXNlIGNhbGwgdGhlIGludGlhbCBkb3duc2NhbGluZyBiZWZvcmUgdGhlIEc0TSBydW4iKQogICAgCiMgUnVuIEc0TQpgYGAKCiMjIFRPRE86IFBlcmZvcm0gdGhlIGZpbmFsIEdMT0JJT00gcnVuIC0gbmVlZHMgZGF0YSBmcm9tIHRoZSBHNE0gcnVuCgpgYGB7cn0KIyBSdW4gR0xPQklPTQpgYGAKCiMjIFRPRE86IFBlcmZvcm0gdGhlIGZpbmFsIGRvd25zY2FsaW5nIC0gbmVlZHMgZGF0YSBmcm9tIHRoZSBmaW5hbCBHTE9CSU9NIHJ1bgoKCmBgYHtyfQojIFJ1biBmaW5hbCBkb3duc2NhbGluZwpgYGAK</div>
+<div id="rmd-source-code">LS0tCnRpdGxlOiAiR0xPQklPTS1HNE0tbGluayIKc3VidGl0bGU6IFIgbm90ZWJvb2sgZm9yIGF1dG9tYXRpemluZyB0aGUgbGluayBiZXR3ZWVuIEdMT0JJT00gYW5kIEc0TS4KYXV0aG9yOgotIEFuZHJleSBMLiBELiBBdWd1c3R5bmN6aWsKLSBBbGJlcnQgQnJvdXdlciAKZGF0ZTogImByIGZvcm1hdChTeXMudGltZSgpLCAnJWQgJUIgJVknKWAiCm91dHB1dDogaHRtbF9ub3RlYm9vawotLS0KCkJlZm9yZSB1c2luZyB0aGlzIG5vdGVib29rLCBwbGVhc2UgZmlyc3QgcmVhZCB0aGUgW2ludHJvZHVjdG9yeSBkb2N1bWVudGF0aW9uXShodHRwczovL2lpYXNhLmdpdGh1Yi5pby9HTE9CSU9NLUc0TS1saW5rKS4gUnVuIHRoZSBjb2RlIGNodW5rcyBpbiBmaXJzdC10by1sYXN0IG9yZGVyLiBZb3UgY2FuIGhhdmUgUlN0dWRpbyBydW4gYWxsIGNodW5rcyBpbiBvbmUgZ28sIGJ1dCB0byBjb25maWd1cmUgYW5kIHRlc3QgeW91ciBzZXR1cC0tLWFuZCBiZWNhdXNlIHNvbWUgY2h1bmtzIHRha2UgYSBsb25nIHRpbWUgdG8gcnVuLS0taXQgaXMgYWR2aXNhYmxlIHRvIHN0YXJ0IG91dCBieSBydW5uaW5nIGNodW5rcyBvbmUtYnktb25lIGF0IGxlYXN0IHVudGlsIHlvdSBoYXZlIHZlcmlmaWVkIHRoYXQgZXZlcnl0aGluZyBpcyB3b3JraW5nIHNtb290aGx5LgoKQ2FyZWZ1bGx5IGNoZWNrIHRoZSBvdXRwdXQgb2YgZWFjaCBjaHVuayBmb3IgZXJyb3JzLCBhbmQgaWYgcHJlc2VudCBtYWtlIGFkanVzdG1lbnRzIGFuZCByZS1ydW4gdGhlIGNodW5rIHRoYXQgZmFpbGVkLgoKIyMgUmVhZCB0aGUgZGVmYXVsdCBjb25maWd1cmF0aW9uIGFuZCBsaXN0IG9mIG9wdGlvbmFsIGNvbmZpZ3VyYXRpb24gc2V0dGluZ3MKCmBgYHtyfQojIFJlbW92ZSBhbnkgb2JqZWN0cyBmcm9tIGVudmlyb25tZW50IGFuZCByZWFkIHRoZSBkZWZhdWx0IGNvbmZpZ3VyYXRpb24Kcm0obGlzdD1scygpKQpzb3VyY2UoIlIvY29uZmlndXJhdGlvbi9kZWZhdWx0LlIiKQoKIyBDb2xsZWN0IHRoZSBuYW1lcyBhbmQgdHlwZXMgb2YgdGhlIGRlZmF1bHQgY29uZmlnIHBhcmFtZXRlcnMKY29uZmlnX25hbWVzIDwtIGxzKCkKY29uZmlnX3R5cGVzIDwtIGxhcHBseShsYXBwbHkoY29uZmlnX25hbWVzLCBnZXQpLCB0eXBlb2YpCgojIFJlYWQgbGlzdCBvZiBvcHRpb25hbCBjb25maWcgc2V0dGluZ3MgYW5kIHJlbW92ZSBtYW5kYXRvcnkgc2V0dGluZ3MgZm9ybSB0aGUgZW52aXJvbm1lbnQKc291cmNlKCJSL2NvbmZpZ3VyYXRpb24vb3B0aW9uYWwuUiIpCnJtKGxpc3Q9Y29uZmlnX25hbWVzWyEoY29uZmlnX25hbWVzICVpbiUgT1BUSU9OQUxfQ09ORklHX1NFVFRJTkdTKV0pCmBgYAoKIyMgTG9hZCByZXF1aXJlZCBwYWNrYWdlcwoKYGBge3J9CmxpYnJhcnkoZ2R4cnJ3KQpsaWJyYXJ5KGdkeHRvb2xzKQpzdXBwcmVzc1dhcm5pbmdzKGxpYnJhcnkodGlkeXZlcnNlKSkKbGlicmFyeShzdHJpbmdyKSAjIHBhcnQgb2YgdGhlIHRpZHl2ZXJzZSwgYnV0IG5vdCBhdHRhY2hlZCBieSBkZWZhdWx0CmxpYnJhcnkoZnMpCmBgYAoKIyMgQ3VzdG9taXplIGNvbmZpZ3VyYXRpb24KCmBgYHtyfQpjdXN0b21fY29uZmlndXJhdGlvbl9maWxlIDwtICJSL2NvbmZpZ3VyYXRpb24vY3VzdG9tLlIiCgojIENoZWNrIHRoYXQgY3VzdG9tIGNvbmZpZ3VyYXRpb24gZXhpc3RzLCBlZGl0IGEgbmV3IG9uZSBvdGhlcndpc2UuCmlmICghZmlsZV9leGlzdHMoY3VzdG9tX2NvbmZpZ3VyYXRpb25fZmlsZSkpIHsKICB3YXJuaW5nKCJDdXN0b20gY29uZmlndXJhdGlvbiBmaWxlIG1pc3NpbmcsIHBsZWFzZSBjdXN0b21pemUuIikKICBmaWxlX2NvcHkoIlIvY29uZmlndXJhdGlvbi9kZWZhdWx0LlIiLCBjdXN0b21fY29uZmlndXJhdGlvbl9maWxlKQogIHJzdHVkaW9hcGk6Om5hdmlnYXRlVG9GaWxlKGN1c3RvbV9jb25maWd1cmF0aW9uX2ZpbGUpCn0KYGBgCgojIyBMb2FkIGN1c3RvbSBjb25maWd1cmF0aW9uIHNldHRpbmdzIGFuZCBjaGVjayB0aGVtIGFnYWluc3QgdGhlIGRlZmF1bHQgc2V0dGluZ3MKCmBgYHtyfQojIFNvdXJjZSB0aGUgY3VzdG9tIGNvbmZpZyBmaWxlLCBzaG91bGQgYWRkIG1hbmRhdG9yeSBjb25maWcgc2V0dGluZ3MgdG8gdGhlIGVudmlyb25tZW50CnNvdXJjZShjdXN0b21fY29uZmlndXJhdGlvbl9maWxlLCBsb2NhbD1UUlVFLCBlY2hvPUZBTFNFKQoKIyBDaGVjayB0aGF0IGFsbCBjb25maWcgc2V0dGluZ3MgZXhpc3QsIHRoaXMgY2F0Y2hlcyBtYW5kYXRvcnkgc2V0dGluZ3MgbWlzc2luZyBpbiB0aGUgY29uZmlnIGZpbGUKZm9yIChpIGluIHNlcV9hbG9uZyhjb25maWdfbmFtZXMpKSAgewogIG5hbWUgPC0gY29uZmlnX25hbWVzW2ldCiAgaWYgKCFleGlzdHMobmFtZSkpIHN0b3Aoc3RyX2dsdWUoIk1hbmRhdG9yeSBjb25maWcgc2V0dGluZyB7bmFtZX0gaXMgbm90IHNldCBpbiBjb25maWcgZmlsZSB7YXJnc1sxXX0hIikpCiAgdHlwZSA8LSB0eXBlb2YoZ2V0KG5hbWUpKQogIGlmICh0eXBlICE9IGNvbmZpZ190eXBlc1tbaV1dICYmCiAgICAgIG5hbWUgIT0gIlJFU09MVVRJT05fRE9XTlNDQUxJTkciICYmICMgUiBoYXMgbm8gc3RhYmxlIG51bWVyaWNhbCB0eXBlCiAgICAgIHR5cGUgIT0gIk5VTEwiICYmICMgYWxsb3cgZm9yIGNvbmZpZ3VyZWQgdmVjdG9yIGJlaW5nIGVtcHR5CiAgICAgIGNvbmZpZ190eXBlc1tbaV1dICE9ICJOVUxMIiAjIGFsbG93IGZvciBkZWZhdWx0IHZlY3RvciBiZWluZyBlbXB0eQogICkgc3RvcChzdHJfZ2x1ZSgie25hbWV9IHNldCB0byB3cm9uZyB0eXBlIGluIHtjb25maWd1cmF0aW9uX2ZpbGV9LCB0eXBlIHNob3VsZCBiZSB7Y29uZmlnX3R5cGVzW1tpXV19IikpCn0Kcm0oY29uZmlnX25hbWVzLCBjb25maWdfdHlwZXMpCmBgYAoKIyMgQ2hlY2sgdGhhdCBzdWJtb2R1bGVzIGFuZCBhIEdMT0JJT00gYnJhbmNoIGFyZSBhdmFpbGFibGUKCldoZW4gZXhlY3V0aW5nIHRoaXMgY2h1bmsgZmFpbHMsIFtyZWFkIHRoaXNdKGh0dHBzOi8vaWlhc2EuZ2l0aHViLmlvL0dMT0JJT00tRzRNLWxpbmsvI2dldHRpbmctc2V0KS4KCmBgYHtyfQppZiAoIWZpbGVfZXhpc3RzKHBhdGgoIkNvbmRvcl9ydW5fUiIsICJDb25kb3JfcnVuLlIiKSkpIHN0b3AgKCJDb25kb3JfcnVuX1Igc3VibW9kdWxlIGNvbnRlbnQgaXMgbWlzc2luZyEiKQppZiAoIWZpbGVfZXhpc3RzKHBhdGgoV0RfRE9XTlNDQUxJTkcsICJSRUFETUUubWQiKSkpIHN0b3AgKCJEb3duU2NhbGluZyBzdWJtb2R1bGUgY29udGVudCBpcyBtaXNzaW5nISIpCmlmICghZGlyX2V4aXN0cyhwYXRoKFdEX0dMT0JJT00sICJNb2RlbCIpKSkgc3RvcCAoIk5vIEdMT0JJT00gYnJhbmNoIGhhcyBiZWVuIGNoZWNrZWQgb3V0ISIpCmBgYAoKIyMgU2V0IHVwIGRpcmVjdG9yaWVzIGFuZCBmdW5jdGlvbnMKCmBgYHtyfQojIENhY2hlIHdvcmtpbmcgZGlyZWN0b3J5CkNEIDwtIGdldHdkKCkKCiMgQ2Fub25pY2FsaXplIHBhdGggdG8gdGVtcG9yYXJ5IGRpcmVjdG9yeSBmb3IgdGhpcyBSIHNlc3Npb24KVEVNUF9ESVIgPC0gcGF0aCh0ZW1wZGlyKCkpCgojIFNvdXJjZSBzdXBwb3J0IGZ1bmN0aW9ucwpzb3VyY2UoIlIvZ2xvYmlvbV9nNG1fZnVuY3Rpb25zLlIiKQpzb3VyY2UoIlIvaGVscGVyX2Z1bmN0aW9ucy5SIikKYGBgCgojIyBQZXJmb3JtIHRoZSBpbml0aWFsIEdMT0JJT00gcnVuCgpgYGB7cn0KIyBTZXQgd2QgCndkIDwtIHBhdGhfd2QoV0RfR0xPQklPTSkKCiMgUnVuIEdMT0JJT00gc2NlbmFyaW9zCmNsdXN0ZXJfbnIgPC0gY2FsbF9jb25kb3JfcnVuKHdkKQoKcHJpbnQoIkluaXRpYWwgR0xPQklPTSBydW4gY29tcGxldGUuIikKYGBgCgojIyBFZGl0IGFuZCBydW4gcG9zdC1wcm9jZXNzaW5nIHNjcmlwdAoKYGBge3J9CgpydW5fcG9zdHByb2NfaW5pdGlhbCh3ZCwgY2x1c3Rlcl9ucikKCmBgYAoKIyMgUGVyZm9ybSB0aGUgaW5pdGlhbCBkb3duc2NhbGluZyAtIG5lZWRzIGRhdGEgZnJvbSB0aGUgaW5pdGlhbCBHTE9CSU9NIHJ1bgoKYGBge3J9CmlmICghZmlsZV9leGlzdHMocGF0aChXRF9ET1dOU0NBTElORywiaW5wdXQiLHN0cl9nbHVlKCJvdXRwdXRfbGFuZGNvdmVyX3tQUk9KRUNUfV97REFURV9MQUJFTH0uZ2R4IikpKSkKICBzdG9wKCJGaWxlIGZvciBkb3duc2NhbGluZyBub3QgZm91bmQhIFBsZWFzZSBjYWxsIHRoZSBpbnRpYWwgR0xPQklPTSBydW4gYmVmb3JlIGRvd25zY2FsaW5nIikKCiMgU2V0IHdkIAp3ZCA8LSBwYXRoX3dkKFdEX0RPV05TQ0FMSU5HKQoKIyBFZGl0IERvd25zY2FsaW5nIHNjcmlwdAplZGl0X2Rvd25zY2FsaW5nKHdkKQoKIyBSdW4gRG93bnNjYWxpbmcgc2NlbmFyaW9zCmNsdXN0ZXJfbnIgPC0gY2FsbF9jb25kb3JfcnVuKHdkKQoKcHJpbnQoIkluaXRpYWwgZG93bnNjYWxpbmcgY29tcGxldGUiKQpgYGAKCiMjIE1lcmdlIGRvd25zY2FsaW5nIG91dHB1dHMgYW5kIHRyYW5zZmVyIHRoZW0gdG8gRzRNCgpgYGB7cn0KbWVyZ2VfYW5kX3RyYW5zZmVyKHdkLGNsdXN0ZXJfbnIpCmBgYAoKIyMgVE9ETzogUnVuIEc0TSAtIG5lZWRzIGRhdGEgZnJvbSB0aGUgaW50aWFsIGRvd25zY2FsaW5nCgpgYGB7cn0KaWYgKCFmaWxlX2V4aXN0cyhwYXRoKFBBVEhfRk9SX0c0TSxzdHJfZ2x1ZSgie0dEWF9PVVRQVVRfTkFNRX1fb3V0cHV0X3tQUk9KRUNUfV97REFURV9MQUJFTH0iKSkpKQogIHN0b3AoIkZpbGUgZm9yIEc0TSBydW4gbm90IGZvdW5kISBQbGVhc2UgY2FsbCB0aGUgaW50aWFsIGRvd25zY2FsaW5nIGJlZm9yZSB0aGUgRzRNIHJ1biIpCiAgICAKIyBSdW4gRzRNCmBgYAoKIyMgVE9ETzogUGVyZm9ybSB0aGUgZmluYWwgR0xPQklPTSBydW4gLSBuZWVkcyBkYXRhIGZyb20gdGhlIEc0TSBydW4KCmBgYHtyfQojIEVkaXQgYW5kIHJ1biBwb3N0LXByb2Nlc3Npbmcgc2NyaXB0CiMgU2V0IHdkIAp3ZCA8LSBwYXRoX3dkKFdEX0dMT0JJT00pCnJ1bl9wb3N0cHJvY19maW5hbCh3ZCkKYGBgCgojIyBUT0RPOiBQZXJmb3JtIHRoZSBmaW5hbCBkb3duc2NhbGluZyAtIG5lZWRzIGRhdGEgZnJvbSB0aGUgZmluYWwgR0xPQklPTSBydW4KCgpgYGB7cn0KIyBSdW4gZmluYWwgZG93bnNjYWxpbmcKYGBgCg==</div>
 
 
 
