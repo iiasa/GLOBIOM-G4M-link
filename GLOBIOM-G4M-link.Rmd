@@ -51,24 +51,13 @@ if (!file_exists(custom_configuration_file)) {
 }
 ```
 
-## Load custom configuration settings and check them against the default settings
+## Load and check custom configuration
+
+When all if fine, the configuration is echoed.
 
 ```{r}
-# Source the custom config file, should add mandatory config settings to the environment
 source(custom_configuration_file, local=TRUE, echo=FALSE)
-
-# Check that all config settings exist, this catches mandatory settings missing in the config file
-for (i in seq_along(config_names))  {
-  name <- config_names[i]
-  if (!exists(name)) stop(str_glue("Mandatory config setting {name} is not set in config file {args[1]}!"))
-  type <- typeof(get(name))
-  if (type != config_types[[i]] &&
-      name != "RESOLUTION_DOWNSCALING" && # R has no stable numerical type
-      type != "NULL" && # allow for configured vector being empty
-      config_types[[i]] != "NULL" # allow for default vector being empty
-  ) stop(str_glue("{name} set to wrong type in {configuration_file}, type should be {config_types[[i]]}"))
-}
-rm(config_names, config_types)
+source("R/configuration/check_and_echo.R")
 ```
 
 ## Check that submodules and a GLOBIOM branch are available

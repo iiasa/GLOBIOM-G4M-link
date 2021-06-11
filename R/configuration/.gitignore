@@ -3,5 +3,6 @@
 
 # But not these files....
 !.gitignore
+!check_and_echo.R
 !default.R
 !optional.R
