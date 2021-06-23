@@ -70,7 +70,7 @@ call_condor_run <- function(wd){
       'HOST_REGEXP = "^limpopo"',
       'REQUEST_MEMORY = 2500',
       'REQUEST_CPUS = 1',
-      'GAMS_FILE_PATH = "1_downscaling_tmp.gms"',
+      'GAMS_FILE_PATH = "{path(TEMP_DIR, DOWNSCALING_SCRIPT)}"',
       'GAMS_VERSION = "32.2"',
       'GAMS_ARGUMENTS = "//nsim=\'%1\'"',
       'BUNDLE_INCLUDE_DIRS = c("include")',
@@ -118,7 +118,7 @@ call_condor_run <- function(wd){
 }
 
 #' Function to edit the post-processing script 8_merge_output, to match the current
-#' project and label, and export its #' outputs to the Downscaling folder for further processing
+#' project and label, and export its outputs to the Downscaling folder for further processing
 
 run_postproc_initial <- function(wd, cluster_nr)
 {
@@ -148,10 +148,10 @@ run_postproc_initial <- function(wd, cluster_nr)
 
   # Create downscaling input folder if absent
   if (!dir_exists(path(CD,"/",WD_DOWNSCALING,"/input/"))) dir_create(path(CD,"/",WD_DOWNSCALING,"/input/"))
- 
+
   # Create G4M output folder if absent
   if (!dir_exists(PATH_FOR_G4M)) dir_create(PATH_FOR_G4M)
-  
+
   path_for_downscaling2 <- str_glue(str_replace_all(path(CD,"/",WD_DOWNSCALING,"/input/"),"/","%X%"),"%X%")
 
   tempString <- str_replace(tempString,"execute_unload[:print:]+output_landcover[:print:]+",
@@ -194,7 +194,7 @@ edit_downscaling <- function(wd)
   setwd(wd)
 
   # Configure downscaling script
-  tempString <- read_lines("./1_downscaling.gms")
+  tempString <- read_lines(path(DOWNSCALING_SCRIPT))
 
   if (!any(str_detect(tempString,"%system.dirSep%"))) {
     tempString <- c("$setLocal X %system.dirSep%",tempString)
@@ -205,7 +205,7 @@ edit_downscaling <- function(wd)
   tempString <- string_replace(tempString,"execute_unload[:print:]+",str_glue("execute_unload 'gdx%X%",GDX_OUTPUT_NAME, ".gdx',"))
 
    # Save file
-  write_lines(tempString,"./1_downscaling_tmp.gms")
+  write_lines(tempString, path(TEMP_DIR, DOWNSCALING_SCRIPT))
 
   setwd(CD)
 }
@@ -263,8 +263,8 @@ run_postproc_final <- function(wd){
 
   # Split G4M scenarios into GLOBIOM dimensions
   scen_globiom_map <- str_split_fixed(scen,"__",3)
-  
-  
+
+
   # Check if scenario name must be treated as string
   if (any(str_detect(scen,"%"))) special_char <- TRUE
   if(special_char)  scen <- unlist(lapply(scen,function(x) str_glue("\"",x,"\"")))
@@ -285,7 +285,7 @@ run_postproc_final <- function(wd){
                                         scen_globiom_map[i,bioen_idx], " . ",scen_globiom_map[i,iea_idx]))}
   }
 
-  
+
   # Define sets for mapping
   g4m_globiom_map <- c("G4MScen2","/",scen,"/","","G4M_SCEN_MAP(G4MScen2,*,*,*)",
                   "/",map_string,"/",";")

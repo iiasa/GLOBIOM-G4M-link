@@ -18,7 +18,19 @@ for (i in seq_along(config_names))  {
 
 # 2. Setting-specific checks
 
-# 3. Echo
+# Map downscaling types to script file names
+ds_type_map <- list(
+  default        = "1_downscaling.gms",
+  econometric    = "1_downscalingEconometric.gms",
+  econometricMNL = "1_downscalingEconometricMNL.gms"
+)
+if (!(DOWNSCALING_TYPE %in% names(ds_type_map))) {
+  stop(str_glue("Invalid DOWNSCALING_TYPE '{DOWNSCALING_TYPE}'! Allowed values: {str_c(names(ds_type_map), collapse=', ')}."))
+}
+DOWNSCALING_SCRIPT <- path(ds_type_map[DOWNSCALING_TYPE])
+rm(ds_type_map)
+
+# 3. Echos
 for (name in config_names)  {
   print(str_glue("{name} = ", get(name)))
 }

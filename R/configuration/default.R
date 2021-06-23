@@ -22,6 +22,7 @@ REGIONAL_AG = "ggi" # regional aggregation level
 PATH_FOR_DOWNSCALING = "H:/Downscaling/Model/input/" # path to save gdx for downscaling
 
 # Downscaling configuration
+DOWNSCALING_TYPE = "default" # optional, one of "default", "econometric", or "econometricMNL"
 WD_DOWNSCALING = "DownScale" # optional, working directory for downscaling relative to current path
 MERGE_GDX_DOWNSCALING = TRUE # merge all gdx outputs on limpopo
 GDX_OUTPUT_NAME = "downscaled" # prefix of downscaled gdx file
