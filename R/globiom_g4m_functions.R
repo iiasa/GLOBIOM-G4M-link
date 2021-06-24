@@ -70,9 +70,9 @@ call_condor_run <- function(wd){
       'HOST_REGEXP = "^limpopo"',
       'REQUEST_MEMORY = 2500',
       'REQUEST_CPUS = 1',
-      'GAMS_FILE_PATH = "{path(TEMP_DIR, DOWNSCALING_SCRIPT)}"',
+      'GAMS_FILE_PATH = "{DOWNSCALING_SCRIPT}"',
       'GAMS_VERSION = "32.2"',
-      'GAMS_ARGUMENTS = "//nsim=\'%1\'"',
+      'GAMS_ARGUMENTS = "//project=\'{PROJECT}\' //lab=\'{DATE_LABEL}\' //gdx_path=\'gdx/{GDX_OUTPUT_NAME}.gdx\' //nsim=\'%1\'"',
       'BUNDLE_INCLUDE_DIRS = c("include")',
       'BUNDLE_EXCLUDE_DIRS = c(".git", ".svn", "225*", "doc")',
       'BUNDLE_EXCLUDE_FILES = c("**/*.~*", "**/*.log", "**/*.log~*", "**/*.lxi", "**/*.lst")',
@@ -182,33 +182,6 @@ run_postproc_initial <- function(wd, cluster_nr)
 
 }
 
-# Create condor configuration file
-
-
-
-#' Function to edit the downscaling script according to scenarios and project
-
-edit_downscaling <- function(wd)
-{
-
-  setwd(wd)
-
-  # Configure downscaling script
-  tempString <- read_lines(path(DOWNSCALING_SCRIPT))
-
-  if (!any(str_detect(tempString,"%system.dirSep%"))) {
-    tempString <- c("$setLocal X %system.dirSep%",tempString)
-  }
-
-  tempString <- string_replace(tempString,"\\$setglobal\\s+project\\s+[:print:]+",str_glue("$setglobal project {PROJECT}"))
-  tempString <- string_replace(tempString,"\\$setglobal\\s+lab\\s+[:print:]+",str_glue("$setglobal lab     ",DATE_LABEL))
-  tempString <- string_replace(tempString,"execute_unload[:print:]+",str_glue("execute_unload 'gdx%X%",GDX_OUTPUT_NAME, ".gdx',"))
-
-   # Save file
-  write_lines(tempString, path(TEMP_DIR, DOWNSCALING_SCRIPT))
-
-  setwd(CD)
-}
 
 #' Function to transfer the downscaling output to G4M folder. Merges the downscaled
 #' regions if required

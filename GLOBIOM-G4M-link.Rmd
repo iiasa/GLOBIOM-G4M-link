@@ -113,9 +113,6 @@ if (!file_exists(path(WD_DOWNSCALING,"input",str_glue("output_landcover_{PROJECT
 # Set wd 
 wd <- path_wd(WD_DOWNSCALING)
 
-# Edit Downscaling script
-edit_downscaling(wd)
-
 # Run Downscaling scenarios
 cluster_nr <- call_condor_run(wd)
 
