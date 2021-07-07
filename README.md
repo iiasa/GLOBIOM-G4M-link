@@ -1,6 +1,6 @@
 # GLOBIOM-G4M-link
 
-Automatize the link between GLOBIOM and G4M. The stages of the link are documented and coded in the R notebook `GLOBIOM-G4M-link.Rmd`. To preview the notebook and its possible output, visit [this page](https://iiasa.github.io/GLOBIOM-G4M-link/GLOBIOM-G4M-link.nb.html) or load `GLOBIOM-G4M-link.nb.html` into a web browser.
+Automatize the [link between GLOBIOM and G4M](https://iiasa.github.io/GLOBIOM/documentation.html#link-to-g4m). The stages of the link are documented and coded in the R notebook `GLOBIOM-G4M-link.Rmd`. To preview the notebook and its possible output, visit [this page](https://iiasa.github.io/GLOBIOM-G4M-link/GLOBIOM-G4M-link.nb.html) or load `GLOBIOM-G4M-link.nb.html` into a web browser.
 
 - [Getting set](#getting-set)
 - [R Dependencies](#r-dependencies)
