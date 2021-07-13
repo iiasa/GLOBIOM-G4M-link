@@ -10,6 +10,7 @@ WD_GLOBIOM = "GLOBIOM" # optional, working directory for GLOBIOM relative to cur
 PROJECT = "test_EPA" # project name
 SCENARIOS = "0" # scenarios to run
 MERGE_GDX = TRUE # merge gdx output on limpopo
+GLOBIOM_SCEN_FILE = "6_scenarios.gms"
 
 # Post-processing script configuration (8_merged_output)
 LIMPOPO_RUN = "yes" # Run on limpopo yes/no
@@ -27,20 +28,22 @@ WD_DOWNSCALING = "DownScale" # optional, working directory for downscaling relat
 MERGE_GDX_DOWNSCALING = TRUE # merge all gdx outputs on limpopo
 GDX_OUTPUT_NAME = "downscaled" # prefix of downscaled gdx file
 MERGE_REGIONS = FALSE # merge gdx locally by scenario
-PATH_FOR_G4M = "H:/Downscaling/Model/G4M/output/" # path to save gdx for G4M run, not yet known - meanwhile use an absolute path
+PATH_FOR_G4M = stringr::str_glue("G4M/Data/GLOBIOM/{PROJECT}_{DATE_LABEL}") # path to save gdx for G4M run, not yet known - meanwhile use an absolute path
 SCENARIOS_FOR_DOWNSCALING = "0" # full set or subset of scenarios defined previously
 RESOLUTION_DOWNSCALING = 37 # number of regions specified in the downscaling
-
 #-------------------------------------------------------------------------------
 
 # 2nd block - G4M run
 #-------------------------------------------------------------------------------
-
+WD_G4M = "G4M" # optional, working directory for G4M relative to current path
+G4M_EXE = "g4m_EPA_07052021.exe" # name of G4M executable
+CO2_PRICE = -1 # co2 price for G4M run, -1 if read form a file or actual price otherwise
+SCENARIOS_FOR_G4M = "70:87" # full set or subset of downscaled scenarios 
 #-------------------------------------------------------------------------------
 
 # 3rd block - final GLOBIOM run
 #-------------------------------------------------------------------------------
-PATH_FOR_FEEDBACK = "I:/augustynczik/" #Path for G4M output file
+PATH_FOR_FEEDBACK = stringr::str_glue("/out/{PROJECT}_{DATE_LABEL}/") #Path for G4M output file
 G4M_FEEDBACK_FILE = "tabs_gui_FAOFRA2015CRF_CSIRO_t14_SSP2_EPA_07052021_final_csv_test3.csv" #Name of G4M output file
 REPORTING_G4M_FINAL = "no" #Reporting to G4M yes/no
 REPORTING_IAMC_FINAL = "yes" #Reporting to IAMC yes/no

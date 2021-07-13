@@ -36,6 +36,7 @@ library(gdxtools)
 suppressWarnings(library(tidyverse))
 library(stringr) # part of the tidyverse, but not attached by default
 library(fs)
+
 ```
 
 ## Customize configuration
@@ -75,6 +76,7 @@ if (!dir_exists(path(WD_GLOBIOM, "Model"))) stop ("No GLOBIOM branch has been ch
 ```{r}
 # Cache working directory
 CD <- getwd()
+setwd(CD)
 
 # Canonicalize path to temporary directory for this R session
 TEMP_DIR <- path(tempdir())
@@ -82,6 +84,9 @@ TEMP_DIR <- path(tempdir())
 # Source support functions
 source("R/globiom_g4m_functions.R")
 source("R/helper_functions.R")
+
+# Load dll with G4M report generation routine
+dyn.load(path(CD,WD_G4M,"/tableMergeForLinker/merge_files.so"))
 ```
 
 ## Perform the initial GLOBIOM run
@@ -122,30 +127,72 @@ print("Initial downscaling complete")
 ## Merge downscaling outputs and transfer them to G4M
 
 ```{r}
+
+# Transfer downscaled output to G4M input folder
 merge_and_transfer(wd,cluster_nr)
 ```
 
-## TODO: Run G4M - needs data from the intial downscaling
+## Preliminary: Run baseline G4M scenarios - needs data from the intial downscaling
 
 ```{r}
-if (!file_exists(path(PATH_FOR_G4M,str_glue("{GDX_OUTPUT_NAME}_output_{PROJECT}_{DATE_LABEL}"))))
+if (!file_exists(path(PATH_FOR_G4M,str_glue("/{GDX_OUTPUT_NAME}_output_{PROJECT}_{DATE_LABEL}.gdx"))))
   stop("File for G4M run not found! Please call the intial downscaling before the G4M run")
-    
-# Run G4M
+
+# Set wd 
+wd <- path_wd(WD_G4M)
+
+# Generate csv input files for G4M 
+gdx_to_csv(wd)
 ```
 
-## TODO: Perform the final GLOBIOM run - needs data from the G4M run
+## Preliminary: Run baseline G4M scenarios - needs data from the intial downscaling
+
+```{r}
+
+# Define baseline scenario switch
+baseline_run_g4m <- TRUE
+
+# Run G4M - baseline scenarios
+call_condor_run(wd)
+
+print("G4M baseline scenario run complete")
+
+```
+
+## Preliminary: Run G4M scenarios - needs data from the intial downscaling and G4M baseline scenarios
+
+```{r}
+allfiles <- dir_ls(path(str_glue(CD,"/G4M/out/{PROJECT}_{DATE_LABEL}/baseline/")))
+base_files <- str_detect(allfiles,"NPVbau_[:print:]+.bin")
+if (!any(base_files)) stop("Baseline G4M run not found! Please run the baseline before the G4M scenarios")
+
+# Baseline scenario switch
+baseline_run_g4m <- FALSE
+
+# Run G4M - final scenarios
+call_condor_run(wd)
+
+print("G4M scenario run complete")
+```
+
+## Preliminary: Compile G4M data and produce the report for GLOBIOM  - needs data from the G4M run
+
+```{r}
+# Compile data for GLOBIOM
+compile_g4m_data(wd)
+```
+
+## Preliminary: Perform the final post-processing - needs data from the G4M run
 
 ```{r}
 # Edit and run post-processing script
 # Set wd 
 wd <- path_wd(WD_GLOBIOM)
+
+# Run final post-processing
 run_postproc_final(wd)
+
+print("Final post-processing complete")
 ```
 
-## TODO: Perform the final downscaling - needs data from the final GLOBIOM run
 
-
-```{r}
-# Run final downscaling
-```

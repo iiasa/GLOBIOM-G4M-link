@@ -30,6 +30,14 @@ if (!(DOWNSCALING_TYPE %in% names(ds_type_map))) {
 DOWNSCALING_SCRIPT <- path(ds_type_map[DOWNSCALING_TYPE])
 rm(ds_type_map)
 
+# Check consistency among scenarios
+scen_list <- eval(parse(text=SCENARIOS))
+downs_list <- eval(parse(text=SCENARIOS_FOR_DOWNSCALING))
+g4m_list <- eval(parse(text=SCENARIOS_FOR_G4M))
+
+if (any(!downs_list %in% scen_list)) stop("Downscaling scenario list must be equal or a subset of the GLOBIOM scenario list")
+if (any(!g4m_list %in% downs_list)) stop("G4M scenario list must be equal or a subset of the Downscaling scenario list")
+
 # 3. Echos
 for (name in config_names)  {
   print(str_glue("{name} = ", get(name)))

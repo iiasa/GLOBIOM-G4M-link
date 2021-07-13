@@ -10,10 +10,12 @@
 call_condor_run <- function(wd){
 
   downscaling_run <- any(str_detect(wd,WD_DOWNSCALING))
+  
+  g4m_run <- any(str_detect(wd,str_glue("link/",WD_G4M)))
 
   # Configure and run scenarios using Condor_run.R
 
-  if (!downscaling_run) {
+  if (!downscaling_run & !g4m_run) {
 
   cluster_number_log <- path(TEMP_DIR, "cluster_number.log")
 
@@ -25,7 +27,7 @@ call_condor_run <- function(wd){
     'REQUEST_MEMORY = 13000',
     'REQUEST_CPUS = 1',
     'GAMS_CURDIR = "Model"',
-    'GAMS_FILE_PATH = "6_scenarios.gms"',
+    'GAMS_FILE_PATH = "{GLOBIOM_SCEN_FILE}"',
     'GAMS_VERSION = "32.2"',
     'GAMS_ARGUMENTS = "//nsim=%1 //yes_output=1 //ssp=SSP2 //scen_type=feedback //water_bio=0 PC=2 PS=0 PW=130"',
     'BUNDLE_INCLUDE = "Model"',
@@ -47,20 +49,27 @@ call_condor_run <- function(wd){
 
   config_path <- path(TEMP_DIR, "config_glob.R")
 
-  } else {
+  } else if (downscaling_run) {
 
     # Define list of scenarios and predict downscaling scenarios
-    scenario_mapping <- rep(0:max(eval(parse(text=SCENARIOS_FOR_DOWNSCALING))),each=RESOLUTION_DOWNSCALING)
+    scenario_list <- eval(parse(text=SCENARIOS))
+    downs_scenario_list <- eval(parse(text=SCENARIOS_FOR_DOWNSCALING))
+    
+    # Get globiom and downscaling scenario mapping
+    scenario_mapping <- get_mapping() # Matching by string for now - should come directly from globiom in the future
+    
+    # Define scenarios for downscaling
+    downscaling_scenarios <- subset(scenario_mapping, ScenLoop %in% downs_scenario_list) 
 
     # Define downscaling scenarios for limpopo run
     scen_string <- "c("
-    for (i in 1: length(SCENARIOS_FOR_DOWNSCALING)){
-      scenarios_idx <- which(scenario_mapping %in% SCENARIOS_FOR_DOWNSCALING[i]) - 1
+    for (i in 1: length(downs_scenario_list)){
+      scenarios_idx <- scenario_mapping$ScenNr[which(scenario_mapping$ScenLoop %in% downs_scenario_list[i])] 
       if (i==1) {scen_string <- str_glue(scen_string,str_glue(min(scenarios_idx),":",max(scenarios_idx)))} else {
-        scen_string <- str_glue(scen_string,",",str_glue(min(scenarios_idx),":",max(scenarios_idx)))}
+      scen_string <- str_glue(scen_string,",",str_glue(min(scenarios_idx),":",max(scenarios_idx)))}
     }
     scen_string <- str_glue(scen_string,")")
-
+    
     cluster_number_log <- path(TEMP_DIR, "cluster_number.log")
 
     config_template <- c(
@@ -88,8 +97,35 @@ call_condor_run <- function(wd){
       'CLUSTER_NUMBER_LOG = "{cluster_number_log}"'
     )
     config_path <- file.path(TEMP_DIR, "config_down.R")
+    
+  } else {
+    
+    g4m_jobs <- get_g4m_jobs()[-1] # EPA files for testing
+    if (length(g4m_jobs) == 1) g4m_jobs <- str_glue('"{g4m_jobs}"')
+    #g4m_jobs <- get_g4m_jobs_new()[-1] # implementation for the new G4M interface
+    
+    config_template <- c(
+      'PROJECT = "{PROJECT}"',
+      'PREFIX = "g4m"',
+      'DATE_LABEL = "{DATE_LABEL}"',
+      'G4M_EXE = "{G4M_EXE}"',
+      'JOBS =',
+      '{g4m_jobs}',
+      'SEED_FILES = ""',
+      'GAMS_CURDIR = ""', # optional, working directory for GAMS and its arguments relative to working directory, "" defaults to the working directory
+      'HOST_REGEXP = "^limpopo"',
+      'REQUEST_MEMORY = 3000',
+      'REQUEST_CPUS = 1',
+      'BUNDLE_INCLUDE = "*"',
+      'WAIT_FOR_RUN_COMPLETION = TRUE',
+      'BASELINE_RUN = {baseline_run_g4m}'
+    )
+    
+    config_path <- path(TEMP_DIR, "config_g4m.R")
+    
   }
 
+  # Write config file
   current_env <- environment()
   write_lines(lapply(config_template, .envir=current_env, str_glue), config_path)
   rm(config_template, current_env)
@@ -107,10 +143,15 @@ call_condor_run <- function(wd){
   }
 
     # Submit run to Limpopo and retrieve the run's Condor cluster number on completion
+  if (!g4m_run){
   rc <- system(str_glue("Rscript --vanilla {CD}/Condor_run_R/Condor_run.R {config_path}"))
   if (rc != 0) stop("GLOBIOM parallel Condor run on Limpopo failed!")
   cluster_nr <- readr::parse_number(read_file(cluster_number_log))
-
+  } else {
+    rc <- system(str_glue("Rscript --vanilla {CD}/{WD_G4M}/R/Condor_run.R {config_path}"))
+    if (rc != 0) stop("G4M parallel Condor run on Limpopo failed!")
+    cluster_nr <- 0
+  }
   # Back to prior dir
   setwd(CD)
 
@@ -123,9 +164,12 @@ call_condor_run <- function(wd){
 run_postproc_initial <- function(wd, cluster_nr)
 {
   setwd(wd)
-
+  
+  # Create full G4M path
+  PATH_FOR_G4M = path(str_glue(CD,"/",PATH_FOR_G4M))
+  
   # create output path string
-  path_for_g4m2 <- str_replace_all(PATH_FOR_G4M,"/","%X%")
+  path_for_g4m2 <- str_glue(str_replace_all(PATH_FOR_G4M,"/","%X%"),"%X%")
 
   # Configure merged output file
   tempString <- read_lines("./Model/8_merge_output.gms")
@@ -192,20 +236,66 @@ merge_and_transfer <- function(wd,cluster_nr){
 
     # Save merged output to G4M folder
     f <- str_glue(wd,"/gdx/downscaled_{PROJECT}_{cluster_nr}_merged.gdx")
-    file_copy(f,str_glue(PATH_FOR_G4M,"downscaled_output_{PROJECT}_{DATE_LABEL}.gdx"),overwrite = TRUE)
+    file_copy(f,path(str_glue(CD,"/",PATH_FOR_G4M,"/downscaled_output_{PROJECT}_{DATE_LABEL}.gdx")),overwrite = TRUE)
   }
 
   if (!MERGE_GDX_DOWNSCALING & MERGE_REGIONS){
-    for (i in 1:length(SCENARIOS_FOR_DOWNSCALING)){
-      scenarios_idx <- which(scenario_mapping %in% SCENARIOS_FOR_DOWNSCALING[i]) - 1
+    
+    scen_list <- eval(parse(text=SCENARIOS_FOR_DOWNSCALING))
+    
+    for (i in 1:length(scen_list)){
+      scenarios_idx <- which(scenario_mapping %in% scen_list[i]) - 1
       merge_gdx_down(str_glue(WD_DOWNSCALING,"/gdx"),scenarios_idx,
-                     SCENARIOS_FOR_DOWNSCALING[i],cluster_nr,PATH_FOR_G4M)
+                     scen_list[i],cluster_nr,PATH_FOR_G4M)
     }
   }
 
   setwd(CD)
 }
 
+
+#' Funciton to colect G4M results from binary files and write a csv file for GLOBIOM
+compile_g4m_data <- function(wd){
+  # Define wd
+  setwd(wd)
+  
+  # Path of output folder
+  file_path <- path_wd(str_glue("/out/{PROJECT}_{DATE_LABEL}/"))
+  
+  # Suffix of scenario runs
+  file_suffix <- "_FAOFRA2015CRF_CSIRO_t14_SSP2_EPA_07052021_" # for now in future should be indexed by project and date label
+
+  # G4M scenario ID
+  g4m_jobs <- get_g4m_jobs()
+  scenarios <- str_replace_all(g4m_jobs," ","__")[-1]
+  
+  if (baseline_run_g4m) {
+    scenarios <- str_sub(scenarios,1,str_length(scenarios) - 4)
+  } else {
+    scenarios <- str_sub(scenarios,1,str_length(scenarios) - 5)
+  }
+  
+  
+  # G4M scenario name
+  scenario_names <- str_replace_all(scenarios,"__","_")
+  
+  # Number of scenarios
+  N <- length(scenarios)
+  
+  # CO2 price
+  co2 <- abs(as.integer(str_sub(g4m_jobs,str_length(g4m_jobs)-2,str_length(g4m_jobs) - 1)))[-1]
+  
+  # Compile results
+  generate_g4M_report(file_path,file_suffix,scenarios,scenario_names,N,co2)
+  
+  # Edit and save csv file for GAMS
+  g4m_out <- read.csv(path(file_path,G4M_FEEDBACK_FILE))
+  colnames(g4m_out)[1:3] <- ""
+  colnames(g4m_out) <- str_replace_all(colnames(g4m_out),"X","")
+  write.csv(g4m_out,path(file_path,G4M_FEEDBACK_FILE),row.names = F)
+  
+  setwd(CD)
+}
 
 #' Final post-processing. The function reads, edits and executes the
 #' 8_merged_output.gms script #' to generate reports for IAMC
@@ -225,13 +315,16 @@ run_postproc_final <- function(wd){
 
   # Save file
   write_lines(tempString, "./Model/8_merge_output_tmp.gms")
+  
+  # Define path for feedback file
+  path_feedback <- path(CD,WD_G4M,PATH_FOR_FEEDBACK)
 
   # read in G4M output file
-  g4m_output <- read.csv(str_glue(PATH_FOR_FEEDBACK,G4M_FEEDBACK_FILE) # Will be mofidied in the future to work with gdx files
+  g4m_output <- read.csv(path(str_glue(path_feedback,"/",G4M_FEEDBACK_FILE)) # Will be modified in the future to work with gdx files
                          , header=FALSE)
 
   # Define G4M scenarios
-  scen <- unique(g4m_output$V2)
+  scen <- unique(g4m_output[,2])
   scen <- scen[which(scen != "")]
 
   # Split G4M scenarios into GLOBIOM dimensions
@@ -239,8 +332,9 @@ run_postproc_final <- function(wd){
 
 
   # Check if scenario name must be treated as string
+  special_char <- FALSE
   if (any(str_detect(scen,"%"))) special_char <- TRUE
-  if(special_char)  scen <- unlist(lapply(scen,function(x) str_glue("\"",x,"\"")))
+  if (special_char)  scen <- unlist(lapply(scen,function(x) str_glue("\"",x,"\"")))
 
   # Define column indices of Macro, Bioen and IEA scenarios
   macro_idx <- which(str_detect(scen_globiom_map[1,],"SSP"))
@@ -268,7 +362,7 @@ run_postproc_final <- function(wd){
   tempString <- string_replace(tempString,regex('G4MScen2[[:print:]*|[\r\n]*]*G4M_SCEN_MAP[[:print:]*|[\r\n]*]*/[\r\n\\s]+;'),
                             str_c(g4m_globiom_map,collapse="\n"))
 
-  path_for_feedback2 <- str_replace_all(PATH_FOR_FEEDBACK,"/","%X%")
+  path_for_feedback2 <- str_glue(str_replace_all(path_feedback,"/","%X%"),"%X%")
 
   tempString <- string_replace(tempString,"\\$include\\s+[:print:]*X[:print:]*",
                            str_glue("$include ",path_for_feedback2,G4M_FEEDBACK_FILE))
