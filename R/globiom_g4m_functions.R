@@ -165,11 +165,9 @@ run_postproc_initial <- function(wd, cluster_nr)
 {
   setwd(wd)
   
-  # Create full G4M path
-  PATH_FOR_G4M = path(str_glue(CD,"/",PATH_FOR_G4M))
-  
+
   # create output path string
-  path_for_g4m2 <- str_glue(str_replace_all(PATH_FOR_G4M,"/","%X%"),"%X%")
+  path_for_g4m2 <- str_glue(str_replace_all(str_glue(CD,"/",PATH_FOR_G4M),"/","%X%"),"%X%")
 
   # Configure merged output file
   tempString <- read_lines("./Model/8_merge_output.gms")
