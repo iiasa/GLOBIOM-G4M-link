@@ -99,10 +99,7 @@ gdx_to_csv <- function(wd){
     if (i==5) names(var) <- c("REGION","MacroScen","IEA_SCEN","BioenScen","Year","value")
 
     # Remap years to columns
-    var2 <- var %>%
-      arrange(Year) %>%
-      mutate(id = data.table::rowid(Year)) %>%
-      pivot_wider(names_from = Year, values_from = value,values_fill = 0) %>% select(-id)
+    var2 <- var %>% spread(Year, value, fill = 0, convert = FALSE)
 
     if (i <= 3) var2 <- var2 %>% relocate(REGION, .before = G4MmItem)
     if (i==4) var2 <- var2 %>% relocate(REGION, .before = LC_TYPE)
@@ -123,10 +120,7 @@ gdx_to_csv <- function(wd){
   names(downs_files) <- c("g4m_05_id","MacroScen","IEA_SCEN","BioenScen","Year","value")
 
   # Remap years to columns
-  downs2 <- downs_files %>%
-    arrange(Year) %>%
-    mutate(id = data.table::rowid(Year)) %>%
-    pivot_wider(names_from = Year, values_from = value,values_fill = 0) %>% select(-id)
+  downs2 <- downs_files %>% spread(Year, value, fill = 0, convert = FALSE)
 
   # Write csv file
   write.csv(downs2,str_glue(wd,"/Data/GLOBIOM/{PROJECT}_{DATE_LABEL}/output_glo4g4mm_LC_{PROJECT}_abs_{DATE_LABEL}.csv"),
