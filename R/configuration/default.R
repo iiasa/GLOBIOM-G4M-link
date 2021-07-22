@@ -4,7 +4,7 @@
 # Limpopo scenario configuration - may include all sample_config options
 WD_GLOBIOM = "GLOBIOM" # optional, working directory for GLOBIOM relative to current path
 PROJECT = "test_EPA" # project name
-SCENARIOS = "0" # scenarios to run
+SCENARIOS = 0 # scenarios to run
 MERGE_GDX = TRUE # merge gdx output on limpopo
 GLOBIOM_SCEN_FILE = "6_scenarios.gms"
 
@@ -25,7 +25,7 @@ MERGE_GDX_DOWNSCALING = TRUE # merge all gdx outputs on limpopo
 GDX_OUTPUT_NAME = "downscaled" # prefix of downscaled gdx file
 MERGE_REGIONS = FALSE # merge gdx locally by scenario
 PATH_FOR_G4M = stringr::str_glue("G4M/Data/GLOBIOM/{PROJECT}_{DATE_LABEL}") # path to save gdx for G4M run, not yet known - meanwhile use an absolute path
-SCENARIOS_FOR_DOWNSCALING = "0" # full set or subset of scenarios defined previously
+SCENARIOS_FOR_DOWNSCALING = 0 # full set or subset of scenarios defined previously
 RESOLUTION_DOWNSCALING = 37 # number of regions specified in the downscaling
 #-------------------------------------------------------------------------------
 
@@ -34,7 +34,7 @@ RESOLUTION_DOWNSCALING = 37 # number of regions specified in the downscaling
 WD_G4M = "G4M" # optional, working directory for G4M relative to current path
 G4M_EXE = "g4m_EPA_07052021.exe" # name of G4M executable
 CO2_PRICE = -1 # co2 price for G4M run, -1 if read form a file or actual price otherwise
-SCENARIOS_FOR_G4M = "70:87" # full set or subset of downscaled scenarios
+SCENARIOS_FOR_G4M = 70:87 # full set or subset of downscaled scenarios
 #-------------------------------------------------------------------------------
 
 # 3rd block - final GLOBIOM run
