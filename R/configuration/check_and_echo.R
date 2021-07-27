@@ -18,6 +18,11 @@ for (i in seq_along(config_names))  {
 
 # 2. Setting-specific checks
 
+# Check paths
+if (!dir_exists(WD_GLOBIOM)) stop(str_glue('Directory WD_GLOBIOM = "{WD_GLOBIOM}" does not exist!'))
+if (!dir_exists(PATH_FOR_G4M)) stop(str_glue('Directory PATH_FOR_G4M = "{PATH_FOR_G4M}" does not exist!'))
+if (!dir_exists(WD_G4M)) stop(str_glue('Directory WD_G4M = "{WD_G4M}" does not exist!'))
+
 # Map downscaling types to script file names
 ds_type_map <- list(
   default        = "1_downscaling.gms",

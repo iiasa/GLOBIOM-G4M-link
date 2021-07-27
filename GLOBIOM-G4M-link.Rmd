@@ -74,9 +74,8 @@ if (!dir_exists(path(WD_GLOBIOM, "Model"))) stop ("No GLOBIOM branch has been ch
 ## Set up directories and functions
 
 ```{r}
-# Cache working directory
+# Cache working directory, should equal the root directory of the repo's working tree.
 CD <- getwd()
-setwd(CD)
 
 # Canonicalize path to temporary directory for this R session
 TEMP_DIR <- path(tempdir())
