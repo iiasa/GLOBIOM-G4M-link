@@ -40,7 +40,7 @@ SCENARIOS_FOR_G4M = 70:87 # full set or subset of downscaled scenarios
 # 3rd block - final GLOBIOM run
 #-------------------------------------------------------------------------------
 PATH_FOR_FEEDBACK = stringr::str_glue("out/{PROJECT}_{DATE_LABEL}/") # directory for G4M output file relative to WD_G4M
-G4M_FEEDBACK_FILE = "tabs_gui_FAOFRA2015CRF_CSIRO_t14_SSP2_EPA_07052021_final_csv_test3.csv" # name of G4M output file
+G4M_FEEDBACK_FILE = stringr::str_glue("tabs_gui_{PROJECT}_{DATE_LABEL}_final_csv.csv") #Name of G4M output file
 REPORTING_G4M_FINAL = "no" # reporting to G4M yes/no
 REPORTING_IAMC_FINAL = "yes" # reporting to IAMC yes/no
 REPORTING_IAMC_G4M_FINAL = "yes" #  reporting G4M to IAMC REGIONAL_AG/no
