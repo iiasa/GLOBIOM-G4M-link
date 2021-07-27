@@ -20,7 +20,11 @@ for (i in seq_along(config_names))  {
 
 # Check paths
 if (!dir_exists(WD_GLOBIOM)) stop(str_glue('Directory WD_GLOBIOM = "{WD_GLOBIOM}" does not exist!'))
-if (!dir_exists(PATH_FOR_G4M)) stop(str_glue('Directory PATH_FOR_G4M = "{PATH_FOR_G4M}" does not exist!'))
+if (!dir_exists(PATH_FOR_G4M)) {
+  if (!dir_exists(path_dir(PATH_FOR_G4M))) stop(str_glue('Neither directory PATH_FOR_G4M = "{PATH_FOR_G4M}" nor its parent directory exist!'))
+  dir_create(PATH_FOR_G4M)
+  print(str_glue('Creating directory PATH_FOR_G4M = "{PATH_FOR_G4M}"'))
+}
 if (!dir_exists(WD_G4M)) stop(str_glue('Directory WD_G4M = "{WD_G4M}" does not exist!'))
 
 # Map downscaling types to script file names
