@@ -108,7 +108,7 @@ gdx_to_csv <- function(wd){
     if (varname == "CO2PRICE") varname <- "CO2price"
 
     # Write csv files
-    write.csv(var2,str_glue(wd,"/Data/GLOBIOM/{PROJECT}_{DATE_LABEL}/output_glo4g4mm_{varname}_{PROJECT}_{DATE_LABEL}.csv"),
+    write.csv(var2,str_glue(wd,"/Data/GLOBIOM/{PROJECT}_{DATE_LABEL}/GLOBIOM2G4M_output_{varname}_{PROJECT}_{DATE_LABEL}.csv"),
               row.names = F, quote = F)
   }
 
@@ -123,7 +123,7 @@ gdx_to_csv <- function(wd){
   downs2 <- downs_files %>% spread(Year, value, fill = 0, convert = FALSE)
 
   # Write csv file
-  write.csv(downs2,str_glue(wd,"/Data/GLOBIOM/{PROJECT}_{DATE_LABEL}/output_glo4g4mm_LC_{PROJECT}_abs_{DATE_LABEL}.csv"),
+  write.csv(downs2,str_glue(wd,"/Data/GLOBIOM/{PROJECT}_{DATE_LABEL}/GLOBIOM2G4M_output_LC_abs_{PROJECT}_{DATE_LABEL}.csv"),
             row.names = F, quote = F)
 
   setwd(CD)
@@ -208,7 +208,7 @@ get_g4m_jobs <- function(){
 }
 
 
-# Function to generate G4M job string - new interface (not yet functional)
+# Function to generate G4M job string - new interface
 get_g4m_jobs_new <- function(){
 
   # Get downscaling mapping
@@ -234,7 +234,7 @@ get_g4m_jobs_new <- function(){
     for (i in 1:length(macro)){
       for (j in 1:length(iea)){
         for (k in 1:length(base_scenarios)){
-          s_str <- str_c(macro[i],"__",iea[j],"__",base_scenarios[k])
+          s_str <- str_c(macro[i],"_",iea[j],"_",base_scenarios[k])
           l <- str_c(str_glue("{PROJECT}_{DATE_LABEL}")," ",s_str," ",s_str," ",0,",")
           g4m_scenario_string <- c(g4m_scenario_string,l)
         }
@@ -244,8 +244,8 @@ get_g4m_jobs_new <- function(){
     for (i in 1:length(macro)){
       for (j in 1:length(iea)){
         for (k in 1:length(g4M_scenarios)){
-          sb_str <- str_c(macro[i],"__",iea[j],"__",base_scenarios[k])
-          s_str <- str_c(macro[i],"__",iea[j],"__",g4M_scenarios[k])
+          sb_str <- str_c(macro[i],"_",iea[j],"_",base_scenarios[k])
+          s_str <- str_c(macro[i],"_",iea[j],"_",g4M_scenarios[k])
           l <- str_c(str_glue("{PROJECT}_{DATE_LABEL}")," ",sb_str," ",s_str," ",-1,",")
           g4m_scenario_string <- c(g4m_scenario_string,l)
         }
