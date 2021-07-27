@@ -45,5 +45,5 @@ if (any(!SCENARIOS_FOR_G4M %in% SCENARIOS_FOR_DOWNSCALING)) stop("G4M scenario l
 
 # 3. Echos
 for (name in config_names)  {
-  print(str_glue("{name} = ", get(name)))
+  print(str_glue("{name} = ", toString(get(name))))
 }
