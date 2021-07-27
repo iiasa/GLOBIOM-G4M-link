@@ -96,9 +96,10 @@ call_condor_run <- function(wd){
 
   } else {
 
-    g4m_jobs <- get_g4m_jobs()[-1] # EPA files for testing
+    #g4m_jobs <- get_g4m_jobs()[-1] # EPA files for testing
+    g4m_jobs <- get_g4m_jobs_new()[-1] # implementation for the new G4M interface
     if (length(g4m_jobs) == 1) g4m_jobs <- str_glue('"{g4m_jobs}"')
-    #g4m_jobs <- get_g4m_jobs_new()[-1] # implementation for the new G4M interface
+
 
     config_template <- c(
       'PROJECT = "{PROJECT}"',
@@ -188,7 +189,7 @@ run_postproc_initial <- function(wd, cluster_nr)
   if (!dir_exists(path(CD,"/",WD_DOWNSCALING,"/input/"))) dir_create(path(CD,"/",WD_DOWNSCALING,"/input/"))
 
   # Create G4M output folder if absent
-  if (!dir_exists(PATH_FOR_G4M)) dir_create(PATH_FOR_G4M)
+  if (!dir_exists(path(CD,"/",PATH_FOR_G4M))) dir_create(path(CD,"/",PATH_FOR_G4M))
 
   path_for_downscaling2 <- str_glue(str_replace_all(path(CD,"/",WD_DOWNSCALING,"/input/"),"/","%X%"),"%X%")
 
@@ -255,7 +256,7 @@ compile_g4m_data <- function(wd){
   file_path <- path_wd(str_glue("/out/{PROJECT}_{DATE_LABEL}/"))
 
   # Suffix of scenario runs
-  file_suffix <- "_FAOFRA2015CRF_CSIRO_t14_SSP2_EPA_07052021_" # for now in future should be indexed by project and date label
+  file_suffix <- str_glue("_{PROJECT}_{DATE_LABEL}_") # for now in future should be indexed by project and date label
 
   # G4M scenario ID
   g4m_jobs <- get_g4m_jobs()
@@ -284,7 +285,7 @@ compile_g4m_data <- function(wd){
   g4m_out <- read.csv(path(file_path,G4M_FEEDBACK_FILE))
   colnames(g4m_out)[1:3] <- ""
   colnames(g4m_out) <- str_replace_all(colnames(g4m_out),"X","")
-  write.csv(g4m_out,path(file_path,G4M_FEEDBACK_FILE),row.names = F)
+  write.csv(g4m_out,path(file_path,G4M_FEEDBACK_FILE),row.names = F,quote = T)
 
   setwd(CD)
 }
