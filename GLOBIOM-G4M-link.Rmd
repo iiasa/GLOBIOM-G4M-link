@@ -36,7 +36,6 @@ library(gdxtools)
 suppressWarnings(library(tidyverse))
 library(stringr) # part of the tidyverse, but not attached by default
 library(fs)
-
 ```
 
 ## Customize configuration
@@ -134,10 +133,10 @@ merge_and_transfer(wd,cluster_nr)
 ## Preliminary: Run baseline G4M scenarios - needs data from the intial downscaling
 
 ```{r}
-if (!file_exists(path(PATH_FOR_G4M,str_glue("/{GDX_OUTPUT_NAME}_output_{PROJECT}_{DATE_LABEL}.gdx"))))
+if (!file_exists(path(PATH_FOR_G4M,str_glue("{GDX_OUTPUT_NAME}_output_{PROJECT}_{DATE_LABEL}.gdx"))))
   stop("File for G4M run not found! Please call the intial downscaling before the G4M run")
 
-# Set wd 
+# Set wd
 wd <- path_wd(WD_G4M)
 
 # Generate csv input files for G4M 
@@ -161,7 +160,7 @@ print("G4M baseline scenario run complete")
 ## Preliminary: Run G4M scenarios - needs data from the intial downscaling and G4M baseline scenarios
 
 ```{r}
-allfiles <- dir_ls(path(str_glue(CD,"/G4M/out/{PROJECT}_{DATE_LABEL}/baseline/")))
+allfiles <- dir_ls(path(CD, "G4M", "out", str_glue("{PROJECT}_{DATE_LABEL}"), "baseline"))
 base_files <- str_detect(allfiles,"NPVbau_[:print:]+.bin")
 if (!any(base_files)) stop("Baseline G4M run not found! Please run the baseline before the G4M scenarios")
 
