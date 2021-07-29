@@ -129,22 +129,42 @@ gdx_to_csv <- function(wd){
   setwd(CD)
 }
 
-
 # Function to retrieve the mapping between globiom and downscaling scenarios
 get_mapping <- function(){
 
+
   # Read scenario mapping from globiom and create data frame
   globiom_scenario_map <- read_lines(path(str_glue(CD,"/",WD_GLOBIOM,"/Model/{GLOBIOM_SCEN_FILE}")))
-  idx_start <- which(str_detect(globiom_scenario_map,"SCEN_MAP[:print:]AllScenLOOP[:print:]+"))
+
+  # Find start and end of scenario definition
+  idx_start <- which(str_detect(globiom_scenario_map,regex("SCEN_MAP[:print:]+AllScenLOOP[:print:]+",ignore_case = T)))
   idx_end <- which(str_detect(globiom_scenario_map[(idx_start+2):length(globiom_scenario_map)],"/[:print:]+"))[1]+idx_start
+
+  # Get number of dimensions
+  scen_dims <- globiom_scenario_map[idx_start]
+  scen_dims <- unlist(str_split(scen_dims,"[(),]"))
+  scen_dims <- scen_dims[which(!scen_dims %in% c(regex("SCEN_MAP", ignore_case = T),""))]
+
+  # Get mapping
+  N <- length(scen_dims)
   scen_map <- globiom_scenario_map[(idx_start+1):(idx_end)]
   scen_map <- str_replace_all(scen_map, "[ \t\n\r\v\f]+", "")
-  scen_map <- as_tibble(str_split_fixed(scen_map, "\\.",n=5))
-  names(scen_map) <- c("ScenLoop","MacroScen","BioenScen","IEAScen","LUScen")
-  scen_map <- subset(scen_map,LUScen != "")
+  scen_map <- as_tibble(str_split_fixed(scen_map, "\\.",n=N))
+  names(scen_map) <- scen_dims
+  scen_map <- scen_map  %>% na_if("") %>% na.omit
+
+  loop_idx <- which(str_detect(scen_dims,regex("ScenLoop",ignore_case = T)))
+  macro_idx <- which(str_detect(scen_dims,regex("MacroScen",ignore_case = T)))
+  bioen_idx <- which(str_detect(scen_dims,regex("BioenScen",ignore_case = T)))
+  iea_idx <- which(str_detect(scen_dims,regex("IEA[:print:]+Scen",ignore_case = T)))
+
+  colnames(scen_map)[c(loop_idx,macro_idx,bioen_idx,iea_idx)] <- c("ScenLoop","MacroScen","BioenScen","IEAScen")
+
+  #Get solved scenarios
   scen_map_solved <- subset(scen_map,ScenLoop %in% SCENARIOS)
   scen_map_solved$BioenScen <- str_replace_all(scen_map_solved$BioenScen,"\"","")
 
+  # Define GLOBIOM - Downscaling map
   downs_input <- as_tibble(gdx(path(str_glue(CD,"/",WD_DOWNSCALING,"/input/output_landcover_{PROJECT}_{DATE_LABEL}.gdx")))["LANDCOVER_COMPARE_SCEN"])
   names(downs_input) <- c("ScenNr","LC","MacroScen","BioenScen","IEAScen","Year","value")
   downs_input <- subset(downs_input,ScenNr=="World" & LC=="TotLnd" & Year==2000)
