@@ -51,6 +51,9 @@ call_condor_run <- function(wd){
 
   } else if (downscaling_run) {
 
+    # Check if input data is empty
+    check_gdx(wd)
+
     # Get globiom and downscaling scenario mapping
     scenario_mapping <- get_mapping() # Matching by string for now - should come directly from globiom in the future
 
@@ -95,6 +98,9 @@ call_condor_run <- function(wd){
     config_path <- file.path(TEMP_DIR, "config_down.R")
 
   } else {
+
+    # Check if input data is empty
+    check_gdx(wd)
 
     #g4m_jobs <- get_g4m_jobs()[-1] # EPA files for testing
     g4m_jobs <- get_g4m_jobs_new()[-1] # implementation for the new G4M interface
