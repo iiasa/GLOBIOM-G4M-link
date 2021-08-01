@@ -2,20 +2,13 @@
 #' File with a collection of functions to run each section of
 #' the GLOBIOM-G4M-link
 
-
-
-#' Perform the initial GLOBIOM scenarios or Downscaling run. The function submits the
-#' desired scenarios for parallel execution on Limpopo.
-
-call_condor_run <- function(wd){
-
-  downscaling_run <- any(str_detect(wd,WD_DOWNSCALING))
-
-  g4m_run <- any(str_detect(wd,str_glue("link/",WD_G4M)))
-
-  # Configure and run scenarios using Condor_run.R
-
-  if (!downscaling_run & !g4m_run) {
+#' Perform GLOBIOM scenarios run
+#'
+#' Perform the initial GLOBIOM scenarios by submitting the configured
+#' for parallel execution on Limpopo.
+#'
+#' @return cluster_nr Cluster sequence number of HT Condor submission
+run_GLOBIOM_scenarios <- function() {
 
   cluster_number_log <- path(TEMP_DIR, "cluster_number.log")
 
@@ -49,7 +42,40 @@ call_condor_run <- function(wd){
 
   config_path <- path(TEMP_DIR, "config_glob.R")
 
-  } else if (downscaling_run) {
+  # Write config file
+  current_env <- environment()
+  write_lines(lapply(config_template, .envir=current_env, str_glue), config_path)
+  rm(config_template, current_env)
+
+  # Set working directory for submission
+  setwd(WD_GLOBIOM)
+
+  # Ensure that a sub directories for run logs and outputs exist
+  if (!dir_exists('Condor')) dir_create("Condor")
+
+  rc <- system(str_glue("Rscript --vanilla {CD}/Condor_run_R/Condor_run.R {config_path}"))
+  if (rc != 0) stop("GLOBIOM parallel Condor run on Limpopo failed!")
+  cluster_nr <- readr::parse_number(read_file(cluster_number_log))
+
+  # Back to prior dir
+  setwd(CD)
+
+  return(cluster_nr)
+}
+
+
+#' Perform a G4M or Downscaling run. The function submits the
+#' desired scenarios for parallel execution on Limpopo.
+
+call_condor_run <- function(wd){
+
+  downscaling_run <- any(str_detect(wd,WD_DOWNSCALING))
+
+  g4m_run <- any(str_detect(wd,str_glue("link/",WD_G4M)))
+
+  # Configure and run scenarios using Condor_run.R
+
+  if (downscaling_run) {
 
     # Check if input data is empty
     check_gdx(wd)
@@ -146,11 +172,7 @@ call_condor_run <- function(wd){
   }
 
     # Submit run to Limpopo and retrieve the run's Condor cluster number on completion
-  if (!g4m_run){
-  rc <- system(str_glue("Rscript --vanilla {CD}/Condor_run_R/Condor_run.R {config_path}"))
-  if (rc != 0) stop("GLOBIOM parallel Condor run on Limpopo failed!")
-  cluster_nr <- readr::parse_number(read_file(cluster_number_log))
-  } else {
+  if (g4m_run) {
     rc <- system(str_glue("Rscript --vanilla {CD}/{WD_G4M}/R/Condor_run.R {config_path}"))
     if (rc != 0) stop("G4M parallel Condor run on Limpopo failed!")
     cluster_nr <- 0

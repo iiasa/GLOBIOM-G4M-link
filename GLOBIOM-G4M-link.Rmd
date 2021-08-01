@@ -87,14 +87,10 @@ source("R/helper_functions.R")
 dyn.load(path(CD,WD_G4M,"/tableMergeForLinker/merge_files.so"))
 ```
 
-## Perform the initial GLOBIOM run
+## Perform the initial GLOBIOM scenarios run
 
 ```{r}
-# Set wd 
-wd <- path_wd(WD_GLOBIOM)
-
-# Run GLOBIOM scenarios
-cluster_nr <- call_condor_run(wd)
+cluster_nr <- run_GLOBIOM_scenarios()
 
 print("Initial GLOBIOM run complete.")
 ```
@@ -103,7 +99,7 @@ print("Initial GLOBIOM run complete.")
 
 ```{r}
 
-run_postproc_initial(wd, cluster_nr)
+run_postproc_initial(WD_GLOBIOM, cluster_nr)
 
 ```
 
