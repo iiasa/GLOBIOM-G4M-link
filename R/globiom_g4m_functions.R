@@ -50,9 +50,6 @@ run_GLOBIOM_scenarios <- function() {
   # Set working directory for submission
   setwd(WD_GLOBIOM)
 
-  # Ensure that a sub directories for run logs and outputs exist
-  if (!dir_exists('Condor')) dir_create("Condor")
-
   rc <- system(str_glue("Rscript --vanilla {CD}/Condor_run_R/Condor_run.R {config_path}"))
   if (rc != 0) stop("GLOBIOM parallel Condor run on Limpopo failed!")
   cluster_nr <- readr::parse_number(read_file(cluster_number_log))
@@ -124,9 +121,6 @@ run_initial_downscaling <- function() {
   rm(config_template, current_env)
 
   setwd(WD_DOWNSCALING)
-
-  # Ensure that a sub directories for run logs and outputs exist
-  if (!dir_exists('Condor')) dir_create("Condor")
 
   # Ensure that required directories exist
   if (!dir_exists('gdx')) dir_create("gdx")
