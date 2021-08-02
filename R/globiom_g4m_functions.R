@@ -231,16 +231,18 @@ run_postproc_initial <- function(wd, cluster_nr)
   write_lines(tempString, "./Model/8a_rep_g4m_tmp.gms")
 
   # Change wd to run post-processing file
-  wd_model <- path(wd,"/Model/")
-  setwd(wd_model)
 
   # Run post-processing script
-  rc <- tryCatch(
-    system("gams 8_merge_output_tmp.gms"),
-    error=function(e) e
+  rc <- tryCatch({
+    setwd("Model")
+    system("gams 8_merge_output_tmp.gms")
+    },
+    error=function(e) e,
+    finally = {
+      setwd(CD)
+    }
   )
   if(rc != 0){
-    setwd(CD)
     stop("Bad return from gams")
   }
 
