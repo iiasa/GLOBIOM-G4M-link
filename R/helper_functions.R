@@ -310,21 +310,3 @@ generate_g4M_report <- function(file_path,file_suffix,scenarios,scenario_names,N
 
 }
 
-
-# Function to test if relevant gdx tables contain the required data
-check_gdx <- function(wd){
-  if (any(str_detect(wd,WD_DOWNSCALING))) {
-    downs_input <- file_size(path(str_glue(CD,"/",WD_DOWNSCALING,"/input/output_landcover_{PROJECT}_{DATE_LABEL}.gdx")))
-    if (downs_input/1024 < 10) stop("Input gdx file might be empty - check reporting script")
-  }
-
-  if (any(str_detect(wd,str_glue("link/",WD_G4M)))) {
-    downs_input <- file_size(path(str_glue(CD,"/",WD_G4M,"/Data/GLOBIOM/{PROJECT}_{DATE_LABEL}/downscaled_output_{PROJECT}_{DATE_LABEL}.gdx")))
-    if (downs_input/1024 < 10) stop("Input gdx file might be empty - check reporting script")
-
-    glob_input <- file_size(path(str_glue(CD,"/",WD_G4M,"/Data/GLOBIOM/{PROJECT}_{DATE_LABEL}/output_globiom4g4mm_{PROJECT}_{DATE_LABEL}.gdx")))
-    if (glob_input/1024 < 10) stop("Input gdx file might be empty - check reporting script")
-  }
-
-}
-

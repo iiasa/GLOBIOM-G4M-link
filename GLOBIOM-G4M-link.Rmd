@@ -109,11 +109,7 @@ run_postproc_initial(WD_GLOBIOM, cluster_nr)
 if (!file_exists(path(WD_DOWNSCALING,"input",str_glue("output_landcover_{PROJECT}_{DATE_LABEL}.gdx"))))
   stop("File for downscaling not found! Please call the intial GLOBIOM run before downscaling")
 
-# Set wd 
-wd <- path_wd(WD_DOWNSCALING)
-
-# Run Downscaling scenarios
-cluster_nr <- call_condor_run(wd)
+cluster_nr <- run_initial_downscaling()
 
 print("Initial downscaling complete")
 ```
@@ -123,7 +119,7 @@ print("Initial downscaling complete")
 ```{r}
 
 # Transfer downscaled output to G4M input folder
-merge_and_transfer(wd,cluster_nr)
+merge_and_transfer(cluster_nr)
 ```
 
 ## Preliminary: Run baseline G4M scenarios - needs data from the intial downscaling
@@ -147,7 +143,7 @@ gdx_to_csv(wd)
 baseline_run_g4m <- TRUE
 
 # Run G4M - baseline scenarios
-call_condor_run(wd)
+run_G4M()
 
 print("G4M baseline scenario run complete")
 
@@ -164,7 +160,7 @@ if (!any(base_files)) stop("Baseline G4M run not found! Please run the baseline 
 baseline_run_g4m <- FALSE
 
 # Run G4M - final scenarios
-call_condor_run(wd)
+run_G4M()
 
 print("G4M scenario run complete")
 ```

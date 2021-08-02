@@ -2,12 +2,12 @@
 #' File with a collection of functions to run each section of
 #' the GLOBIOM-G4M-link
 
-#' Perform GLOBIOM scenarios run
+#' Run GLOBIOM scenarios
 #'
-#' Perform the initial GLOBIOM scenarios by submitting the configured
-#' for parallel execution on Limpopo.
+#' Run the initial GLOBIOM scenarios by submitting the configured scenarios for
+#' parallel execution on an HTCondor cluster.
 #'
-#' @return cluster_nr Cluster sequence number of HT Condor submission
+#' @return cluster_nr Cluster sequence number of HTCondor submission
 run_GLOBIOM_scenarios <- function() {
 
   cluster_number_log <- path(TEMP_DIR, "cluster_number.log")
@@ -63,120 +63,139 @@ run_GLOBIOM_scenarios <- function() {
   return(cluster_nr)
 }
 
+#' Run initial downscaling
+#'
+#' Run the initial downscaling by submitting scenarios for parallel execution on
+#' an HTCondor cluster.
+#'
+#' @return cluster_nr Cluster sequence number of HTCondor submission
+run_initial_downscaling <- function() {
 
-#' Perform a G4M or Downscaling run. The function submits the
-#' desired scenarios for parallel execution on Limpopo.
+  # Check if input data is empty
+  downs_input <- file_size(path(str_glue(CD,"/",WD_DOWNSCALING,"/input/output_landcover_{PROJECT}_{DATE_LABEL}.gdx")))
+  if (downs_input/1024 < 10) stop("Input gdx file might be empty - check reporting script")
 
-call_condor_run <- function(wd){
+  # Get globiom and downscaling scenario mapping
+  scenario_mapping <- get_mapping() # Matching by string for now - should come directly from globiom in the future
 
-  downscaling_run <- any(str_detect(wd,WD_DOWNSCALING))
+  # Define scenarios for downscaling
+  downscaling_scenarios <- subset(scenario_mapping, ScenLoop %in% SCENARIOS_FOR_DOWNSCALING)
 
-  g4m_run <- any(str_detect(wd,str_glue("link/",WD_G4M)))
-
-  # Configure and run scenarios using Condor_run.R
-
-  if (downscaling_run) {
-
-    # Check if input data is empty
-    check_gdx(wd)
-
-    # Get globiom and downscaling scenario mapping
-    scenario_mapping <- get_mapping() # Matching by string for now - should come directly from globiom in the future
-
-    # Define scenarios for downscaling
-    downscaling_scenarios <- subset(scenario_mapping, ScenLoop %in% SCENARIOS_FOR_DOWNSCALING)
-
-    # Define downscaling scenarios for limpopo run
-    scen_string <- "c("
-    for (i in 1: length(SCENARIOS_FOR_DOWNSCALING)){
-      scenarios_idx <- scenario_mapping$ScenNr[which(scenario_mapping$ScenLoop %in% SCENARIOS_FOR_DOWNSCALING[i])]
-      if (i==1) {scen_string <- str_glue(scen_string,str_glue(min(scenarios_idx),":",max(scenarios_idx)))} else {
+  # Define downscaling scenarios for limpopo run
+  scen_string <- "c("
+  for (i in 1: length(SCENARIOS_FOR_DOWNSCALING)){
+    scenarios_idx <- scenario_mapping$ScenNr[which(scenario_mapping$ScenLoop %in% SCENARIOS_FOR_DOWNSCALING[i])]
+    if (i==1) {scen_string <- str_glue(scen_string,str_glue(min(scenarios_idx),":",max(scenarios_idx)))} else {
       scen_string <- str_glue(scen_string,",",str_glue(min(scenarios_idx),":",max(scenarios_idx)))}
-    }
-    scen_string <- str_glue(scen_string,")")
-
-    cluster_number_log <- path(TEMP_DIR, "cluster_number.log")
-
-    config_template <- c(
-      'EXPERIMENT = "{PROJECT}"',
-      'PREFIX = "_globiom"',
-      'JOBS = c({scen_string})',
-      'HOST_REGEXP = "^limpopo"',
-      'REQUEST_MEMORY = 2500',
-      'REQUEST_CPUS = 1',
-      'GAMS_FILE_PATH = "{DOWNSCALING_SCRIPT}"',
-      'GAMS_VERSION = "32.2"',
-      'GAMS_ARGUMENTS = "//project=\\\"{PROJECT}\\\" //lab=\\\"{DATE_LABEL}\\\" //gdx_path=\\\"gdx/{GDX_OUTPUT_NAME}.gdx\\\" //nsim=%1"',
-      'BUNDLE_INCLUDE_DIRS = c("include")',
-      'BUNDLE_EXCLUDE_DIRS = c(".git", ".svn", "225*", "doc")',
-      'BUNDLE_EXCLUDE_FILES = c("**/*.~*", "**/*.log", "**/*.log~*", "**/*.lxi", "**/*.lst")',
-      'BUNDLE_ADDITIONAL_FILES = c()',
-      'G00_OUTPUT_DIR = "t"',
-      'G00_OUTPUT_FILE = "d1_out.g00"',
-      'GET_G00_OUTPUT = FALSE',
-      'GDX_OUTPUT_DIR = "gdx"',
-      'GDX_OUTPUT_FILE = "downscaled.gdx"',
-      'GET_GDX_OUTPUT = TRUE',
-      'MERGE_GDX_OUTPUT = TRUE',
-      'WAIT_FOR_RUN_COMPLETION = TRUE',
-      'CLUSTER_NUMBER_LOG = "{cluster_number_log}"'
-    )
-    config_path <- file.path(TEMP_DIR, "config_down.R")
-
-  } else {
-
-    # Check if input data is empty
-    check_gdx(wd)
-
-    #g4m_jobs <- get_g4m_jobs()[-1] # EPA files for testing
-    g4m_jobs <- get_g4m_jobs_new()[-1] # implementation for the new G4M interface
-    if (length(g4m_jobs) == 1) g4m_jobs <- str_glue('"{g4m_jobs}"')
-
-
-    config_template <- c(
-      'PROJECT = "{PROJECT}"',
-      'PREFIX = "g4m"',
-      'DATE_LABEL = "{DATE_LABEL}"',
-      'G4M_EXE = "{G4M_EXE}"',
-      'JOBS =',
-      '{g4m_jobs}',
-      'SEED_FILES = ""',
-      'GAMS_CURDIR = ""', # optional, working directory for GAMS and its arguments relative to working directory, "" defaults to the working directory
-      'HOST_REGEXP = "^limpopo"',
-      'REQUEST_MEMORY = 3000',
-      'REQUEST_CPUS = 1',
-      'BUNDLE_INCLUDE = "*"',
-      'WAIT_FOR_RUN_COMPLETION = TRUE',
-      'BASELINE_RUN = {baseline_run_g4m}'
-    )
-
-    config_path <- path(TEMP_DIR, "config_g4m.R")
-
   }
+  scen_string <- str_glue(scen_string,")")
+
+  cluster_number_log <- path(TEMP_DIR, "cluster_number.log")
+
+  config_template <- c(
+    'EXPERIMENT = "{PROJECT}"',
+    'PREFIX = "_globiom"',
+    'JOBS = c({scen_string})',
+    'HOST_REGEXP = "^limpopo"',
+    'REQUEST_MEMORY = 2500',
+    'REQUEST_CPUS = 1',
+    'GAMS_FILE_PATH = "{DOWNSCALING_SCRIPT}"',
+    'GAMS_VERSION = "32.2"',
+    'GAMS_ARGUMENTS = "//project=\\\"{PROJECT}\\\" //lab=\\\"{DATE_LABEL}\\\" //gdx_path=\\\"gdx/{GDX_OUTPUT_NAME}.gdx\\\" //nsim=%1"',
+    'BUNDLE_INCLUDE_DIRS = c("include")',
+    'BUNDLE_EXCLUDE_DIRS = c(".git", ".svn", "225*", "doc")',
+    'BUNDLE_EXCLUDE_FILES = c("**/*.~*", "**/*.log", "**/*.log~*", "**/*.lxi", "**/*.lst")',
+    'BUNDLE_ADDITIONAL_FILES = c()',
+    'G00_OUTPUT_DIR = "t"',
+    'G00_OUTPUT_FILE = "d1_out.g00"',
+    'GET_G00_OUTPUT = FALSE',
+    'GDX_OUTPUT_DIR = "gdx"',
+    'GDX_OUTPUT_FILE = "downscaled.gdx"',
+    'GET_GDX_OUTPUT = TRUE',
+    'MERGE_GDX_OUTPUT = TRUE',
+    'WAIT_FOR_RUN_COMPLETION = TRUE',
+    'CLUSTER_NUMBER_LOG = "{cluster_number_log}"'
+  )
+  config_path <- file.path(TEMP_DIR, "config_down.R")
 
   # Write config file
   current_env <- environment()
   write_lines(lapply(config_template, .envir=current_env, str_glue), config_path)
   rm(config_template, current_env)
 
-  # Set working directory to GLOBIOM or Downscaling root
-  setwd(wd)
+  setwd(WD_DOWNSCALING)
 
   # Ensure that a sub directories for run logs and outputs exist
   if (!dir_exists('Condor')) dir_create("Condor")
 
-  if (downscaling_run) {
-    if (!dir_exists('gdx')) dir_create("gdx")
-    if (!dir_exists('output')) dir_create("output")
-    if (!dir_exists('t')) dir_create("t")
-  }
+  # Ensure that required directories exist
+  if (!dir_exists('gdx')) dir_create("gdx")
+  if (!dir_exists('output')) dir_create("output")
+  if (!dir_exists('t')) dir_create("t")
 
-    # Submit run to Limpopo and retrieve the run's Condor cluster number on completion
-  if (g4m_run) {
-    rc <- system(str_glue("Rscript --vanilla {CD}/{WD_G4M}/R/Condor_run.R {config_path}"))
-    if (rc != 0) stop("G4M parallel Condor run on Limpopo failed!")
-    cluster_nr <- 0
-  }
+  # Submit run to Limpopo and retrieve the run's Condor cluster number on completion
+  rc <- system(str_glue("Rscript --vanilla {CD}/Condor_run_R/Condor_run.R {config_path}"))
+  if (rc != 0) stop("Downscaling parallel Condor run on Limpopo failed!")
+  cluster_nr <- readr::parse_number(read_file(cluster_number_log))
+
+  # Back to prior dir
+  setwd(CD)
+
+  return(cluster_nr)
+}
+
+#' Run G4M
+#'
+#' Run G4N by submitting jobs for parallel execution on an HTCondor cluster.
+#'
+#' @return cluster_nr Cluster sequence number of HTCondor submission
+run_G4M <- function(){
+
+  # Configure and run scenarios using Condor_run.R
+
+  # Check if input data is empty
+  downs_input <- file_size(path(str_glue(CD,"/",WD_G4M,"/Data/GLOBIOM/{PROJECT}_{DATE_LABEL}/downscaled_output_{PROJECT}_{DATE_LABEL}.gdx")))
+  if (downs_input/1024 < 10) stop("Input gdx file might be empty - check reporting script")
+  glob_input <- file_size(path(str_glue(CD,"/",WD_G4M,"/Data/GLOBIOM/{PROJECT}_{DATE_LABEL}/output_globiom4g4mm_{PROJECT}_{DATE_LABEL}.gdx")))
+  if (glob_input/1024 < 10) stop("Input gdx file might be empty - check reporting script")
+
+  #g4m_jobs <- get_g4m_jobs()[-1] # EPA files for testing
+  g4m_jobs <- get_g4m_jobs_new()[-1] # implementation for the new G4M interface
+  if (length(g4m_jobs) == 1) g4m_jobs <- str_glue('"{g4m_jobs}"')
+
+  config_template <- c(
+    'PROJECT = "{PROJECT}"',
+    'PREFIX = "g4m"',
+    'DATE_LABEL = "{DATE_LABEL}"',
+    'G4M_EXE = "{G4M_EXE}"',
+    'JOBS =',
+    '{g4m_jobs}',
+    'SEED_FILES = ""',
+    'GAMS_CURDIR = ""', # optional, working directory for GAMS and its arguments relative to working directory, "" defaults to the working directory
+    'HOST_REGEXP = "^limpopo"',
+    'REQUEST_MEMORY = 3000',
+    'REQUEST_CPUS = 1',
+    'BUNDLE_INCLUDE = "*"',
+    'WAIT_FOR_RUN_COMPLETION = TRUE',
+    'BASELINE_RUN = {baseline_run_g4m}'
+  )
+
+  config_path <- path(TEMP_DIR, "config_g4m.R")
+
+  # Write config file
+  current_env <- environment()
+  write_lines(lapply(config_template, .envir=current_env, str_glue), config_path)
+  rm(config_template, current_env)
+
+  setwd(WD_G4M)
+
+  # Ensure that a sub directories for run logs and outputs exist
+  if (!dir_exists('Condor')) dir_create("Condor")
+
+  rc <- system(str_glue("Rscript --vanilla {CD}/{WD_G4M}/R/Condor_run.R {config_path}"))
+  if (rc != 0) stop("G4M parallel Condor run on Limpopo failed!")
+  cluster_nr <- 0
+
   # Back to prior dir
   setwd(CD)
 
@@ -255,12 +274,12 @@ run_postproc_initial <- function(wd, cluster_nr)
 #' Function to transfer the downscaling output to G4M folder. Merges the downscaled
 #' regions if required
 
-merge_and_transfer <- function(wd,cluster_nr){
+merge_and_transfer <- function(cluster_nr){
   # Transfer gdx to G4M folder - in case files were merged on limpopo
   if (MERGE_GDX_DOWNSCALING){
 
     # Save merged output to G4M folder
-    f <- str_glue(wd,"/gdx/downscaled_{PROJECT}_{cluster_nr}_merged.gdx")
+    f <- str_glue(WD_DOWNSCALING,"/gdx/downscaled_{PROJECT}_{cluster_nr}_merged.gdx")
     file_copy(f,path(str_glue(CD,"/",PATH_FOR_G4M,"/downscaled_output_{PROJECT}_{DATE_LABEL}.gdx")),overwrite = TRUE)
   }
 
@@ -278,9 +297,9 @@ merge_and_transfer <- function(wd,cluster_nr){
 
 
 #' Function to collect G4M results from binary files and write a csv file for GLOBIOM
-compile_g4m_data <- function(wd){
+compile_g4m_data <- function(){
   # Define wd
-  setwd(wd)
+  setwd(WD_G4M)
 
   # Path of output folder
   file_path <- path_wd(str_glue("/out/{PROJECT}_{DATE_LABEL}/"))
