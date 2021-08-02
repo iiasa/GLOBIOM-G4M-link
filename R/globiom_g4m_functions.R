@@ -308,24 +308,17 @@ compile_g4m_data <- function(){
   file_suffix <- str_glue("_{PROJECT}_{DATE_LABEL}_") # for now in future should be indexed by project and date label
 
   # G4M scenario ID
-  g4m_jobs <- get_g4m_jobs()
-  scenarios <- str_replace_all(g4m_jobs," ","__")[-1]
+  g4m_jobs <- get_g4m_jobs_new()[-1]
 
-  if (baseline_run_g4m) {
-    scenarios <- str_sub(scenarios,1,str_length(scenarios) - 4)
-  } else {
-    scenarios <- str_sub(scenarios,1,str_length(scenarios) - 5)
-  }
-
-
-  # G4M scenario name
-  scenario_names <- str_replace_all(scenarios,"__","_")
+  # Split dimensions and extract scenario name
+  scenarios_split <- str_split_fixed(g4m_jobs," ",n=4)
+  scenarios <- scenario_names <- scenarios_split[,3]
 
   # Number of scenarios
   N <- length(scenarios)
 
-  # CO2 price
-  co2 <- abs(as.integer(str_sub(g4m_jobs,str_length(g4m_jobs)-2,str_length(g4m_jobs) - 1)))[-1]
+  # Extract CO2 price
+  co2 <- abs(as.integer(str_replace(scenarios_split[,4],",","")))
 
   # Compile results
   generate_g4M_report(file_path,file_suffix,scenarios,scenario_names,N,co2)
