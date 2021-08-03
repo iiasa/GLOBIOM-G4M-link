@@ -301,37 +301,41 @@ compile_g4m_data <- function(baseline = NULL) {
   if (!is.logical(baseline))
     stop("Set baseline parameter to TRUE or FALSE!")
 
+  prior_wd <- getwd()
+  rc <- tryCatch ({
     setwd(WD_G4M)
 
-  # Path of output folder
-  file_path <- path_wd(str_glue("/out/{PROJECT}_{DATE_LABEL}/"))
+    # Path of output folder
+    file_path <- path_wd(str_glue("/out/{PROJECT}_{DATE_LABEL}/"))
 
-  # Suffix of scenario runs
-  file_suffix <- str_glue("_{PROJECT}_{DATE_LABEL}_") # for now in future should be indexed by project and date label
+    # Suffix of scenario runs
+    file_suffix <- str_glue("_{PROJECT}_{DATE_LABEL}_") # for now in future should be indexed by project and date label
 
-  # G4M scenario ID
-  g4m_jobs <- get_g4m_jobs_new(baseline = baseline)[-1]
+    # G4M scenario ID
+    g4m_jobs <- get_g4m_jobs_new(baseline = baseline)[-1]
 
-  # Split dimensions and extract scenario name
-  scenarios_split <- str_split_fixed(g4m_jobs," ",n=4)
-  scenarios <- scenario_names <- scenarios_split[,3]
+    # Split dimensions and extract scenario name
+    scenarios_split <- str_split_fixed(g4m_jobs," ",n=4)
+    scenarios <- scenario_names <- scenarios_split[,3]
 
-  # Number of scenarios
-  N <- length(scenarios)
+    # Number of scenarios
+    N <- length(scenarios)
 
-  # Extract CO2 price
-  co2 <- abs(as.integer(str_replace(scenarios_split[,4],",","")))
+    # Extract CO2 price
+    co2 <- abs(as.integer(str_replace(scenarios_split[,4],",","")))
 
-  # Compile results
-  generate_g4M_report(file_path,file_suffix,scenarios,scenario_names,N,co2)
+    # Compile results
+    generate_g4M_report(file_path,file_suffix,scenarios,scenario_names,N,co2)
 
-  # Edit and save csv file for GAMS
-  g4m_out <- read.csv(path(file_path,G4M_FEEDBACK_FILE))
-  colnames(g4m_out)[1:3] <- ""
-  colnames(g4m_out) <- str_replace_all(colnames(g4m_out),"X","")
-  write.csv(g4m_out,path(file_path,G4M_FEEDBACK_FILE),row.names = F,quote = T)
-
-  setwd(CD)
+    # Edit and save csv file for GAMS
+    g4m_out <- read.csv(path(file_path,G4M_FEEDBACK_FILE))
+    colnames(g4m_out)[1:3] <- ""
+    colnames(g4m_out) <- str_replace_all(colnames(g4m_out),"X","")
+    write.csv(g4m_out,path(file_path,G4M_FEEDBACK_FILE),row.names = F,quote = T)
+  },
+  finally = {
+    setwd(prior_wd)
+  })
 }
 
 #' Final post-processing. The function reads, edits and executes the

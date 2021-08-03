@@ -158,7 +158,6 @@ print("G4M scenario run complete")
 ## Preliminary: Compile G4M data and produce the report for GLOBIOM  - needs data from the G4M run
 
 ```{r}
-# Compile data for GLOBIOM
 compile_g4m_data(baseline = FALSE)
 ```
 
