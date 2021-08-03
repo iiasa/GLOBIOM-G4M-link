@@ -357,7 +357,7 @@ run_postproc_final <- function(wd){
   scen <- scen[which(scen != "")]
 
   # Split G4M scenarios into GLOBIOM dimensions
-  scen_globiom_map <- str_split_fixed(scen,"__",3)
+  scen_globiom_map <- str_split_fixed(scen,"_",3)
 
 
   # Check if scenario name must be treated as string
