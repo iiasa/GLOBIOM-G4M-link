@@ -47,17 +47,19 @@ run_GLOBIOM_scenarios <- function() {
   write_lines(lapply(config_template, .envir=current_env, str_glue), config_path)
   rm(config_template, current_env)
 
-  # Set working directory for submission
-  setwd(WD_GLOBIOM)
+  # Submit GLOBIOM scenarios and wait for run completion
+  prior_wd <- getwd()
+  rc <- tryCatch ({
+    setwd(WD_GLOBIOM)
+    system(str_glue("Rscript --vanilla {CD}/Condor_run_R/Condor_run.R {config_path}"))
+  },
+  finally = {
+    setwd(prior_wd)
+  })
+  if (rc != 0) stop("Condor run failed!")
 
-  rc <- system(str_glue("Rscript --vanilla {CD}/Condor_run_R/Condor_run.R {config_path}"))
-  if (rc != 0) stop("GLOBIOM parallel Condor run on Limpopo failed!")
-  cluster_nr <- readr::parse_number(read_file(cluster_number_log))
-
-  # Back to prior dir
-  setwd(CD)
-
-  return(cluster_nr)
+  # Return the cluster number
+  readr::parse_number(read_file(cluster_number_log))
 }
 
 #' Run initial downscaling
@@ -120,22 +122,29 @@ run_initial_downscaling <- function() {
   write_lines(lapply(config_template, .envir=current_env, str_glue), config_path)
   rm(config_template, current_env)
 
-  setwd(WD_DOWNSCALING)
-
-  # Ensure that required directories exist
-  if (!dir_exists('gdx')) dir_create("gdx")
-  if (!dir_exists('output')) dir_create("output")
-  if (!dir_exists('t')) dir_create("t")
-
   # Submit run to Limpopo and retrieve the run's Condor cluster number on completion
   rc <- system(str_glue("Rscript --vanilla {CD}/Condor_run_R/Condor_run.R {config_path}"))
   if (rc != 0) stop("Downscaling parallel Condor run on Limpopo failed!")
   cluster_nr <- readr::parse_number(read_file(cluster_number_log))
 
-  # Back to prior dir
-  setwd(CD)
+  # Submit downscaling run and wait for run completion
+  prior_wd <- getwd()
+  rc <- tryCatch ({
+    setwd(WD_DOWNSCALING)
+    # Ensure that required directories exist
+    if (!dir_exists('gdx')) dir_create("gdx")
+    if (!dir_exists('output')) dir_create("output")
+    if (!dir_exists('t')) dir_create("t")
 
-  return(cluster_nr)
+    system(str_glue("Rscript --vanilla {CD}/Condor_run_R/Condor_run.R {config_path}"))
+  },
+  finally = {
+    setwd(prior_wd)
+  })
+  if (rc != 0) stop("Condor run failed!")
+
+  # Return the cluster number
+  readr::parse_number(read_file(cluster_number_log))
 }
 
 #' Run G4M
@@ -143,7 +152,6 @@ run_initial_downscaling <- function() {
 #' Run G4N by submitting jobs for parallel execution on an HTCondor cluster.
 #'
 #' @param baseline = TRUE|FALSE: set to TRUE to select baseline scenarios.
-#' @return cluster_nr Cluster sequence number of HTCondor submission.
 run_G4M <- function(baseline = NULL) {
   if (!is.logical(baseline))
     stop("Set baseline parameter to TRUE or FALSE!")
@@ -184,19 +192,18 @@ run_G4M <- function(baseline = NULL) {
   write_lines(lapply(config_template, .envir=current_env, str_glue), config_path)
   rm(config_template, current_env)
 
-  setwd(WD_G4M)
+  prior_wd <- getwd()
+  rc <- tryCatch ({
+    setwd(WD_G4M)
+    # Ensure that a sub directories for run logs and outputs exist
+    if (!dir_exists('Condor')) dir_create("Condor")
 
-  # Ensure that a sub directories for run logs and outputs exist
-  if (!dir_exists('Condor')) dir_create("Condor")
-
-  rc <- system(str_glue("Rscript --vanilla {CD}/{WD_G4M}/R/Condor_run.R {config_path}"))
-  if (rc != 0) stop("G4M parallel Condor run on Limpopo failed!")
-  cluster_nr <- 0
-
-  # Back to prior dir
-  setwd(CD)
-
-  return(cluster_nr)
+    system(str_glue("Rscript --vanilla {CD}/{WD_G4M}/R/Condor_run.R {config_path}"))
+  },
+  finally = {
+    setwd(prior_wd)
+  })
+  if (rc != 0) stop("Condor run failed!")
 }
 
 #' Function to edit the post-processing script 8_merge_output, to match the current
