@@ -206,72 +206,68 @@ run_G4M <- function(baseline = NULL) {
   if (rc != 0) stop("Condor run failed!")
 }
 
-#' Function to edit the post-processing script 8_merge_output, to match the current
-#' project and label, and export its outputs to the Downscaling folder for further processing
-
-run_postproc_initial <- function(wd, cluster_nr)
+#' Run GLOBIOM post-processing
+#'
+#' Edit the post-processing script 8_merge_output, to match the current project
+#' and label, run the script, and export its outputs to the Downscaling folder
+#' for further processing
+#'
+#' @param cluster_nr Cluster sequence number of prior GLOBIOM HTCondor submission
+run_GLOBIOM_postproc <- function(cluster_nr)
 {
-  setwd(wd)
+  prior_wd <- getwd()
+  rc <- tryCatch ({
+    setwd(WD_GLOBIOM)
 
+    # create output path string
+    path_for_g4m2 <- str_glue(str_replace_all(str_glue(CD,"/",PATH_FOR_G4M),"/","%X%"),"%X%")
 
-  # create output path string
-  path_for_g4m2 <- str_glue(str_replace_all(str_glue(CD,"/",PATH_FOR_G4M),"/","%X%"),"%X%")
+    # Configure merged output file
+    tempString <- read_lines("./Model/8_merge_output.gms")
+    tempString <- string_replace(tempString,"\\$set\\s+limpopo\\s+[:print:]+",str_glue("$set limpopo ",LIMPOPO_RUN))
+    tempString <- string_replace(tempString,"\\$set\\s+limpopo_nr\\s+[:print:]+",str_glue("$set limpopo_nr ",cluster_nr))
+    tempString <- string_replace(tempString,"\\$set\\s+project\\s+[:print:]+",str_glue("$set project {PROJECT}"))
+    tempString <- string_replace(tempString,"\\$set\\s+lab\\s+[:print:]+",str_glue("$set lab ",DATE_LABEL))
+    tempString <- string_replace(tempString,"\\$set\\s+rep_g4m\\s+[:print:]+",str_glue("$set rep_g4m ",REPORTING_G4M))
+    tempString <- string_replace(tempString,"\\$set\\s+rep_iamc_glo\\s+[:print:]+",str_glue("$set rep_iamc_glo ",REPORTING_IAMC))
+    tempString <- string_replace(tempString,"\\$set\\s+rep_iamc_g4m\\s+[:print:]+",str_glue("$set rep_iamc_g4m ",REPORTING_IAMC_G4M))
+    tempString <- string_replace(tempString,"\\$set\\s+g4mfile\\s+[:print:]+",str_glue("$set g4mfile ",G4M_FEEDBACK_FILE))
+    tempString <- string_replace(tempString,"\\$set\\s+regionagg\\s+[:print:]+",str_glue("$set regionagg ",REGIONAL_AG))
+    tempString <- string_replace(tempString,"\\$include\\s+8a_rep_g4m","$include 8a_rep_g4m_tmp")
 
-  # Configure merged output file
-  tempString <- read_lines("./Model/8_merge_output.gms")
-  tempString <- string_replace(tempString,"\\$set\\s+limpopo\\s+[:print:]+",str_glue("$set limpopo ",LIMPOPO_RUN))
-  tempString <- string_replace(tempString,"\\$set\\s+limpopo_nr\\s+[:print:]+",str_glue("$set limpopo_nr ",cluster_nr))
-  tempString <- string_replace(tempString,"\\$set\\s+project\\s+[:print:]+",str_glue("$set project {PROJECT}"))
-  tempString <- string_replace(tempString,"\\$set\\s+lab\\s+[:print:]+",str_glue("$set lab ",DATE_LABEL))
-  tempString <- string_replace(tempString,"\\$set\\s+rep_g4m\\s+[:print:]+",str_glue("$set rep_g4m ",REPORTING_G4M))
-  tempString <- string_replace(tempString,"\\$set\\s+rep_iamc_glo\\s+[:print:]+",str_glue("$set rep_iamc_glo ",REPORTING_IAMC))
-  tempString <- string_replace(tempString,"\\$set\\s+rep_iamc_g4m\\s+[:print:]+",str_glue("$set rep_iamc_g4m ",REPORTING_IAMC_G4M))
-  tempString <- string_replace(tempString,"\\$set\\s+g4mfile\\s+[:print:]+",str_glue("$set g4mfile ",G4M_FEEDBACK_FILE))
-  tempString <- string_replace(tempString,"\\$set\\s+regionagg\\s+[:print:]+",str_glue("$set regionagg ",REGIONAL_AG))
-  tempString <- string_replace(tempString,"\\$include\\s+8a_rep_g4m","$include 8a_rep_g4m_tmp")
+    # Save file
+    write_lines(tempString, "Model/8_merge_output_tmp.gms")
 
-  # Save file
-  write_lines(tempString, "./Model/8_merge_output_tmp.gms")
+    # Point gdx output to downscaling folder
+    tempString <- read_lines("Model/8a_rep_g4m.gms")
 
-  # Point gdx output to downscaling folder
-  tempString <- read_lines("./Model/8a_rep_g4m.gms")
+    # Create downscaling input folder if absent
+    if (!dir_exists(path(CD,"/",WD_DOWNSCALING,"/input/"))) dir_create(path(CD,"/",WD_DOWNSCALING,"/input/"))
 
-  # Create downscaling input folder if absent
-  if (!dir_exists(path(CD,"/",WD_DOWNSCALING,"/input/"))) dir_create(path(CD,"/",WD_DOWNSCALING,"/input/"))
+    # Create G4M output folder if absent
+    if (!dir_exists(path(CD,"/",PATH_FOR_G4M))) dir_create(path(CD,"/",PATH_FOR_G4M))
 
-  # Create G4M output folder if absent
-  if (!dir_exists(path(CD,"/",PATH_FOR_G4M))) dir_create(path(CD,"/",PATH_FOR_G4M))
+    path_for_downscaling2 <- str_glue(str_replace_all(path(CD,"/",WD_DOWNSCALING,"/input/"),"/","%X%"),"%X%")
 
-  path_for_downscaling2 <- str_glue(str_replace_all(path(CD,"/",WD_DOWNSCALING,"/input/"),"/","%X%"),"%X%")
+    tempString <- str_replace(tempString,"execute_unload[:print:]+output_landcover[:print:]+",
+                              str_glue("execute_unload \"",path_for_downscaling2,"output_landcover_%project%_%lab%\"LANDCOVER_COMPARE_SCEN, LUC_COMPARE_SCEN0, Price_compare2,MacroScen, IEA_SCEN, BioenScen, ScenYear, REGION, COUNTRY,REGION_MAP"))
 
-  tempString <- str_replace(tempString,"execute_unload[:print:]+output_landcover[:print:]+",
-                            str_glue("execute_unload \"",path_for_downscaling2,"output_landcover_%project%_%lab%\"LANDCOVER_COMPARE_SCEN, LUC_COMPARE_SCEN0, Price_compare2,MacroScen, IEA_SCEN, BioenScen, ScenYear, REGION, COUNTRY,REGION_MAP"))
+    tempString <- str_replace(tempString,"execute_unload[:print:]+output_globiom4g4mm[:print:]+",
+                              str_glue("execute_unload \"",path_for_g4m2,"output_globiom4g4mm_%project%_%lab%\" G4Mm_SupplyResidues, G4Mm_SupplyWood, G4Mm_Wood_price, G4Mm_LandRent,G4Mm_CO2PRICE, MacroScen, IEA_SCEN, BioenScen, ScenYear"))
 
-  tempString <- str_replace(tempString,"execute_unload[:print:]+output_globiom4g4mm[:print:]+",
-                            str_glue("execute_unload \"",path_for_g4m2,"output_globiom4g4mm_%project%_%lab%\" G4Mm_SupplyResidues, G4Mm_SupplyWood, G4Mm_Wood_price, G4Mm_LandRent,G4Mm_CO2PRICE, MacroScen, IEA_SCEN, BioenScen, ScenYear"))
+    # Save file
+    write_lines(tempString, "Model/8a_rep_g4m_tmp.gms")
 
-  # Save file
-  write_lines(tempString, "./Model/8a_rep_g4m_tmp.gms")
-
-  # Change wd to run post-processing file
-
-  # Run post-processing script
-  rc <- tryCatch({
+    # Run post-processing script in the Model directory
     setwd("Model")
-    system("gams 8_merge_output_tmp.gms")
-    },
-    error=function(e) e,
-    finally = {
-      setwd(CD)
+    rc <- system("gams 8_merge_output_tmp.gms")
+    if (rc != 0) {
+      stop(str_glue("GAMS failed with returns code {rc}! See https://www.gams.com/latest/docs/UG_GAMSReturnCodes.html#INDEX_return_21_codes_2d__21_error_21_codes"))
     }
-  )
-  if(rc != 0){
-    stop("Bad return from gams")
-  }
-
-  #Back to prior wd
-  setwd(CD)
-
+  },
+  finally = {
+    setwd(prior_wd)
+  })
 }
 
 

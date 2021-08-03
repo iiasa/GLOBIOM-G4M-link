@@ -95,12 +95,10 @@ cluster_nr <- run_GLOBIOM_scenarios()
 print("Initial GLOBIOM run complete.")
 ```
 
-## Edit and run post-processing script
+## Edit and run GLOBIOM post-processing script
 
 ```{r}
-
-run_postproc_initial(WD_GLOBIOM, cluster_nr)
-
+run_GLOBIOM_postproc(cluster_nr)
 ```
 
 ## Perform the initial downscaling - needs data from the initial GLOBIOM run
