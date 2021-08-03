@@ -2,7 +2,6 @@
 @echo off
 pushd %~dp0
 svn checkout --revision 3459 svn://hpg909/svn_globiom/globiom_live/Trunk GLOBIOM
-mkdir GLOBIOM\Condor
 popd
 exit /b :: end batch script processing
 BATCH
@@ -13,5 +12,4 @@ BATCH
 pushd "$(dirname "$0")" #
 set -e #
 svn checkout --revision 3459 svn://hpg909/svn_globiom/globiom_live/Trunk GLOBIOM #
-mkdir GLOBIOM/Condor #
 popd #
