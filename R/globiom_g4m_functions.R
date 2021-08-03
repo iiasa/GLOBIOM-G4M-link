@@ -262,7 +262,7 @@ run_GLOBIOM_postproc <- function(cluster_nr)
     setwd("Model")
     rc <- system("gams 8_merge_output_tmp.gms")
     if (rc != 0) {
-      stop(str_glue("GAMS failed with returns code {rc}! See https://www.gams.com/latest/docs/UG_GAMSReturnCodes.html#INDEX_return_21_codes_2d__21_error_21_codes"))
+      stop(str_glue("GAMS failed with return code {rc}! See https://www.gams.com/latest/docs/UG_GAMSReturnCodes.html#INDEX_return_21_codes_2d__21_error_21_codes"))
     }
   },
   finally = {
@@ -273,7 +273,8 @@ run_GLOBIOM_postproc <- function(cluster_nr)
 
 #' Function to transfer the downscaling output to G4M folder. Merges the downscaled
 #' regions if required
-
+#'
+#' #' @param cluster_nr Cluster sequence number of prior downscaling HTCondor submission
 merge_and_transfer <- function(cluster_nr){
   # Transfer gdx to G4M folder - in case files were merged on limpopo
   if (MERGE_GDX_DOWNSCALING){
@@ -291,8 +292,6 @@ merge_and_transfer <- function(cluster_nr){
                      SCENARIOS_FOR_DOWNSCALING[i],cluster_nr,PATH_FOR_G4M)
     }
   }
-
-  setwd(CD)
 }
 
 #' Function to collect G4M results from binary files and write a csv file for GLOBIOM

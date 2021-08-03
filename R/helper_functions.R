@@ -50,28 +50,28 @@ merge_gdx <- function(PROJECT,WD,c_nr){
 # Merge gdx files from downscaling according to the scenario number
 merge_gdx_down <- function(wd_out,s_list,s_cnt,c_nr,path_out){
   prior_wd <- getwd()
+  rc <- tryCatch ({
+    setwd(wd_out)
 
-  setwd(wd_out)
-  s_list <-  sprintf("%06d", s_list)
-  merge_args <- c()
-  merge_args <- c(merge_args, str_c(str_glue("downscaled_{PROJECT}_"),c_nr,".",s_list,".gdx"))
-  merge_args <- c(merge_args, str_glue(str_glue("output=",path_out,"/output_landcover_{PROJECT}_",s_cnt,"_merged.gdx")))
+    s_list <-  sprintf("%06d", s_list)
+    merge_args <- c()
+    merge_args <- c(merge_args, str_c(str_glue("downscaled_{PROJECT}_"),c_nr,".",s_list,".gdx"))
+    merge_args <- c(merge_args, str_glue(str_glue("output=",path_out,"/output_landcover_{PROJECT}_",s_cnt,"_merged.gdx")))
 
-  # Invoke GDX merge
+    # Invoke GDX merge
+    rc <- tryCatch(
+      system2("gdxmerge", args=merge_args),
+      error=function(e) e
+    )
+    if(rc != 0){
+      stop(str_glue("GDXMERGE failed with return code {rc}!"))
+    }
 
-  error_code <- tryCatch(
-    system2("gdxmerge", args=merge_args),
-    error=function(e) e
-  )
-
-  if(error_code != 0){
+  },
+  finally = {
     setwd(prior_wd)
-    stop("Bad return from gams")
-  }
-
-  setwd(prior_wd)
+  })
 }
-
 
 # Search and replace function for adapting GLOBIOM scripts
 string_replace <- function(full_str,search_str,replace_str){
