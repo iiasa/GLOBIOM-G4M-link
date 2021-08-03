@@ -149,7 +149,7 @@ get_mapping <- function(){
   N <- length(scen_dims)
   scen_map <- globiom_scenario_map[(idx_start+1):(idx_end)]
   scen_map <- str_replace_all(scen_map, "[ \t\n\r\v\f]+", "")
-  scen_map <- as_tibble(str_split_fixed(scen_map, "\\.",n=N))
+  scen_map <- as_tibble(str_split_fixed(scen_map, "\\.",n=N), .name_repair="minimal")
   names(scen_map) <- scen_dims
   scen_map <- scen_map  %>% na_if("") %>% na.omit
 
