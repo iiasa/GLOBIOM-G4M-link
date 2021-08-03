@@ -180,7 +180,7 @@ get_mapping <- function(){
 
 
 # Function to generate G4M job string
-get_g4m_jobs <- function(){
+get_g4m_jobs <- function(baseline = NULL) {
 
   # Get downscaling mapping
   downs_map <-  unique(get_mapping()[-4])
@@ -201,7 +201,7 @@ get_g4m_jobs <- function(){
 
   # Generate scenario string
   g4m_scenario_string <- ""
-  if (baseline_run_g4m) {
+  if (baseline) {
     for (i in 1:length(macro)){
       for (j in 1:length(iea)){
         for (k in 1:length(base_scenarios)){
@@ -223,13 +223,12 @@ get_g4m_jobs <- function(){
     }
   }
 
-
   return(g4m_scenario_string)
 }
 
 
 # Function to generate G4M job string - new interface
-get_g4m_jobs_new <- function(){
+get_g4m_jobs_new <- function(baseline = NULL){
 
   # Get downscaling mapping
   downs_map <-  unique(get_mapping()[-4])
@@ -240,7 +239,7 @@ get_g4m_jobs_new <- function(){
  # For now all scenarios are run in the baseline - needs to be adjusted with identifiers if same scenarios are run with different co2 price
   # Generate scenario string
   g4m_scenario_string <- ""
-  if (baseline_run_g4m) {
+  if (baseline) {
     for (i in 1:dim(downs_map)[1]){
           s_str <- str_c(downs_map$MacroScen[i],"_",downs_map$IEAScen[i],"_",downs_map$BioenScen[i])
           l <- str_c(str_glue("{PROJECT}_{DATE_LABEL}")," ",s_str," ",s_str," ",0,",")
@@ -271,7 +270,7 @@ get_g4m_jobs_new <- function(){
   #
   # # Generate scenario string
   # g4m_scenario_string <- ""
-  # if (baseline_run_g4m) {
+  # if (baseline) {
   #   for (i in 1:length(macro)){
   #     for (j in 1:length(iea)){
   #       for (k in 1:length(base_scenarios)){

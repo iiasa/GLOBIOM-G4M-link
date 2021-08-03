@@ -138,12 +138,7 @@ gdx_to_csv(wd)
 ## Preliminary: Run baseline G4M scenarios - needs data from the intial downscaling
 
 ```{r}
-
-# Define baseline scenario switch
-baseline_run_g4m <- TRUE
-
-# Run G4M - baseline scenarios
-run_G4M()
+run_G4M(baseline = TRUE)
 
 print("G4M baseline scenario run complete")
 
@@ -156,11 +151,8 @@ allfiles <- dir_ls(path(CD, "G4M", "out", str_glue("{PROJECT}_{DATE_LABEL}"), "b
 base_files <- str_detect(allfiles,"NPVbau_[:print:]+.bin")
 if (!any(base_files)) stop("Baseline G4M run not found! Please run the baseline before the G4M scenarios")
 
-# Baseline scenario switch
-baseline_run_g4m <- FALSE
-
 # Run G4M - final scenarios
-run_G4M()
+run_G4M(baseline = FALSE)
 
 print("G4M scenario run complete")
 ```
@@ -169,7 +161,7 @@ print("G4M scenario run complete")
 
 ```{r}
 # Compile data for GLOBIOM
-compile_g4m_data(wd)
+compile_g4m_data(baseline = FALSE)
 ```
 
 ## Preliminary: Perform the final post-processing - needs data from the G4M run

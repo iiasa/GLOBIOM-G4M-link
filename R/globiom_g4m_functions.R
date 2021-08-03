@@ -142,8 +142,11 @@ run_initial_downscaling <- function() {
 #'
 #' Run G4N by submitting jobs for parallel execution on an HTCondor cluster.
 #'
-#' @return cluster_nr Cluster sequence number of HTCondor submission
-run_G4M <- function(){
+#' @param baseline = TRUE|FALSE: set to TRUE to select baseline scenarios.
+#' @return cluster_nr Cluster sequence number of HTCondor submission.
+run_G4M <- function(baseline = NULL) {
+  if (!is.logical(baseline))
+    stop("Set baseline parameter to TRUE or FALSE!")
 
   # Configure and run scenarios using Condor_run.R
 
@@ -153,8 +156,8 @@ run_G4M <- function(){
   glob_input <- file_size(path(str_glue(CD,"/",WD_G4M,"/Data/GLOBIOM/{PROJECT}_{DATE_LABEL}/output_globiom4g4mm_{PROJECT}_{DATE_LABEL}.gdx")))
   if (glob_input/1024 < 10) stop("Input gdx file might be empty - check reporting script")
 
-  #g4m_jobs <- get_g4m_jobs()[-1] # EPA files for testing
-  g4m_jobs <- get_g4m_jobs_new()[-1] # implementation for the new G4M interface
+  #g4m_jobs <- get_g4m_jobs(baseline = baseline)[-1] # EPA files for testing
+  g4m_jobs <- get_g4m_jobs_new(baseline = baseline)[-1] # implementation for the new G4M interface
   if (length(g4m_jobs) == 1) g4m_jobs <- str_glue('"{g4m_jobs}"')
 
   config_template <- c(
@@ -171,7 +174,7 @@ run_G4M <- function(){
     'REQUEST_CPUS = 1',
     'BUNDLE_INCLUDE = "*"',
     'WAIT_FOR_RUN_COMPLETION = TRUE',
-    'BASELINE_RUN = {baseline_run_g4m}'
+    'BASELINE_RUN = {baseline}'
   )
 
   config_path <- path(TEMP_DIR, "config_g4m.R")
@@ -289,11 +292,14 @@ merge_and_transfer <- function(cluster_nr){
   setwd(CD)
 }
 
-
 #' Function to collect G4M results from binary files and write a csv file for GLOBIOM
-compile_g4m_data <- function(){
-  # Define wd
-  setwd(WD_G4M)
+#;
+#' @param baseline = TRUE|FALSE: set to TRUE to select baseline scenarios.
+compile_g4m_data <- function(baseline = NULL) {
+  if (!is.logical(baseline))
+    stop("Set baseline parameter to TRUE or FALSE!")
+
+    setwd(WD_G4M)
 
   # Path of output folder
   file_path <- path_wd(str_glue("/out/{PROJECT}_{DATE_LABEL}/"))
@@ -302,7 +308,7 @@ compile_g4m_data <- function(){
   file_suffix <- str_glue("_{PROJECT}_{DATE_LABEL}_") # for now in future should be indexed by project and date label
 
   # G4M scenario ID
-  g4m_jobs <- get_g4m_jobs_new()[-1]
+  g4m_jobs <- get_g4m_jobs_new(baseline = baseline)[-1]
 
   # Split dimensions and extract scenario name
   scenarios_split <- str_split_fixed(g4m_jobs," ",n=4)
