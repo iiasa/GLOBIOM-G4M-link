@@ -122,11 +122,6 @@ run_initial_downscaling <- function() {
   write_lines(lapply(config_template, .envir=current_env, str_glue), config_path)
   rm(config_template, current_env)
 
-  # Submit run to Limpopo and retrieve the run's Condor cluster number on completion
-  rc <- system(str_glue("Rscript --vanilla {CD}/Condor_run_R/Condor_run.R {config_path}"))
-  if (rc != 0) stop("Downscaling parallel Condor run on Limpopo failed!")
-  cluster_nr <- readr::parse_number(read_file(cluster_number_log))
-
   # Submit downscaling run and wait for run completion
   prior_wd <- getwd()
   rc <- tryCatch ({
