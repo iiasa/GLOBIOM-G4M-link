@@ -333,16 +333,13 @@ compile_g4m_data <- function(baseline = NULL) {
   })
 }
 
-#' Final post-processing. The function reads, edits and executes the
-#' 8_merged_output.gms script #' to generate reports for IAMC
+#' Run final post-processing
 #'
-run_postproc_final <- function(wd){
-
-  # Define wd
-  setwd(wd)
-
-  # Configure merged output file
-  tempString <- read_lines("./Model/8_merge_output_tmp.gms")
+#' Reads, edits and executes the GLOBIOM 8_merged_output.gms script to generate
+#' reports for IAMC.
+run_postproc_final <- function() {
+  # Configure merge output file
+  tempString <- read_lines(path(WD_GLOBIOM, "Model", "8_merge_output_tmp.gms"))
   tempString <- string_replace(tempString,"\\$set\\s+rep_g4m\\s+[:print:]+",str_glue("$set rep_g4m ",REPORTING_G4M_FINAL))
   tempString <- string_replace(tempString,"\\$set\\s+rep_iamc_glo\\s+[:print:]+",str_glue("$set rep_iamc_glo ",REPORTING_IAMC_FINAL))
   tempString <- string_replace(tempString,"\\$set\\s+rep_iamc_g4m\\s+[:print:]+",str_glue("$set rep_iamc_g4m ",REPORTING_IAMC_G4M_FINAL))
@@ -350,14 +347,13 @@ run_postproc_final <- function(wd){
   if (!any(str_detect(tempString,"8c_rep_iamc_g4m_tmp.gms"))) tempString <- string_replace(tempString,"\\$include\\s+8c_rep_iamc_g4m.gms","$include 8c_rep_iamc_g4m_tmp.gms")
 
   # Save file
-  write_lines(tempString, "./Model/8_merge_output_tmp.gms")
+  write_lines(tempString, path(WD_GLOBIOM, "Model", "8_merge_output_tmp.gms"))
 
   # Define path for feedback file
-  path_feedback <- path(CD,WD_G4M,PATH_FOR_FEEDBACK)
+  path_feedback <- path(WD_G4M, PATH_FOR_FEEDBACK)
 
   # read in G4M output file
-  g4m_output <- read.csv(path(str_glue(path_feedback,"/",G4M_FEEDBACK_FILE)) # Will be modified in the future to work with gdx files
-                         , header=FALSE)
+  g4m_output <- read.csv(path(path_feedback, G4M_FEEDBACK_FILE), header=FALSE) # Will be modified in the future to work with gdx files
 
   # Define G4M scenarios
   scen <- unique(g4m_output[,2])
@@ -365,7 +361,6 @@ run_postproc_final <- function(wd){
 
   # Split G4M scenarios into GLOBIOM dimensions
   scen_globiom_map <- str_split_fixed(scen,"_",3)
-
 
   # Check if scenario name must be treated as string
   special_char <- FALSE
@@ -388,39 +383,31 @@ run_postproc_final <- function(wd){
                                         scen_globiom_map[i,bioen_idx], " . ",scen_globiom_map[i,iea_idx]))}
   }
 
-
   # Define sets for mapping
   g4m_globiom_map <- c("G4MScen2","/",scen,"/","","G4M_SCEN_MAP(G4MScen2,*,*,*)",
                   "/",map_string,"/",";")
 
-  # Configure merged output file
-  tempString <- read_file("./Model/8c_rep_iamc_g4m.gms")
+  # Edit
+  tempString <- read_file(path(WD_GLOBIOM, "Model", "8c_rep_iamc_g4m.gms"))
   tempString <- string_replace(tempString,regex('G4MScen2[[:print:]*|[\r\n]*]*G4M_SCEN_MAP[[:print:]*|[\r\n]*]*/[\r\n\\s]+;'),
                             str_c(g4m_globiom_map,collapse="\n"))
 
-  path_for_feedback2 <- str_glue(str_replace_all(path_feedback,"/","%X%"),"%X%")
+  path_for_feedback_file <-path_wd(path_feedback, G4M_FEEDBACK_FILE)
 
   tempString <- string_replace(tempString,"\\$include\\s+[:print:]*X[:print:]*",
-                           str_glue("$include ",path_for_feedback2,G4M_FEEDBACK_FILE))
+                           str_glue('$include "{path_for_feedback_file}"'))
 
-  # Save file
-  write_lines(tempString, "./Model/8c_rep_iamc_g4m_tmp.gms")
-
-  # Change wd to run post-processing file
-  wd_model <- path(wd,"/Model/")
-  setwd(wd_model)
-
-  # Run post-processing script
-  rc <- tryCatch(
-    system("gams 8_merge_output_tmp.gms"),
-    error=function(e) e
-  )
-  if(rc != 0){
-    setwd(CD)
-    stop("Bad return from gams")
-  }
-
-  # Return to previous wd
-  setwd(CD)
+  # Save edits and run merge output file
+  prior_wd <- getwd()
+  rc <- tryCatch({
+    setwd(path(WD_GLOBIOM, "Model"))
+    write_lines(tempString, "8c_rep_iamc_g4m_tmp.gms")
+    rc <- system("gams 8_merge_output_tmp.gms")
+    if (rc != 0) {
+      stop(str_glue("GAMS failed with return code {rc}! See https://www.gams.com/latest/docs/UG_GAMSReturnCodes.html#INDEX_return_21_codes_2d__21_error_21_codes"))
+    }
+  },
+  finally = {
+    setwd(prior_wd)
+  })
 }
-

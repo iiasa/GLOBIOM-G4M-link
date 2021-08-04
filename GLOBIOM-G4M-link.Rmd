@@ -160,12 +160,7 @@ compile_g4m_data(baseline = FALSE)
 ## Preliminary: Perform the final post-processing - needs data from the G4M run
 
 ```{r}
-# Edit and run post-processing script
-# Set wd 
-wd <- path_wd(WD_GLOBIOM)
-
-# Run final post-processing
-run_postproc_final(wd)
+run_postproc_final()
 
 print("Final post-processing complete")
 ```
