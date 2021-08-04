@@ -85,10 +85,10 @@ string_replace <- function(full_str,search_str,replace_str){
 
 
 # Function to convert gdx globiom files to csv for G4M input - only for testing
-gdx_to_csv <- function(wd){
+gdx_to_csv_for_G4M <- function() {
 
   # Read globiom outputs
-  glob_files <- gdx(str_glue(wd,"/Data/GLOBIOM/{PROJECT}_{DATE_LABEL}/output_globiom4g4mm_{PROJECT}_{DATE_LABEL}.gdx"))
+  glob_files <- gdx(str_glue("{WD_G4M}/Data/GLOBIOM/{PROJECT}_{DATE_LABEL}/output_globiom4g4mm_{PROJECT}_{DATE_LABEL}.gdx"))
   items <- all_items(glob_files)$parameters
 
   # Read data tables and rearrange
@@ -108,12 +108,12 @@ gdx_to_csv <- function(wd){
     if (varname == "CO2PRICE") varname <- "CO2price"
 
     # Write csv files
-    write.csv(var2,str_glue(wd,"/Data/GLOBIOM/{PROJECT}_{DATE_LABEL}/GLOBIOM2G4M_output_{varname}_{PROJECT}_{DATE_LABEL}.csv"),
+    write.csv(var2, str_glue("{WD_G4M}/Data/GLOBIOM/{PROJECT}_{DATE_LABEL}/GLOBIOM2G4M_output_{varname}_{PROJECT}_{DATE_LABEL}.csv"),
               row.names = F, quote = F)
   }
 
   # Read downscaling outputs and filter input data
-  downs_files <- as_tibble(gdx(str_glue(wd,"/Data/GLOBIOM/{PROJECT}_{DATE_LABEL}/downscaled_output_{PROJECT}_{DATE_LABEL}.gdx"))["LandCover_G4MID"])
+  downs_files <- as_tibble(gdx(str_glue("{WD_G4M}/Data/GLOBIOM/{PROJECT}_{DATE_LABEL}/downscaled_output_{PROJECT}_{DATE_LABEL}.gdx"))["LandCover_G4MID"])
   downs_files <- downs_files[,-1]
   downs_files <- subset(downs_files, V6 == "Reserved")
   downs_files <- downs_files[,-5]
@@ -123,10 +123,8 @@ gdx_to_csv <- function(wd){
   downs2 <- downs_files %>% spread(Year, value, fill = 0, convert = FALSE)
 
   # Write csv file
-  write.csv(downs2,str_glue(wd,"/Data/GLOBIOM/{PROJECT}_{DATE_LABEL}/GLOBIOM2G4M_output_LC_abs_{PROJECT}_{DATE_LABEL}.csv"),
+  write.csv(downs2, str_glue("{WD_G4M}/Data/GLOBIOM/{PROJECT}_{DATE_LABEL}/GLOBIOM2G4M_output_LC_abs_{PROJECT}_{DATE_LABEL}.csv"),
             row.names = F, quote = F)
-
-  setwd(CD)
 }
 
 # Function to retrieve the mapping between globiom and downscaling scenarios

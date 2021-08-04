@@ -120,17 +120,13 @@ print("Initial downscaling complete")
 merge_and_transfer(cluster_nr)
 ```
 
-## Preliminary: Run baseline G4M scenarios - needs data from the intial downscaling
+## Generate CSV input files for G4M 
 
 ```{r}
-if (!file_exists(path(PATH_FOR_G4M,str_glue("{GDX_OUTPUT_NAME}_output_{PROJECT}_{DATE_LABEL}.gdx"))))
-  stop("File for G4M run not found! Please call the intial downscaling before the G4M run")
+if (!file_exists(path(PATH_FOR_G4M, str_glue("{GDX_OUTPUT_NAME}_output_{PROJECT}_{DATE_LABEL}.gdx"))))
+  stop("File for G4M run not found! Please perform intial downscaling first.")
 
-# Set wd
-wd <- path_wd(WD_G4M)
-
-# Generate csv input files for G4M 
-gdx_to_csv(wd)
+gdx_to_csv_for_G4M()
 ```
 
 ## Preliminary: Run baseline G4M scenarios - needs data from the intial downscaling
