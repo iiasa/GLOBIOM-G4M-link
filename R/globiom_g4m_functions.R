@@ -71,7 +71,7 @@ run_GLOBIOM_scenarios <- function() {
 run_initial_downscaling <- function() {
 
   # Check if input data is empty
-  downs_input <- file_size(path(str_glue(CD,"/",WD_DOWNSCALING,"/input/output_landcover_{PROJECT}_{DATE_LABEL}.gdx")))
+  downs_input <- file_size(path(CD, WD_DOWNSCALING, "input", str_glue("output_landcover_{PROJECT}_{DATE_LABEL}.gdx")))
   if (downs_input/1024 < 10) stop("Input gdx file might be empty - check reporting script")
 
   # Get globiom and downscaling scenario mapping
@@ -154,9 +154,9 @@ run_G4M <- function(baseline = NULL) {
   # Configure and run scenarios using Condor_run.R
 
   # Check if input data is empty
-  downs_input <- file_size(path(str_glue(CD,"/",WD_G4M,"/Data/GLOBIOM/{PROJECT}_{DATE_LABEL}/downscaled_output_{PROJECT}_{DATE_LABEL}.gdx")))
+  downs_input <- file_size(path(WD_G4M, "Data", "GLOBIOM", str_glue("{PROJECT}_{DATE_LABEL}"), str_glue("downscaled_output_{PROJECT}_{DATE_LABEL}.gdx")))
   if (downs_input/1024 < 10) stop("Input gdx file might be empty - check reporting script")
-  glob_input <- file_size(path(str_glue(CD,"/",WD_G4M,"/Data/GLOBIOM/{PROJECT}_{DATE_LABEL}/output_globiom4g4mm_{PROJECT}_{DATE_LABEL}.gdx")))
+  glob_input <- file_size(path(WD_G4M, "Data", "GLOBIOM", str_glue("{PROJECT}_{DATE_LABEL}"), str_glue("output_globiom4g4mm_{PROJECT}_{DATE_LABEL}.gdx")))
   if (glob_input/1024 < 10) stop("Input gdx file might be empty - check reporting script")
 
   #g4m_jobs <- get_g4m_jobs(baseline = baseline)[-1] # EPA files for testing
@@ -214,11 +214,8 @@ run_GLOBIOM_postproc <- function(cluster_nr)
   rc <- tryCatch ({
     setwd(WD_GLOBIOM)
 
-    # create output path string
-    path_for_g4m2 <- str_glue(str_replace_all(str_glue(CD,"/",PATH_FOR_G4M),"/","%X%"),"%X%")
-
     # Configure merged output file
-    tempString <- read_lines("./Model/8_merge_output.gms")
+    tempString <- read_lines(path("Model", "8_merge_output.gms"))
     tempString <- string_replace(tempString,"\\$set\\s+limpopo\\s+[:print:]+",str_glue("$set limpopo ",LIMPOPO_RUN))
     tempString <- string_replace(tempString,"\\$set\\s+limpopo_nr\\s+[:print:]+",str_glue("$set limpopo_nr ",cluster_nr))
     tempString <- string_replace(tempString,"\\$set\\s+project\\s+[:print:]+",str_glue("$set project {PROJECT}"))
@@ -231,27 +228,25 @@ run_GLOBIOM_postproc <- function(cluster_nr)
     tempString <- string_replace(tempString,"\\$include\\s+8a_rep_g4m","$include 8a_rep_g4m_tmp")
 
     # Save file
-    write_lines(tempString, "Model/8_merge_output_tmp.gms")
+    write_lines(tempString, path("Model", "8_merge_output_tmp.gms"))
 
     # Point gdx output to downscaling folder
-    tempString <- read_lines("Model/8a_rep_g4m.gms")
+    tempString <- read_lines(path("Model", "8a_rep_g4m.gms"))
 
     # Create downscaling input folder if absent
-    if (!dir_exists(path(CD,"/",WD_DOWNSCALING,"/input/"))) dir_create(path(CD,"/",WD_DOWNSCALING,"/input/"))
+    if (!dir_exists(path(CD, WD_DOWNSCALING, "input"))) dir_create(path(CD, WD_DOWNSCALING, "input"))
 
     # Create G4M output folder if absent
-    if (!dir_exists(path(CD,"/",PATH_FOR_G4M))) dir_create(path(CD,"/",PATH_FOR_G4M))
-
-    path_for_downscaling2 <- str_glue(str_replace_all(path(CD,"/",WD_DOWNSCALING,"/input/"),"/","%X%"),"%X%")
+    if (!dir_exists(path(CD, PATH_FOR_G4M))) dir_create(path(CD, PATH_FOR_G4M))
 
     tempString <- str_replace(tempString,"execute_unload[:print:]+output_landcover[:print:]+",
-                              str_glue("execute_unload \"",path_for_downscaling2,"output_landcover_%project%_%lab%\"LANDCOVER_COMPARE_SCEN, LUC_COMPARE_SCEN0, Price_compare2,MacroScen, IEA_SCEN, BioenScen, ScenYear, REGION, COUNTRY,REGION_MAP"))
+                              str_glue("execute_unload \"", path(CD, WD_DOWNSCALING, "input", "output_landcover_%project%_%lab%"), "\", LANDCOVER_COMPARE_SCEN, LUC_COMPARE_SCEN0, Price_compare2, MacroScen, IEA_SCEN, BioenScen, ScenYear, REGION, COUNTRY,REGION_MAP"))
 
     tempString <- str_replace(tempString,"execute_unload[:print:]+output_globiom4g4mm[:print:]+",
-                              str_glue("execute_unload \"",path_for_g4m2,"output_globiom4g4mm_%project%_%lab%\" G4Mm_SupplyResidues, G4Mm_SupplyWood, G4Mm_Wood_price, G4Mm_LandRent,G4Mm_CO2PRICE, MacroScen, IEA_SCEN, BioenScen, ScenYear"))
+                              str_glue("execute_unload \"", path(CD, PATH_FOR_G4M, "output_globiom4g4mm_%project%_%lab%"), "\", G4Mm_SupplyResidues, G4Mm_SupplyWood, G4Mm_Wood_price, G4Mm_LandRent,G4Mm_CO2PRICE, MacroScen, IEA_SCEN, BioenScen, ScenYear"))
 
     # Save file
-    write_lines(tempString, "Model/8a_rep_g4m_tmp.gms")
+    write_lines(tempString, path("Model", "8a_rep_g4m_tmp.gms"))
 
     # Run post-processing script in the Model directory
     setwd("Model")
@@ -276,15 +271,15 @@ merge_and_transfer <- function(cluster_nr){
 
     # Save merged output to G4M folder
     f <- str_glue(WD_DOWNSCALING,"/gdx/downscaled_{PROJECT}_{cluster_nr}_merged.gdx")
-    file_copy(f,path(str_glue(CD,"/",PATH_FOR_G4M,"/downscaled_output_{PROJECT}_{DATE_LABEL}.gdx")),overwrite = TRUE)
+    file_copy(f, path(CD, PATH_FOR_G4M, str_glue("downscaled_output_{PROJECT}_{DATE_LABEL}.gdx")), overwrite = TRUE)
   }
 
   if (!MERGE_GDX_DOWNSCALING & MERGE_REGIONS){
 
     for (i in 1:length(SCENARIOS_FOR_DOWNSCALING)){
       scenarios_idx <- which(scenario_mapping %in% SCENARIOS_FOR_DOWNSCALING[i]) - 1
-      merge_gdx_down(str_glue(WD_DOWNSCALING,"/gdx"),scenarios_idx,
-                     SCENARIOS_FOR_DOWNSCALING[i],cluster_nr,PATH_FOR_G4M)
+      merge_gdx_down(path(WD_DOWNSCALING, "gdx"), scenarios_idx,
+                     SCENARIOS_FOR_DOWNSCALING[i], cluster_nr, PATH_FOR_G4M)
     }
   }
 }
@@ -301,7 +296,7 @@ compile_g4m_data <- function(baseline = NULL) {
     setwd(WD_G4M)
 
     # Path of output folder
-    file_path <- path_wd(str_glue("/out/{PROJECT}_{DATE_LABEL}/"))
+    file_path <- path_wd("out", str_glue("{PROJECT}_{DATE_LABEL}"))
 
     # Suffix of scenario runs
     file_suffix <- str_glue("_{PROJECT}_{DATE_LABEL}_") # for now in future should be indexed by project and date label
@@ -320,13 +315,13 @@ compile_g4m_data <- function(baseline = NULL) {
     co2 <- abs(as.integer(str_replace(scenarios_split[,4],",","")))
 
     # Compile results
-    generate_g4M_report(file_path,file_suffix,scenarios,scenario_names,N,co2)
+    generate_g4M_report(file_path, file_suffix, scenarios, scenario_names, N, co2)
 
     # Edit and save csv file for GAMS
-    g4m_out <- read.csv(path(file_path,G4M_FEEDBACK_FILE))
+    g4m_out <- read.csv(path(file_path, G4M_FEEDBACK_FILE))
     colnames(g4m_out)[1:3] <- ""
     colnames(g4m_out) <- str_replace_all(colnames(g4m_out),"X","")
-    write.csv(g4m_out,path(file_path,G4M_FEEDBACK_FILE),row.names = F,quote = T)
+    write.csv(g4m_out, path(file_path, G4M_FEEDBACK_FILE), row.names = F, quote = T)
   },
   finally = {
     setwd(prior_wd)
