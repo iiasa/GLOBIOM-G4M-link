@@ -213,11 +213,11 @@ run_GLOBIOM_postproc <- function(cluster_nr)
   # Create downscaling input folder if absent
   if (!dir_exists(path(CD, WD_DOWNSCALING, "input"))) dir_create(path(CD, WD_DOWNSCALING, "input"))
 
-  # Construct path of landcover output file
-  output_landcover <- path(CD, WD_DOWNSCALING, "input", "output_landcover_%project%_%lab%")
-
   # Create G4M input folder if absent
   if (!dir_exists(path(CD, PATH_FOR_G4M))) dir_create(path(CD, PATH_FOR_G4M))
+
+  # Construct path of landcover output file
+  output_landcover <- path(CD, WD_DOWNSCALING, "input", "output_landcover_%project%_%lab%")
 
   # Construct path of output file for G4M
   output_globiom4g4mm <- path(CD, PATH_FOR_G4M, "output_globiom4g4mm_%project%_%lab%")
@@ -322,18 +322,19 @@ compile_g4m_data <- function(baseline = NULL) {
 #' Reads, edits and executes the GLOBIOM 8_merged_output.gms script to generate
 #' reports for IAMC.
 run_postproc_final <- function() {
-  # Configure merge output file
-  tempString <- read_lines(path(WD_GLOBIOM, "Model", "8_merge_output_tmp.gms"))
-  tempString <- string_replace(tempString,"\\$set\\s+rep_g4m\\s+[:print:]+",str_glue("$set rep_g4m ",REPORTING_G4M_FINAL))
-  tempString <- string_replace(tempString,"\\$set\\s+rep_iamc_glo\\s+[:print:]+",str_glue("$set rep_iamc_glo ",REPORTING_IAMC_FINAL))
-  tempString <- string_replace(tempString,"\\$set\\s+rep_iamc_g4m\\s+[:print:]+",str_glue("$set rep_iamc_g4m ",REPORTING_IAMC_G4M_FINAL))
-  tempString <- string_replace(tempString,"\\$set\\s+g4mfile\\s+[:print:]+",str_glue("$set g4mfile ",G4M_FEEDBACK_FILE))
-  if (!any(str_detect(tempString,"8c_rep_iamc_g4m_tmp.gms"))) tempString <- string_replace(tempString,"\\$include\\s+8c_rep_iamc_g4m.gms","$include 8c_rep_iamc_g4m_tmp.gms")
 
-  # Save file
+  # Create a tmp copy of the merge output file with a tmp $include
+  tempString <- read_lines(path(WD_GLOBIOM, "Model", "8_merge_output.gms"))
+  if (!any(str_detect(tempString,"8c_rep_iamc_g4m_tmp.gms"))) tempString <- string_replace(tempString,"\\$include\\s+8c_rep_iamc_g4m.gms","$include 8c_rep_iamc_g4m_tmp.gms")
   write_lines(tempString, path(WD_GLOBIOM, "Model", "8_merge_output_tmp.gms"))
 
-  # Define path for feedback file
+  # Construct path of landcover output file
+  output_landcover <- path(CD, WD_DOWNSCALING, "input", "output_landcover_%project%_%lab%")
+
+  # Construct path of output file for G4M
+  output_globiom4g4mm <- path(CD, PATH_FOR_G4M, "output_globiom4g4mm_%project%_%lab%")
+
+  # Construct path for feedback file
   path_feedback <- path(WD_G4M, PATH_FOR_FEEDBACK)
 
   # read in G4M output file
@@ -359,12 +360,31 @@ run_postproc_final <- function() {
   if(special_char) scen_globiom_map[,bioen_idx] <- unlist(lapply(scen_globiom_map[,bioen_idx],function(x) str_glue("\"",x,"\"")))
 
   # Create scenario mapping string
-  for (i in 1:length(scen)){
-
-    if (i==1) { map_string <- str_glue(scen[i]," . ", scen_globiom_map[i,macro_idx], " . ",
-                                     scen_globiom_map[i,bioen_idx], " . ",scen_globiom_map[i,iea_idx]) } else {
-    map_string <- c(map_string,str_glue(scen[i]," . ", scen_globiom_map[i,macro_idx], " . ",
-                                        scen_globiom_map[i,bioen_idx], " . ",scen_globiom_map[i,iea_idx]))}
+  for (i in 1:length(scen)) {
+    if (i == 1) {
+      map_string <-
+        str_glue(scen[i],
+                 " . ",
+                 scen_globiom_map[i, macro_idx],
+                 " . ",
+                 scen_globiom_map[i, bioen_idx],
+                 " . ",
+                 scen_globiom_map[i, iea_idx])
+    } else {
+      map_string <-
+        c(
+          map_string,
+          str_glue(
+            scen[i],
+            " . ",
+            scen_globiom_map[i, macro_idx],
+            " . ",
+            scen_globiom_map[i, bioen_idx],
+            " . ",
+            scen_globiom_map[i, iea_idx]
+          )
+        )
+    }
   }
 
   # Define sets for mapping
@@ -381,12 +401,25 @@ run_postproc_final <- function() {
   tempString <- string_replace(tempString,"\\$include\\s+[:print:]*X[:print:]*",
                            str_glue('$include "{path_for_feedback_file}"'))
 
-  # Save edits and run merge output file
+  # Save edits and run post-processing script in the GLOBIOM Model directory
   prior_wd <- getwd()
-  rc <- tryCatch({
+  rc <- tryCatch ({
     setwd(path(WD_GLOBIOM, "Model"))
     write_lines(tempString, "8c_rep_iamc_g4m_tmp.gms")
-    rc <- system("gams 8_merge_output_tmp.gms")
+    rc <- system(str_glue('gams',
+                          '8_merge_output_tmp.gms',
+                          '--limpopo "{LIMPOPO_RUN}"',
+                          '--limpopo_nr "{cluster_nr}"',
+                          '--project "{PROJECT}"',
+                          '--lab "{DATE_LABEL}"',
+                          '--rep_g4m "{REPORTING_G4M_FINAL}"',
+                          '--rep_iamc_glo "{REPORTING_IAMC_FINAL}"',
+                          '--rep_iamc_g4m "{REPORTING_IAMC_G4M_FINAL}"',
+                          '--g4mfile "{G4M_FEEDBACK_FILE}"',
+                          '--regionagg "{REGIONAL_AG}"',
+                          '--output_landcover "{output_landcover}"',
+                          '--output_globiom4g4mm "{output_globiom4g4mm}"',
+                          .sep = ' '))
     if (rc != 0) {
       stop(str_glue("GAMS failed with return code {rc}! See https://www.gams.com/latest/docs/UG_GAMSReturnCodes.html#INDEX_return_21_codes_2d__21_error_21_codes"))
     }
