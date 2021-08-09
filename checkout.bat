@@ -11,5 +11,5 @@ BATCH
 # the trailing # makes the shell ignore the CR. Must be run with the bash shell.
 pushd "$(dirname "$0")" #
 set -e #
-svn checkout --revision 3459 svn://hpg909/svn_globiom/globiom_live/Trunk GLOBIOM #
+svn checkout --revision 3468 svn://hpg909/svn_globiom/globiom_live/Trunk GLOBIOM #
 popd #
