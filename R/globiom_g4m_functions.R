@@ -203,54 +203,43 @@ run_G4M <- function(baseline = NULL) {
 
 #' Run GLOBIOM post-processing
 #'
-#' Edit the post-processing script 8_merge_output, to match the current project
-#' and label, run the script, and export its outputs to the Downscaling folder
-#' for further processing
+#' Parameterize the GLOBIOM 8_merge_output.gms post-processing script to match
+#' the current project configuration and export its output file for downscaling
+#' and G4M.
 #'
 #' @param cluster_nr Cluster sequence number of prior GLOBIOM HTCondor submission
 run_GLOBIOM_postproc <- function(cluster_nr)
 {
+  # Create downscaling input folder if absent
+  if (!dir_exists(path(CD, WD_DOWNSCALING, "input"))) dir_create(path(CD, WD_DOWNSCALING, "input"))
+
+  # Construct path of landcover output file
+  output_landcover <- path(CD, WD_DOWNSCALING, "input", "output_landcover_%project%_%lab%")
+
+  # Create G4M input folder if absent
+  if (!dir_exists(path(CD, PATH_FOR_G4M))) dir_create(path(CD, PATH_FOR_G4M))
+
+  # Construct path of output file for G4M
+  output_globiom4g4mm <- path(CD, PATH_FOR_G4M, "output_globiom4g4mm_%project%_%lab%")
+
+  # Run post-processing script in the GLOBIOM Model directory
   prior_wd <- getwd()
   rc <- tryCatch ({
-    setwd(WD_GLOBIOM)
-
-    # Configure merged output file
-    tempString <- read_lines(path("Model", "8_merge_output.gms"))
-    tempString <- string_replace(tempString,"\\$set\\s+limpopo\\s+[:print:]+",str_glue("$set limpopo ",LIMPOPO_RUN))
-    tempString <- string_replace(tempString,"\\$set\\s+limpopo_nr\\s+[:print:]+",str_glue("$set limpopo_nr ",cluster_nr))
-    tempString <- string_replace(tempString,"\\$set\\s+project\\s+[:print:]+",str_glue("$set project {PROJECT}"))
-    tempString <- string_replace(tempString,"\\$set\\s+lab\\s+[:print:]+",str_glue("$set lab ",DATE_LABEL))
-    tempString <- string_replace(tempString,"\\$set\\s+rep_g4m\\s+[:print:]+",str_glue("$set rep_g4m ",REPORTING_G4M))
-    tempString <- string_replace(tempString,"\\$set\\s+rep_iamc_glo\\s+[:print:]+",str_glue("$set rep_iamc_glo ",REPORTING_IAMC))
-    tempString <- string_replace(tempString,"\\$set\\s+rep_iamc_g4m\\s+[:print:]+",str_glue("$set rep_iamc_g4m ",REPORTING_IAMC_G4M))
-    tempString <- string_replace(tempString,"\\$set\\s+g4mfile\\s+[:print:]+",str_glue("$set g4mfile ",G4M_FEEDBACK_FILE))
-    tempString <- string_replace(tempString,"\\$set\\s+regionagg\\s+[:print:]+",str_glue("$set regionagg ",REGIONAL_AG))
-    tempString <- string_replace(tempString,"\\$include\\s+8a_rep_g4m","$include 8a_rep_g4m_tmp")
-
-    # Save file
-    write_lines(tempString, path("Model", "8_merge_output_tmp.gms"))
-
-    # Point gdx output to downscaling folder
-    tempString <- read_lines(path("Model", "8a_rep_g4m.gms"))
-
-    # Create downscaling input folder if absent
-    if (!dir_exists(path(CD, WD_DOWNSCALING, "input"))) dir_create(path(CD, WD_DOWNSCALING, "input"))
-
-    # Create G4M output folder if absent
-    if (!dir_exists(path(CD, PATH_FOR_G4M))) dir_create(path(CD, PATH_FOR_G4M))
-
-    tempString <- str_replace(tempString,"execute_unload[:print:]+output_landcover[:print:]+",
-                              str_glue("execute_unload \"", path(CD, WD_DOWNSCALING, "input", "output_landcover_%project%_%lab%"), "\", LANDCOVER_COMPARE_SCEN, LUC_COMPARE_SCEN0, Price_compare2, MacroScen, IEA_SCEN, BioenScen, ScenYear, REGION, COUNTRY,REGION_MAP"))
-
-    tempString <- str_replace(tempString,"execute_unload[:print:]+output_globiom4g4mm[:print:]+",
-                              str_glue("execute_unload \"", path(CD, PATH_FOR_G4M, "output_globiom4g4mm_%project%_%lab%"), "\", G4Mm_SupplyResidues, G4Mm_SupplyWood, G4Mm_Wood_price, G4Mm_LandRent,G4Mm_CO2PRICE, MacroScen, IEA_SCEN, BioenScen, ScenYear"))
-
-    # Save file
-    write_lines(tempString, path("Model", "8a_rep_g4m_tmp.gms"))
-
-    # Run post-processing script in the Model directory
-    setwd("Model")
-    rc <- system("gams 8_merge_output_tmp.gms")
+    setwd(path(WD_GLOBIOM, "Model"))
+    rc <- system(str_glue('gams',
+                          '8_merge_output.gms',
+                          '--limpopo "{LIMPOPO_RUN}"',
+                          '--limpopo_nr "{cluster_nr}"',
+                          '--project "{PROJECT}"',
+                          '--lab "{DATE_LABEL}"',
+                          '--rep_g4m "{REPORTING_G4M}"',
+                          '--rep_iamc_glo "{REPORTING_IAMC}"',
+                          '--rep_iamc_g4m "{REPORTING_IAMC_G4M}"',
+                          '--g4mfile "{G4M_FEEDBACK_FILE}"',
+                          '--regionagg "{REGIONAL_AG}"',
+                          '--output_landcover "{output_landcover}"',
+                          '--output_globiom4g4mm "{output_globiom4g4mm}"',
+                          .sep = ' '))
     if (rc != 0) {
       stop(str_glue("GAMS failed with return code {rc}! See https://www.gams.com/latest/docs/UG_GAMSReturnCodes.html#INDEX_return_21_codes_2d__21_error_21_codes"))
     }
