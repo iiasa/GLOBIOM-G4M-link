@@ -217,10 +217,10 @@ run_GLOBIOM_postproc <- function(cluster_nr)
   if (!dir_exists(path(CD, PATH_FOR_G4M))) dir_create(path(CD, PATH_FOR_G4M))
 
   # Construct path of landcover output file
-  output_landcover <- path(CD, WD_DOWNSCALING, "input", "output_landcover_%project%_%lab%")
+  output_landcover <- path(CD, WD_DOWNSCALING, "input", str_glue("output_landcover_{PROJECT}_{DATE_LABEL}"))
 
   # Construct path of output file for G4M
-  output_globiom4g4mm <- path(CD, PATH_FOR_G4M, "output_globiom4g4mm_%project%_%lab%")
+  output_globiom4g4mm <- path(CD, PATH_FOR_G4M, str_glue("output_globiom4g4mm_{PROJECT}_{DATE_LABEL}"))
 
   # Run post-processing script in the GLOBIOM Model directory
   prior_wd <- getwd()
@@ -329,10 +329,10 @@ run_postproc_final <- function() {
   write_lines(tempString, path(WD_GLOBIOM, "Model", "8_merge_output_tmp.gms"))
 
   # Construct path of landcover output file
-  output_landcover <- path(CD, WD_DOWNSCALING, "input", "output_landcover_%project%_%lab%")
+  output_landcover <- path(CD, WD_DOWNSCALING, "input", str_glue("output_landcover_{PROJECT}_{DATE_LABEL}"))
 
   # Construct path of output file for G4M
-  output_globiom4g4mm <- path(CD, PATH_FOR_G4M, "output_globiom4g4mm_%project%_%lab%")
+  output_globiom4g4mm <- path(CD, PATH_FOR_G4M, str_glue("output_globiom4g4mm_{PROJECT}_{DATE_LABEL}"))
 
   # Construct path for feedback file
   path_feedback <- path(WD_G4M, PATH_FOR_FEEDBACK)
