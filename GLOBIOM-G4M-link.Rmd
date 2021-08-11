@@ -100,7 +100,7 @@ print("GLOBIOM scenarios run complete.")
 Merge and export GLOBIOM output for use by downscaling and G4M.
 
 ```{r}
-run_globiom_postproc(cluster_nr_globiom)
+run_initial_postproc(cluster_nr_globiom)
 
 print("Initial post processing complete.")
 ```
