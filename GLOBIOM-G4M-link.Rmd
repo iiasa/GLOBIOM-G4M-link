@@ -90,7 +90,7 @@ dyn.load(path(CD,WD_G4M,"/tableMergeForLinker/merge_files.so"))
 ## Perform the initial GLOBIOM scenarios run
 
 ```{r}
-cluster_nr <- run_globiom_scenarios()
+cluster_nr_globiom <- run_globiom_scenarios()
 
 print("Initial GLOBIOM run complete.")
 ```
@@ -98,7 +98,7 @@ print("Initial GLOBIOM run complete.")
 ## Edit and run GLOBIOM post-processing script
 
 ```{r}
-run_globiom_postproc(cluster_nr)
+run_globiom_postproc(cluster_nr_globiom)
 ```
 
 ## Perform the initial downscaling - needs data from the initial GLOBIOM run
@@ -107,7 +107,7 @@ run_globiom_postproc(cluster_nr)
 if (!file_exists(path(WD_DOWNSCALING,"input",str_glue("output_landcover_{PROJECT}_{DATE_LABEL}.gdx"))))
   stop("File for downscaling not found! Please call the intial GLOBIOM run before downscaling")
 
-cluster_nr <- run_initial_downscaling()
+cluster_nr_downscaling <- run_initial_downscaling()
 
 print("Initial downscaling complete")
 ```
@@ -146,7 +146,7 @@ base_files <- str_detect(allfiles,"NPVbau_[:print:]+.bin")
 if (!any(base_files)) stop("Baseline G4M run not found! Please run the baseline before the G4M scenarios")
 
 # Run G4M - final scenarios
-run_G4M(baseline = FALSE)
+run_g4m(baseline = FALSE)
 
 print("G4M scenario run complete")
 ```
@@ -160,7 +160,7 @@ compile_g4m_data(baseline = FALSE)
 ## Preliminary: Perform the final post-processing - needs data from the G4M run
 
 ```{r}
-run_postproc_final()
+run_final_postproc(cluster_nr_globiom)
 
 print("Final post-processing complete")
 ```

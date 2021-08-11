@@ -201,14 +201,14 @@ run_g4m <- function(baseline = NULL) {
   if (rc != 0) stop("Condor run failed!")
 }
 
-#' Run GLOBIOM post-processing
+#' Run initial post-processing
 #'
 #' Parameterize the GLOBIOM 8_merge_output.gms post-processing script to match
 #' the current project configuration and export its output file for downscaling
 #' and G4M.
 #'
-#' @param cluster_nr Cluster sequence number of prior GLOBIOM HTCondor submission
-run_globiom_postproc <- function(cluster_nr)
+#' @param cluster_nr_globiom Cluster sequence number of prior GLOBIOM HTCondor submission
+run_initial_postproc <- function(cluster_nr_globiom)
 {
   # Create downscaling input folder if absent
   if (!dir_exists(path(CD, WD_DOWNSCALING, "input"))) dir_create(path(CD, WD_DOWNSCALING, "input"))
@@ -229,7 +229,7 @@ run_globiom_postproc <- function(cluster_nr)
     rc <- system(str_glue('gams',
                           '8_merge_output.gms',
                           '--limpopo "{LIMPOPO_RUN}"',
-                          '--limpopo_nr "{cluster_nr}"',
+                          '--limpopo_nr "{cluster_nr_globiom}"',
                           '--project "{PROJECT}"',
                           '--lab "{DATE_LABEL}"',
                           '--rep_g4m "{REPORTING_G4M}"',
@@ -249,17 +249,16 @@ run_globiom_postproc <- function(cluster_nr)
   })
 }
 
-
 #' Function to transfer the downscaling output to G4M folder. Merges the downscaled
 #' regions if required
 #'
-#' #' @param cluster_nr Cluster sequence number of prior downscaling HTCondor submission
-merge_and_transfer <- function(cluster_nr){
+#' @param cluster_nr_downscaling Cluster sequence number of prior downscaling HTCondor submission
+merge_and_transfer <- function(cluster_nr_downscaling) {
   # Transfer gdx to G4M folder - in case files were merged on limpopo
   if (MERGE_GDX_DOWNSCALING){
 
     # Save merged output to G4M folder
-    f <- str_glue(WD_DOWNSCALING,"/gdx/downscaled_{PROJECT}_{cluster_nr}_merged.gdx")
+    f <- str_glue(WD_DOWNSCALING,"/gdx/downscaled_{PROJECT}_{cluster_nr_downscaling}_merged.gdx")
     file_copy(f, path(CD, PATH_FOR_G4M, str_glue("downscaled_output_{PROJECT}_{DATE_LABEL}.gdx")), overwrite = TRUE)
   }
 
@@ -268,7 +267,7 @@ merge_and_transfer <- function(cluster_nr){
     for (i in 1:length(SCENARIOS_FOR_DOWNSCALING)){
       scenarios_idx <- which(scenario_mapping %in% SCENARIOS_FOR_DOWNSCALING[i]) - 1
       merge_gdx_down(path(WD_DOWNSCALING, "gdx"), scenarios_idx,
-                     SCENARIOS_FOR_DOWNSCALING[i], cluster_nr, PATH_FOR_G4M)
+                     SCENARIOS_FOR_DOWNSCALING[i], cluster_nr_downscaling, PATH_FOR_G4M)
     }
   }
 }
@@ -321,7 +320,9 @@ compile_g4m_data <- function(baseline = NULL) {
 #'
 #' Reads, edits and executes the GLOBIOM 8_merged_output.gms script to generate
 #' reports for IAMC.
-run_postproc_final <- function() {
+#'
+#' @param cluster_nr_globiom Cluster sequence number of prior GLOBIOM HTCondor submission
+run_final_postproc <- function(cluster_nr_globiom) {
 
   # Create a tmp copy of the merge output file with a tmp $include
   tempString <- read_lines(path(WD_GLOBIOM, "Model", "8_merge_output.gms"))
@@ -409,7 +410,7 @@ run_postproc_final <- function() {
     rc <- system(str_glue('gams',
                           '8_merge_output_tmp.gms',
                           '--limpopo "{LIMPOPO_RUN}"',
-                          '--limpopo_nr "{cluster_nr}"',
+                          '--limpopo_nr "{cluster_nr_globiom}"',
                           '--project "{PROJECT}"',
                           '--lab "{DATE_LABEL}"',
                           '--rep_g4m "{REPORTING_G4M_FINAL}"',
