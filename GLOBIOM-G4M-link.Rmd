@@ -90,7 +90,7 @@ dyn.load(path(CD,WD_G4M,"/tableMergeForLinker/merge_files.so"))
 ## Perform the initial GLOBIOM scenarios run
 
 ```{r}
-cluster_nr <- run_GLOBIOM_scenarios()
+cluster_nr <- run_globiom_scenarios()
 
 print("Initial GLOBIOM run complete.")
 ```
@@ -98,7 +98,7 @@ print("Initial GLOBIOM run complete.")
 ## Edit and run GLOBIOM post-processing script
 
 ```{r}
-run_GLOBIOM_postproc(cluster_nr)
+run_globiom_postproc(cluster_nr)
 ```
 
 ## Perform the initial downscaling - needs data from the initial GLOBIOM run
@@ -126,13 +126,13 @@ merge_and_transfer(cluster_nr)
 if (!file_exists(path(PATH_FOR_G4M, str_glue("{GDX_OUTPUT_NAME}_output_{PROJECT}_{DATE_LABEL}.gdx"))))
   stop("File for G4M run not found! Please perform intial downscaling first.")
 
-gdx_to_csv_for_G4M()
+gdx_to_csv_for_g4m()
 ```
 
 ## Preliminary: Run baseline G4M scenarios - needs data from the intial downscaling
 
 ```{r}
-run_G4M(baseline = TRUE)
+run_g4m(baseline = TRUE)
 
 print("G4M baseline scenario run complete")
 

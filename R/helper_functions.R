@@ -74,7 +74,7 @@ string_replace <- function(full_str,search_str,replace_str){
 
 
 # Function to convert gdx globiom files to csv for G4M input - only for testing
-gdx_to_csv_for_G4M <- function() {
+gdx_to_csv_for_g4m <- function() {
 
   # Read globiom outputs
   glob_files <- gdx(str_glue("{WD_G4M}/Data/GLOBIOM/{PROJECT}_{DATE_LABEL}/output_globiom4g4mm_{PROJECT}_{DATE_LABEL}.gdx"))

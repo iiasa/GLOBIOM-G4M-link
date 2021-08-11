@@ -8,7 +8,7 @@
 #' parallel execution on an HTCondor cluster.
 #'
 #' @return cluster_nr Cluster sequence number of HTCondor submission
-run_GLOBIOM_scenarios <- function() {
+run_globiom_scenarios <- function() {
 
   cluster_number_log <- path(TEMP_DIR, "cluster_number.log")
 
@@ -147,7 +147,7 @@ run_initial_downscaling <- function() {
 #' Run G4N by submitting jobs for parallel execution on an HTCondor cluster.
 #'
 #' @param baseline = TRUE|FALSE: set to TRUE to select baseline scenarios.
-run_G4M <- function(baseline = NULL) {
+run_g4m <- function(baseline = NULL) {
   if (!is.logical(baseline))
     stop("Set baseline parameter to TRUE or FALSE!")
 
@@ -208,7 +208,7 @@ run_G4M <- function(baseline = NULL) {
 #' and G4M.
 #'
 #' @param cluster_nr Cluster sequence number of prior GLOBIOM HTCondor submission
-run_GLOBIOM_postproc <- function(cluster_nr)
+run_globiom_postproc <- function(cluster_nr)
 {
   # Create downscaling input folder if absent
   if (!dir_exists(path(CD, WD_DOWNSCALING, "input"))) dir_create(path(CD, WD_DOWNSCALING, "input"))
