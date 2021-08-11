@@ -87,18 +87,22 @@ source("R/helper_functions.R")
 dyn.load(path(CD,WD_G4M,"/tableMergeForLinker/merge_files.so"))
 ```
 
-## Perform the initial GLOBIOM scenarios run
+## Run GLOBIOM scenarios
 
 ```{r}
 cluster_nr_globiom <- run_globiom_scenarios()
 
-print("Initial GLOBIOM run complete.")
+print("GLOBIOM scenarios run complete.")
 ```
 
-## Edit and run GLOBIOM post-processing script
+## Run initial post-processing
+
+Merge and export GLOBIOM output for use by downscaling and G4M.
 
 ```{r}
 run_globiom_postproc(cluster_nr_globiom)
+
+print("Initial post processing complete.")
 ```
 
 ## Perform the initial downscaling - needs data from the initial GLOBIOM run
@@ -117,7 +121,7 @@ print("Initial downscaling complete")
 ```{r}
 
 # Transfer downscaled output to G4M input folder
-merge_and_transfer(cluster_nr)
+merge_and_transfer(cluster_nr_downscaling)
 ```
 
 ## Generate CSV input files for G4M 
