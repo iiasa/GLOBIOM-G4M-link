@@ -82,7 +82,8 @@ CD <- getwd()
 TEMP_DIR <- path(tempdir())
 
 # Source support functions
-source("R/globiom_g4m_functions.R")
+source("R/run_submission.R")
+source("R/transfer.R")
 source("R/post_processing.R")
 source("R/helper_functions.R")
 
