@@ -83,6 +83,7 @@ TEMP_DIR <- path(tempdir())
 
 # Source support functions
 source("R/globiom_g4m_functions.R")
+source("R/post_processing.R")
 source("R/helper_functions.R")
 
 # Load dll with G4M report generation routine
@@ -141,7 +142,6 @@ gdx_to_csv_for_g4m()
 run_g4m(baseline = TRUE)
 
 print("G4M baseline scenario run complete")
-
 ```
 
 ## 5a. Preliminary: Run G4M scenarios - needs data from the intial downscaling and G4M baseline scenarios
