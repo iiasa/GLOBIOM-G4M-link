@@ -103,8 +103,13 @@ gdx_to_csv_for_g4m <- function() {
 
   # Read downscaling outputs and filter input data
   downs_files <- as_tibble(gdx(str_glue("{WD_G4M}/Data/GLOBIOM/{PROJECT}_{DATE_LABEL}/downscaled_output_{PROJECT}_{DATE_LABEL}.gdx"))["LandCover_G4MID"])
-  downs_files <- downs_files[,-1]
-  downs_files <- subset(downs_files, V6 == "Reserved")
+  if (dim(downs_files)[2] == 8){
+    downs_files <- downs_files[,-1]
+    downs_files <- subset(downs_files, V6 == "Reserved")
+  } else {
+    downs_files <- subset(downs_files, V5 == "Reserved")
+  }
+
   downs_files <- downs_files[,-5]
   names(downs_files) <- c("g4m_05_id","MacroScen","IEA_SCEN","BioenScen","Year","value")
 

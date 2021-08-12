@@ -260,15 +260,36 @@ merge_and_transfer <- function(cluster_nr_downscaling) {
     # Save merged output to G4M folder
     f <- str_glue(WD_DOWNSCALING,"/gdx/downscaled_{PROJECT}_{cluster_nr_downscaling}_merged.gdx")
     file_copy(f, path(CD, PATH_FOR_G4M, str_glue("downscaled_output_{PROJECT}_{DATE_LABEL}.gdx")), overwrite = TRUE)
-  }
+  } else {
 
-  if (!MERGE_GDX_DOWNSCALING & MERGE_REGIONS){
+    # Get scenario mapping and indices
+    scenario_mapping <- get_mapping()
+    scenarios_idx <- scenario_mapping$ScenNr[which(scenario_mapping$ScenLoop %in% SCENARIOS_FOR_DOWNSCALING)]
 
-    for (i in 1:length(SCENARIOS_FOR_DOWNSCALING)){
-      scenarios_idx <- which(scenario_mapping %in% SCENARIOS_FOR_DOWNSCALING[i]) - 1
-      merge_gdx_down(path(WD_DOWNSCALING, "gdx"), scenarios_idx,
-                     SCENARIOS_FOR_DOWNSCALING[i], cluster_nr_downscaling, PATH_FOR_G4M)
+    # Extract land cover table for G4M
+    for (i in 1:length(scenarios_idx)){
+
+      # Get scenario number
+      s_list <-  sprintf("%06d", scenarios_idx[i])
+
+      # Read data for G4M
+      if (i==1) {
+        out <- gdx(path(CD,WD_DOWNSCALING,"gdx", str_glue("{GDX_OUTPUT_NAME}_{PROJECT}_{cluster_nr}.",
+                                                          s_list,".gdx")))["LandCover_G4MID"]
+      } else {
+
+        out_aux <-  gdx(path(CD,WD_DOWNSCALING,"gdx", str_glue("{GDX_OUTPUT_NAME}_{PROJECT}_{cluster_nr}.",
+                                                               s_list,".gdx")))["LandCover_G4MID"]
+        out <- rbind(out,out_aux)
+
+      }
+
     }
+
+    # Write merged gdx file to G4M data folder
+    write.gdx(path(CD, PATH_FOR_G4M, str_glue("downscaled_output_{PROJECT}_{DATE_LABEL}.gdx")),
+              list(LandCover_G4MID=out))
+
   }
 }
 
