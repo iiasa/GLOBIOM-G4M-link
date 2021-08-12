@@ -8,6 +8,8 @@ date: "`r format(Sys.time(), '%d %B %Y')`"
 output: html_notebook
 ---
 
+![GLOBIOM-G4M processing steps and data flow.](images/link_scheme.jpg)
+
 Before using this notebook, please first read the [introductory documentation](https://iiasa.github.io/GLOBIOM-G4M-link). Run the code chunks in first-to-last order. You can have RStudio run all chunks in one go, but to configure and test your setup---and because some chunks take a long time to run---it is advisable to start out by running chunks one-by-one at least until you have verified that everything is working smoothly.
 
 Carefully check the output of each chunk for errors, and if present make adjustments and re-run the chunk that failed.
@@ -87,7 +89,7 @@ source("R/helper_functions.R")
 dyn.load(path(CD,WD_G4M,"/tableMergeForLinker/merge_files.so"))
 ```
 
-## Run GLOBIOM scenarios
+## 1. Run GLOBIOM scenarios
 
 ```{r}
 cluster_nr_globiom <- run_globiom_scenarios()
@@ -95,7 +97,7 @@ cluster_nr_globiom <- run_globiom_scenarios()
 print("GLOBIOM scenarios run complete.")
 ```
 
-## Run initial post-processing
+## 2. Run initial post-processing
 
 Merge and export GLOBIOM output for use by downscaling and G4M.
 
@@ -105,7 +107,7 @@ run_initial_postproc(cluster_nr_globiom)
 print("Initial post processing complete.")
 ```
 
-## Perform the initial downscaling - needs data from the initial GLOBIOM run
+## 3a. Perform the initial downscaling - needs data from the initial GLOBIOM run
 
 ```{r}
 if (!file_exists(path(WD_DOWNSCALING,"input",str_glue("output_landcover_{PROJECT}_{DATE_LABEL}.gdx"))))
@@ -116,7 +118,7 @@ cluster_nr_downscaling <- run_initial_downscaling()
 print("Initial downscaling complete")
 ```
 
-## Merge downscaling outputs and transfer them to G4M
+## 3b. Merge downscaling outputs and transfer them to G4M
 
 ```{r}
 
@@ -124,7 +126,7 @@ print("Initial downscaling complete")
 merge_and_transfer(cluster_nr_downscaling)
 ```
 
-## Generate CSV input files for G4M 
+## 3c. Generate CSV input files for G4M 
 
 ```{r}
 if (!file_exists(path(PATH_FOR_G4M, str_glue("{GDX_OUTPUT_NAME}_output_{PROJECT}_{DATE_LABEL}.gdx"))))
@@ -133,7 +135,7 @@ if (!file_exists(path(PATH_FOR_G4M, str_glue("{GDX_OUTPUT_NAME}_output_{PROJECT}
 gdx_to_csv_for_g4m()
 ```
 
-## Preliminary: Run baseline G4M scenarios - needs data from the intial downscaling
+## 4. Preliminary: Run baseline G4M scenarios - needs data from the intial downscaling
 
 ```{r}
 run_g4m(baseline = TRUE)
@@ -142,7 +144,7 @@ print("G4M baseline scenario run complete")
 
 ```
 
-## Preliminary: Run G4M scenarios - needs data from the intial downscaling and G4M baseline scenarios
+## 5a. Preliminary: Run G4M scenarios - needs data from the intial downscaling and G4M baseline scenarios
 
 ```{r}
 allfiles <- dir_ls(path(CD, "G4M", "out", str_glue("{PROJECT}_{DATE_LABEL}"), "baseline"))
@@ -155,13 +157,13 @@ run_g4m(baseline = FALSE)
 print("G4M scenario run complete")
 ```
 
-## Preliminary: Compile G4M data and produce the report for GLOBIOM  - needs data from the G4M run
+## 5b. Preliminary: Compile G4M data and produce the report for GLOBIOM  - needs data from the G4M run
 
 ```{r}
 compile_g4m_data(baseline = FALSE)
 ```
 
-## Preliminary: Perform the final post-processing - needs data from the G4M run
+## 6. Preliminary: Perform the final post-processing - needs data from the G4M run
 
 ```{r}
 run_final_postproc(cluster_nr_globiom)
