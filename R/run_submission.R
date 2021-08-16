@@ -36,7 +36,8 @@ run_globiom_scenarios <- function() {
     'GET_GDX_OUTPUT = TRUE',
     'MERGE_GDX_OUTPUT = {MERGE_GDX}',
     'WAIT_FOR_RUN_COMPLETION = TRUE',
-    'CLUSTER_NUMBER_LOG = "{cluster_number_log}"'
+    'CLUSTER_NUMBER_LOG = "{cluster_number_log}"',
+    'CLEAR_LINES = FALSE'
   )
 
   config_path <- path(TEMP_DIR, "config_glob.R")
@@ -112,7 +113,8 @@ run_initial_downscaling <- function() {
     'GET_GDX_OUTPUT = TRUE',
     'MERGE_GDX_OUTPUT = TRUE',
     'WAIT_FOR_RUN_COMPLETION = TRUE',
-    'CLUSTER_NUMBER_LOG = "{cluster_number_log}"'
+    'CLUSTER_NUMBER_LOG = "{cluster_number_log}"',
+    'CLEAR_LINES = FALSE'
   )
   config_path <- file.path(TEMP_DIR, "config_down.R")
 
