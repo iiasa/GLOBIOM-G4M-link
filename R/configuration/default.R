@@ -32,9 +32,10 @@ RESOLUTION_DOWNSCALING = 37 # number of regions specified in the downscaling
 # 2nd block - G4M run
 #-------------------------------------------------------------------------------
 WD_G4M = "G4M" # optional, working directory for G4M relative to root directory
-G4M_EXE = "g4m_EPA_07052021.exe" # name of G4M executable
+G4M_EXE = "G4M_newInterface_ver_EPA_07052021.exe" # name of G4M executable
+G4M_SUBMISSION_SCRIPT = "g4m_run.R" # submission script to run G4M
 CO2_PRICE = -1 # co2 price for G4M run, -1 if read form a file or actual price otherwise
-SCENARIOS_FOR_G4M = 70:87 # full set or subset of downscaled scenarios
+SCENARIOS_FOR_G4M = 0 # full set or subset of downscaled scenarios
 #-------------------------------------------------------------------------------
 
 # 3rd block - final GLOBIOM run
