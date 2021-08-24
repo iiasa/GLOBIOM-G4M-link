@@ -226,6 +226,12 @@ get_g4m_jobs_new <- function(baseline = NULL){
   downs_map <-  unique(get_mapping()[-4])
   downs_map <- subset(downs_map, ScenLoop %in% SCENARIOS_FOR_G4M)
 
+  # Save config files
+  lab <- str_glue("{PROJECT}_{DATE_LABEL}")
+  config <- list(lab,baseline,G4M_EXE)
+  save(config, file=path(CD,WD_G4M,"Data","Default","config.RData"))
+  save(downs_map, file=path(CD,WD_G4M,"Data","Default","scenario_map.RData"))
+
   g4m_scen_table <- downs_map %>% relocate(BioenScen, .after = IEAScen)
 
  # For now all scenarios are run in the baseline - needs to be adjusted with identifiers if same scenarios are run with different co2 price
