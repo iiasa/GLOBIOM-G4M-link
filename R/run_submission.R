@@ -148,7 +148,7 @@ run_initial_downscaling <- function() {
 #' Run G4M by submitting jobs for parallel execution on an HTCondor cluster.
 #'
 #' @param baseline = TRUE|FALSE: set to TRUE to select baseline scenarios.
-run_g4m <- function(baseline = NULL) {
+run_g4m_old <- function(baseline = NULL) {
   if (!is.logical(baseline))
     stop("Set baseline parameter to TRUE or FALSE!")
 
@@ -209,64 +209,52 @@ run_g4m <- function(baseline = NULL) {
 # Note that {...} instances are escaped as {{...}},
 # Note that as of R 4.0.0, r(...) raw string constants are an option,
 # but we want to support R < 4.0.0
-G4M_JOB_TEMPLATE <- "c(
-  \'Executable = {{job_bat}}\',
-  \"\",
-  \'Universe = vanilla\',
-  \"\",
-  \'output = {{run_dir}}/{{PREFIX}}_{{LABEL}}_$(Cluster).$(Process).out\',
-  \'log = {{run_dir}}/{{PREFIX}}_{{LABEL}}_$(Cluster).$(Process).log\',
-  \'error = {{run_dir}}/{{PREFIX}}_{{LABEL}}_$(Cluster).$(Process).err\',
-  \"\",
-  \'## To protect the job from running on the same machine\',
-  \'## where it crashed before\',
-  \'job_machine_attrs = Machine\',
-  \'job_machine_attrs_history_length = 5\',
-  \"\",
-  \'+IIASAGroup = \"ESM\"\',
-  \"\",
-  \"requirements = \\\\\",
-  \'  ( (Arch ==\"INTEL\")||(Arch ==\"X86_64\") ) && \\\\\',
-  \'  ( (OpSys == \"WINDOWS\")||(OpSys == \"WINNT61\") ) && \\\\\',
-  \"  ( ( TARGET.Machine == \\\"{{str_c(hostdoms, collapse=\'\\\" ) || ( TARGET.Machine == \\\"\')}}\\\") )\",
-  \"\",
-  \'request_memory = {{REQUEST_MEMORY}}\',
-  \'request_cpus = 1\',
-  \'rank = mips\',
-  \"\",
-  \'## Hold the suspended job (i.e. do not allow suspention)\',
-  \'periodic_hold = (JobStatus == 7)\',
-  \'periodic_release = (NumJobStarts <= 10) && (HoldReasonCode != 1) && ((time() - EnteredCurrentStatus)>300)\',
-  \"\",
-  \'##  specifies how long a given job will attempt to run on a remote resource, even if that resource loses contact with the submitting machine, seconds, default=2400 (40 minutes)\',
-  \'job_lease_duration = 18000\',
-  \"\",
-  \'## End the job only when exitcode = 0\',
-  \'on_exit_remove = (ExitBySignal == False) && (ExitCode == 0)\',
-  \"\",
-  \'## Hold the job if NumJobStarts > 10\',
-  \'on_exit_hold = (NumJobStarts > 10) && (ExitCode != 0)\',
-  \"\",
-  \'should_transfer_files = YES\',
-  \'when_to_transfer_output = ON_EXIT\',
-  \'stream_output = True\',
-  \'stream_error = True\',
-  \'transfer_output_files = out\',
-  \'transfer_output_remaps = \"out={output_dir}\"\',
-  \'Notification = Error\',
-  \"\",
-  \"queue arguments from (\",
-  {{JOBS}},
-  \")\"
+
+G4M_JOB_TEMPLATE <- c(
+  "executable = {job_bat}",
+  "arguments = $(job)",
+  "universe = vanilla",
+  "",
+  "nice_user = {ifelse(NICE_USER, 'True', 'False')}",
+  "",
+  "# Job log, output, and error files",
+  "log = {run_dir}/{PREFIX}_{EXPERIMENT}_$(cluster).$(job).log", # don't use $$() expansion here: Condor creates the log file before it can resolve the expansion
+  "output = {run_dir}/{PREFIX}_{EXPERIMENT}_$(cluster).$(job).out",
+  "stream_output = True",
+  "error = {run_dir}/{PREFIX}_{EXPERIMENT}_$(cluster).$(job).err",
+  "stream_error = True",
+  "",
+  "periodic_release =  (NumJobStarts <= {JOB_RELEASES}) && (JobStatus == 5) && ((CurrentTime - EnteredCurrentStatus) > 120)", # if seed job goes on hold for more than 2 minutes, release it up to JOB_RELEASES times
+  "",
+  "requirements = \\",
+  '  ( (Arch =="INTEL")||(Arch =="X86_64") ) && \\',
+  '  ( (OpSys == "WINDOWS")||(OpSys == "WINNT61") ) && \\',
+  "  ( GLOBIOM =?= True ) && \\",
+  "  ( ( TARGET.Machine == \"{str_c(hostdoms, collapse='\" ) || ( TARGET.Machine == \"')}\") )",
+  "request_memory = {REQUEST_MEMORY}",
+  "request_cpus = {REQUEST_CPUS}", # Number of "CPUs" (hardware threads) to reserve for each job
+  "request_disk = {request_disk}",
+  "",
+  '+IIASAGroup = "ESM"', # Identifies you as part of the group allowed to use ESM cluster
+  "run_as_owner = {ifelse(RUN_AS_OWNER, 'True', 'False')}",
+  "",
+  "should_transfer_files = YES",
+  "when_to_transfer_output = ON_EXIT",
+  "transfer_output_files = out",
+  'transfer_output_remaps = \"out={OUTPUT_DIR}\"',
+  "",
+  "notification = {NOTIFICATION}",
+  '{ifelse(is.null(EMAIL_ADDRESS), "", str_glue("notify_user = {EMAIL_ADDRESS}"))}',
+  "",
+  "queue job in ({str_c(JOBS,collapse=',')})"
 )
-"
 
 #' Run G4M
 #'
 #' Run G4M by submitting jobs for parallel execution on an HTCondor cluster.
 #'
 #' @param baseline = TRUE|FALSE: set to TRUE to select baseline scenarios.
-run_g4m_attempt <- function(baseline = NULL) {
+run_g4m <- function(baseline = NULL) {
   if (!is.logical(baseline))
     stop("Set baseline parameter to TRUE or FALSE!")
 
@@ -276,49 +264,61 @@ run_g4m_attempt <- function(baseline = NULL) {
   } else {
     output_dir <- path("out", str_glue("{PROJECT}_{DATE_LABEL}"))
   }
-  if (!dir_exists(path(WD_G4M, output_dir)))
-    dir_create(path(WD_G4M, output_dir))
+  if (!dir_exists(path(CD, WD_G4M, output_dir)))
+    dir_create(path(CD, WD_G4M, output_dir))
 
   # Determine files for bundle
-  default_file_list <- dir_ls(path_wd(WD_G4M, "Data", "Default"))
-  glob_file_list <- dir_ls(path_wd(WD_G4M, "Data", "GLOBIOM", str_glue("{PROJECT}_{DATE_LABEL}")))
+  default_file_list <- dir_ls(path(CD, WD_G4M, "Data", "Default"))
+  glob_file_list <- dir_ls(path(CD, WD_G4M, "Data", "GLOBIOM", str_glue("{PROJECT}_{DATE_LABEL}")))
   base_file_list <- c(default_file_list, glob_file_list)
   if (baseline) {
-    seed_files <- c(base_file_list, str_glue("{G4M_EXE}"))
+    seed_files <- c(base_file_list, str_glue("{G4M_EXE}"),"g4m_run.R")
     seed_files <- seed_files[which(!str_detect(seed_files, ".gdx"))]
+    output_folder <- str_glue("out/{PROJECT}_{DATE_LABEL}/baseline")
+    if (!dir_exists(output_folder)) dir_create(output_folder)
 
   } else {
-    bau_file_list <- dir_ls(path_wd(WD_G4M, "out", str_glue("{PROJECT}_{DATE_LABEL}"), "baseline"))
+    bau_file_list <- dir_ls(path(CD, WD_G4M, "out", str_glue("{PROJECT}_{DATE_LABEL}"), "baseline"))
     idx <- which(str_detect(bau_file_list, "biomass_bau") | str_detect(bau_file_list, "NPVbau"))
     bau_file_list <- bau_file_list[idx]
-    seed_files <- c(base_file_list, bau_file_list, str_glue("{G4M_EXE}"))
+    seed_files <- c(base_file_list, bau_file_list, str_glue("{G4M_EXE}"),path(CD,"R","g4m_run.R"))
+    output_folder <- str_glue("out/{PROJECT}_{DATE_LABEL}")
+    if (!dir_exists(output_folder)) dir_create(output_folder)
   }
 
-  # Configure and run scenarios using Condor_run.R
 
   # Check if input data is empty
-  downs_input <- file_size(path(WD_G4M, "Data", "GLOBIOM", str_glue("{PROJECT}_{DATE_LABEL}"), str_glue("downscaled_output_{PROJECT}_{DATE_LABEL}.gdx")))
+  downs_input <- file_size(path(CD, WD_G4M, "Data", "GLOBIOM", str_glue("{PROJECT}_{DATE_LABEL}"), str_glue("downscaled_output_{PROJECT}_{DATE_LABEL}.gdx")))
   if (downs_input/1024 < 10) stop("Input gdx file might be empty - check reporting script")
-  glob_input <- file_size(path(WD_G4M, "Data", "GLOBIOM", str_glue("{PROJECT}_{DATE_LABEL}"), str_glue("output_globiom4g4mm_{PROJECT}_{DATE_LABEL}.gdx")))
+  glob_input <- file_size(path(CD, WD_G4M, "Data", "GLOBIOM", str_glue("{PROJECT}_{DATE_LABEL}"), str_glue("output_globiom4g4mm_{PROJECT}_{DATE_LABEL}.gdx")))
   if (glob_input/1024 < 10) stop("Input gdx file might be empty - check reporting script")
 
   #g4m_jobs <- get_g4m_jobs(baseline = baseline)[-1] # EPA files for testing
   g4m_jobs <- get_g4m_jobs_new(baseline = baseline)[-1] # implementation for the new G4M interface
   if (length(g4m_jobs) == 1) g4m_jobs <- str_glue('"{g4m_jobs}"')
 
+
+  # Configure parameters
   config_template <- c(
-    'PROJECT = "{PROJECT}"',
+    'EXPERIMENT = "{PROJECT}"',
     'PREFIX = "g4m"',
-    'JOBS =',
-    '{g4m_jobs}',
+    'JOBS = c({str_c(SCENARIOS_FOR_G4M, collapse=",")})',
     'HOST_REGEXP = "^limpopo"',
     'REQUEST_MEMORY = 3000',
     'REQUEST_CPUS = 1',
-    'LAUNCHER = "{G4M_EXE}"',
+    'LAUNCHER = "Rscript"',
+    'SCRIPT = "{G4M_SUBMISSION_SCRIPT}"',
+    'ARGUMENTS = "%1"',
     'DATE_LABEL = "{DATE_LABEL}"',
-    'BUNDLE_INCLUDE = "{seed_files}"',
+    'BUNDLE_INCLUDE = ',
+    '{seed_files}',
     'WAIT_FOR_RUN_COMPLETION = TRUE',
-    'JOB_TEMPLATE = {G4M_JOB_TEMPLATE}'
+    'JOB_TEMPLATE = ',
+    '{G4M_JOB_TEMPLATE}',
+    'GET_OUTPUT = FALSE',
+    'OUTPUT_DIR = "{output_folder}"',
+    'OUTPUT_FILE = ""',
+    'RETAIN_BUNDLE = FALSE'
   )
 
   config_path <- path(TEMP_DIR, "config_g4m.R")
