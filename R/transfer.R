@@ -25,11 +25,11 @@ merge_and_transfer <- function(cluster_nr_downscaling) {
 
       # Read data for G4M
       if (i==1) {
-        out <- gdx(path(CD,WD_DOWNSCALING,"gdx", str_glue("{GDX_OUTPUT_NAME}_{PROJECT}_{cluster_nr}.",
+        out <- gdx(path(CD,WD_DOWNSCALING,"gdx", str_glue("{GDX_OUTPUT_NAME}_{PROJECT}_{cluster_nr_downscaling}.",
                                                           s_list,".gdx")))["LandCover_G4MID"]
       } else {
 
-        out_aux <-  gdx(path(CD,WD_DOWNSCALING,"gdx", str_glue("{GDX_OUTPUT_NAME}_{PROJECT}_{cluster_nr}.",
+        out_aux <-  gdx(path(CD,WD_DOWNSCALING,"gdx", str_glue("{GDX_OUTPUT_NAME}_{PROJECT}_{cluster_nr_downscaling}.",
                                                                s_list,".gdx")))["LandCover_G4MID"]
         out <- rbind(out,out_aux)
 
