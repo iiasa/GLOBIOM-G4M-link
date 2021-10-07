@@ -18,27 +18,34 @@ REPORTING_IAMC_G4M = "no" # reporting G4M to IAMC REGIONAL_AG/no
 REGIONAL_AG = "ggi" # regional aggregation level
 PATH_FOR_DOWNSCALING = "H:/Downscaling/Model/input/" # path to save gdx for downscaling
 
+#-------------------------------------------------------------------------------
+
+# 2nd block - Downscaling
+#-------------------------------------------------------------------------------
+
 # Downscaling configuration
 DOWNSCALING_TYPE = "default" # optional, one of "default", "econometric", or "econometricMNL"
 WD_DOWNSCALING = "DownScale" # optional, working directory for downscaling relative to root directory
-MERGE_GDX_DOWNSCALING = TRUE # merge all gdx outputs on limpopo
+MERGE_GDX_DOWNSCALING = FALSE # merge all gdx outputs on limpopo
 GDX_OUTPUT_NAME = "downscaled" # prefix of downscaled gdx file
 MERGE_REGIONS = FALSE # merge gdx locally by scenario
 PATH_FOR_G4M = stringr::str_glue("G4M/Data/GLOBIOM/{PROJECT}_{DATE_LABEL}") # directory where to save GDX for G4M run
 SCENARIOS_FOR_DOWNSCALING = 0 # full set or subset of scenarios defined previously
 RESOLUTION_DOWNSCALING = 37 # number of regions specified in the downscaling
+
 #-------------------------------------------------------------------------------
 
-# 2nd block - G4M run
+# 3rd block - G4M run
 #-------------------------------------------------------------------------------
 WD_G4M = "G4M" # optional, working directory for G4M relative to root directory
 G4M_EXE = "G4M_newInterface_ver_EPA_07052021.exe" # name of G4M executable
 G4M_SUBMISSION_SCRIPT = "g4m_run.R" # submission script to run G4M
 CO2_PRICE = -1 # co2 price for G4M run, -1 if read form a file or actual price otherwise
 SCENARIOS_FOR_G4M = 0 # full set or subset of downscaled scenarios
+
 #-------------------------------------------------------------------------------
 
-# 3rd block - final GLOBIOM run
+# 4rd block - final post-processing
 #-------------------------------------------------------------------------------
 PATH_FOR_FEEDBACK = stringr::str_glue("out/{PROJECT}_{DATE_LABEL}/") # directory for G4M output file relative to WD_G4M
 G4M_FEEDBACK_FILE = stringr::str_glue("tabs_gui_{PROJECT}_{DATE_LABEL}_final_csv.csv") #Name of G4M output file
