@@ -4,7 +4,7 @@
 #' regions if required
 #'
 #' @param cluster_nr_downscaling Cluster sequence number of prior downscaling HTCondor submission
-merge_and_transfer <- function(cluster_nr_downscaling) {
+merge_and_transfer2 <- function(cluster_nr_downscaling) {
   # Transfer gdx to G4M folder - in case files were merged on limpopo
   if (MERGE_GDX_DOWNSCALING){
 
@@ -43,6 +43,67 @@ merge_and_transfer <- function(cluster_nr_downscaling) {
 
   }
 }
+
+#' Function to transfer the downscaling output to G4M folder. Merges the downscaled
+#' regions if required
+#'
+#' @param cluster_nr_downscaling Cluster sequence number of prior downscaling HTCondor submission
+merge_and_transfer <- function(cluster_nr_downscaling) {
+  # Transfer gdx to G4M folder - in case files were merged on limpopo
+  if (MERGE_GDX_DOWNSCALING){
+
+    # Save merged output to G4M folder
+    f <- str_glue(WD_DOWNSCALING,"/gdx/downscaled_{PROJECT}_{cluster_nr_downscaling}_merged.gdx")
+    file_copy(f, path(CD, PATH_FOR_G4M, str_glue("downscaled_output_{PROJECT}_{DATE_LABEL}.gdx")), overwrite = TRUE)
+  } else {
+
+    # Get scenario mapping and indices
+    scenario_mapping <- get_mapping()
+    scenarios_idx <- sort(scenario_mapping$ScenNr[which(scenario_mapping$ScenLoop %in% SCENARIOS_FOR_DOWNSCALING)])
+
+    # Extract land cover table for G4M
+    for (i in 1:length(scenarios_idx)){
+
+      # Get scenario number
+      s_list <-  sprintf("%06d", scenarios_idx[i])
+
+      # Read data for G4M
+
+      downs_files <- gdx(path(CD,WD_DOWNSCALING,"gdx", str_glue("{GDX_OUTPUT_NAME}_{PROJECT}_{cluster_nr_downscaling}.",
+                                                                s_list,".gdx")))["LandCover_G4MID"]
+
+      if (dim(downs_files)[2] == 8){
+        downs_files <- downs_files[,-1]
+        downs_files <- subset(downs_files, V6 == "Reserved")
+      } else {
+        downs_files <- subset(downs_files, V5 == "Reserved")
+      }
+
+      downs_files <- downs_files[,-5]
+      names(downs_files) <- c("g4m_05_id","MacroScen","IEA_SCEN","BioenScen","Year","value")
+
+      # Remap years to columns
+      downs2 <- downs_files %>% spread(Year, value, fill = 0, convert = FALSE)
+
+      if (i==1) {
+        # Write csv file
+        write_csv(downs2, str_glue("{WD_G4M}/Data/GLOBIOM/{PROJECT}_{DATE_LABEL}/GLOBIOM2G4M_output_LC_abs_{PROJECT}_{DATE_LABEL}.csv"),
+                  quote = F, col_names = T)
+      } else {
+        # Append to csv file
+        write_csv(downs2, str_glue("{WD_G4M}/Data/GLOBIOM/{PROJECT}_{DATE_LABEL}/GLOBIOM2G4M_output_LC_abs_{PROJECT}_{DATE_LABEL}.csv"),
+                  quote = F, append = T)
+      }
+
+
+    }
+
+  }
+
+}
+
+
+
 
 #' Function to collect G4M results from binary files and write a csv file for GLOBIOM
 #;
