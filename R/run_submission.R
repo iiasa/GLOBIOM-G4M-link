@@ -111,7 +111,7 @@ run_initial_downscaling <- function() {
     'GDX_OUTPUT_DIR = "gdx"',
     'GDX_OUTPUT_FILE = "downscaled.gdx"',
     'GET_GDX_OUTPUT = TRUE',
-    'MERGE_GDX_OUTPUT = TRUE',
+    'MERGE_GDX_OUTPUT = {MERGE_GDX_DOWNSCALING}',
     'WAIT_FOR_RUN_COMPLETION = TRUE',
     'CLUSTER_NUMBER_LOG = "{cluster_number_log}"',
     'CLEAR_LINES = FALSE'
@@ -288,7 +288,7 @@ run_g4m <- function(baseline = NULL) {
 
 
   # Check if input data is empty
-  downs_input <- file_size(path(CD, WD_G4M, "Data", "GLOBIOM", str_glue("{PROJECT}_{DATE_LABEL}"), str_glue("downscaled_output_{PROJECT}_{DATE_LABEL}.gdx")))
+  downs_input <- file_size(path(CD, WD_G4M, "Data", "GLOBIOM", str_glue("{PROJECT}_{DATE_LABEL}"), str_glue("GLOBIOM2G4M_output_LC_abs_{PROJECT}_{DATE_LABEL}.csv")))
   if (downs_input/1024 < 10) stop("Input gdx file might be empty - check reporting script")
   glob_input <- file_size(path(CD, WD_G4M, "Data", "GLOBIOM", str_glue("{PROJECT}_{DATE_LABEL}"), str_glue("output_globiom4g4mm_{PROJECT}_{DATE_LABEL}.gdx")))
   if (glob_input/1024 < 10) stop("Input gdx file might be empty - check reporting script")
