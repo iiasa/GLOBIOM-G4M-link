@@ -80,18 +80,18 @@ merge_and_transfer <- function(cluster_nr_downscaling) {
       }
 
       downs_files <- downs_files[,-5]
-      names(downs_files) <- c("g4m_05_id","MacroScen","IEA_SCEN","BioenScen","Year","value")
+      names(downs_files) <- c("g4m_05_id","SCEN1","SCEN3","SCEN2","Year","value")
 
       # Remap years to columns
       downs2 <- downs_files %>% spread(Year, value, fill = 0, convert = FALSE)
 
       if (i==1) {
         # Write csv file
-        write_csv(downs2, str_glue("{WD_G4M}/Data/GLOBIOM/{PROJECT}_{DATE_LABEL}/GLOBIOM2G4M_output_LC_abs_{PROJECT}_{DATE_LABEL}.csv"),
+        write_csv(downs2, str_glue(CD,"/{WD_G4M}/Data/GLOBIOM/{PROJECT}_{DATE_LABEL}/GLOBIOM2G4M_output_LC_abs_{PROJECT}_{DATE_LABEL}.csv"),
                   quote = F, col_names = T)
       } else {
         # Append to csv file
-        write_csv(downs2, str_glue("{WD_G4M}/Data/GLOBIOM/{PROJECT}_{DATE_LABEL}/GLOBIOM2G4M_output_LC_abs_{PROJECT}_{DATE_LABEL}.csv"),
+        write_csv(downs2, str_glue(CD,"/{WD_G4M}/Data/GLOBIOM/{PROJECT}_{DATE_LABEL}/GLOBIOM2G4M_output_LC_abs_{PROJECT}_{DATE_LABEL}.csv"),
                   quote = F, append = T)
       }
 
