@@ -272,7 +272,7 @@ run_g4m <- function(baseline = NULL) {
   glob_file_list <- dir_ls(path(CD, WD_G4M, "Data", "GLOBIOM", str_glue("{PROJECT}_{DATE_LABEL}")))
   base_file_list <- c(default_file_list, glob_file_list)
   if (baseline) {
-    seed_files <- c(base_file_list, str_glue("{G4M_EXE}"),"g4m_run.R")
+    seed_files <- c(base_file_list, str_glue("{G4M_EXE}"),path(CD,"R","g4m_run.R"))
     seed_files <- seed_files[which(!str_detect(seed_files, ".gdx"))]
     output_folder <- str_glue("out/{PROJECT}_{DATE_LABEL}/baseline")
     if (!dir_exists(output_folder)) dir_create(output_folder)
