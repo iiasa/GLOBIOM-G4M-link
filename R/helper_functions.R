@@ -73,7 +73,7 @@ string_replace <- function(full_str,search_str,replace_str){
 }
 
 
-# Function to convert gdx globiom files to csv for G4M input - only for testing
+# Convert gdx globiom files to csv for G4M input - only for testing
 gdx_to_csv_for_g4m <- function() {
 
   # Read globiom outputs
@@ -83,9 +83,9 @@ gdx_to_csv_for_g4m <- function() {
   # Read data tables and rearrange
   for(i in 1:length(items)){
     var <- as_tibble(glob_files[items[i]])
-    if (i <= 3) names(var) <- c("G4MmItem","G4MmLogs","REGION","MacroScen","IEA_SCEN","BioenScen","Year","value")
-    if (i==4) names(var) <- c("LC_TYPE","REGION","MacroScen","IEA_SCEN","BioenScen","Year","value")
-    if (i==5) names(var) <- c("REGION","MacroScen","IEA_SCEN","BioenScen","Year","value")
+    if (i <= 3) names(var) <- c("G4MmItem","G4MmLogs","REGION","SCEN1","SCEN3","SCEN2","Year","value")
+    if (i==4) names(var) <- c("LC_TYPE","REGION","SCEN1","SCEN3","SCEN2","Year","value")
+    if (i==5) names(var) <- c("REGION","SCEN1","SCEN3","SCEN2","Year","value")
 
     # Remap years to columns
     var2 <- var %>% spread(Year, value, fill = 0, convert = FALSE)
@@ -121,57 +121,62 @@ gdx_to_csv_for_g4m <- function() {
 #            row.names = F, quote = F)
 }
 
-# Function to retrieve the mapping between globiom and downscaling scenarios
+# Retrieve the mapping between globiom and downscaling scenarios
 get_mapping <- function(){
 
 
-  # Read scenario mapping from globiom and create data frame
-  globiom_scenario_map <- read_lines(path(str_glue(CD,"/",WD_GLOBIOM,"/Model/{GLOBIOM_SCEN_FILE}")))
+  # # Read scenario mapping from globiom and create data frame
+  # globiom_scenario_map <- read_lines(path(str_glue(CD,"/",WD_GLOBIOM,"/Model/{GLOBIOM_SCEN_FILE}")))
+  #
+  # # Find start and end of scenario definition
+  # idx_start <- which(str_detect(globiom_scenario_map,regex("SCEN_MAP[:print:]+AllScenLOOP[:print:]+",ignore_case = T)))
+  # idx_end <- which(str_detect(globiom_scenario_map[(idx_start+2):length(globiom_scenario_map)],"/[:print:]+"))[1]+idx_start
+  #
+  # # Get number of dimensions
+  # scen_dims <- globiom_scenario_map[idx_start]
+  # scen_dims <- unlist(str_split(scen_dims,"[(),]"))
+  # scen_dims <- scen_dims[which(!scen_dims %in% c(regex("SCEN_MAP", ignore_case = T),""))]
+  #
+  # # Get mapping
+  # N <- length(scen_dims)
+  # scen_map <- globiom_scenario_map[(idx_start+1):(idx_end)]
+  # scen_map <- str_replace_all(scen_map, "[ \t\n\r\v\f]+", "")
+  # scen_map <- as_tibble(str_split_fixed(scen_map, "\\.",n=N), .name_repair="minimal")
+  # names(scen_map) <- scen_dims
 
-  # Find start and end of scenario definition
-  idx_start <- which(str_detect(globiom_scenario_map,regex("SCEN_MAP[:print:]+AllScenLOOP[:print:]+",ignore_case = T)))
-  idx_end <- which(str_detect(globiom_scenario_map[(idx_start+2):length(globiom_scenario_map)],"/[:print:]+"))[1]+idx_start
+  s_nr <-  sprintf("%06d", SCENARIOS[1])
+  scen_map <- gdx(path(CD,WD_GLOBIOM,"Model","gdx",str_glue("output_{PROJECT}_",cluster_nr_globiom,".",s_nr,".gdx")))["SCEN_MAP"]
 
-  # Get number of dimensions
-  scen_dims <- globiom_scenario_map[idx_start]
-  scen_dims <- unlist(str_split(scen_dims,"[(),]"))
-  scen_dims <- scen_dims[which(!scen_dims %in% c(regex("SCEN_MAP", ignore_case = T),""))]
-
-  # Get mapping
-  N <- length(scen_dims)
-  scen_map <- globiom_scenario_map[(idx_start+1):(idx_end)]
-  scen_map <- str_replace_all(scen_map, "[ \t\n\r\v\f]+", "")
-  scen_map <- as_tibble(str_split_fixed(scen_map, "\\.",n=N), .name_repair="minimal")
-  names(scen_map) <- scen_dims
   scen_map <- scen_map  %>% na_if("") %>% na.omit
+  scen_dims <- colnames(scen_map)
 
   loop_idx <- which(str_detect(scen_dims,regex("ScenLoop",ignore_case = T)))
-  macro_idx <- which(str_detect(scen_dims,regex("MacroScen",ignore_case = T)))
-  bioen_idx <- which(str_detect(scen_dims,regex("BioenScen",ignore_case = T)))
-  iea_idx <- which(str_detect(scen_dims,regex("IEA[:print:]+Scen",ignore_case = T)))
+  macro_idx <- which(str_detect(scen_dims,regex("SCEN1",ignore_case = T)))
+  bioen_idx <- which(str_detect(scen_dims,regex("SCEN2",ignore_case = T)))
+  iea_idx <- which(str_detect(scen_dims,regex("SCEN3",ignore_case = T)))
 
-  colnames(scen_map)[c(loop_idx,macro_idx,bioen_idx,iea_idx)] <- c("ScenLoop","MacroScen","BioenScen","IEAScen")
+  colnames(scen_map)[c(loop_idx,macro_idx,bioen_idx,iea_idx)] <- c("ScenLoop","SCEN1","SCEN2","SCEN3")
 
   #Get solved scenarios
   scen_map_solved <- subset(scen_map,ScenLoop %in% SCENARIOS)
-  scen_map_solved$BioenScen <- str_replace_all(scen_map_solved$BioenScen,"\"","")
+  scen_map_solved$SCEN2 <- str_replace_all(scen_map_solved$SCEN2,"\"","")
 
   # Define GLOBIOM - Downscaling map
   downs_input <- as_tibble(gdx(path(str_glue(CD,"/",WD_DOWNSCALING,"/input/output_landcover_{PROJECT}_{DATE_LABEL}.gdx")))["LANDCOVER_COMPARE_SCEN"])
-  names(downs_input) <- c("ScenNr","LC","MacroScen","BioenScen","IEAScen","Year","value")
+  names(downs_input) <- c("ScenNr","LC","SCEN1","SCEN2","SCEN3","Year","value")
   downs_input <- subset(downs_input,ScenNr=="World" & LC=="TotLnd" & Year==2000)
   downs_input <- downs_input %>% uncount(RESOLUTION_DOWNSCALING)
   downs_input$ScenNr <- 0:(length(downs_input$ScenNr)-1)
   downs_input <- downs_input[,c(1,3:5)]
 
-  downscaling_scenarios <- merge(downs_input,scen_map_solved,by=c("MacroScen","BioenScen","IEAScen"))
+  downscaling_scenarios <- merge(downs_input,scen_map_solved,by=c("SCEN1","SCEN2","SCEN3"))
 
   return(downscaling_scenarios)
 
 }
 
 
-# Function to generate G4M job string
+# Generate G4M job string
 get_g4m_jobs <- function(baseline = NULL) {
 
   # Get downscaling mapping
@@ -219,7 +224,7 @@ get_g4m_jobs <- function(baseline = NULL) {
 }
 
 
-# Function to generate G4M job string - new interface
+# Generate G4M job string - new interface
 get_g4m_jobs_new <- function(baseline = NULL){
 
   # Get downscaling mapping
@@ -232,21 +237,21 @@ get_g4m_jobs_new <- function(baseline = NULL){
   save(config, file=path(CD,WD_G4M,"Data","Default","config.RData"))
   save(downs_map, file=path(CD,WD_G4M,"Data","Default","scenario_map.RData"))
 
-  g4m_scen_table <- downs_map %>% relocate(BioenScen, .after = IEAScen)
+  g4m_scen_table <- downs_map %>% relocate(SCEN2, .after = SCEN3)
 
  # For now all scenarios are run in the baseline - needs to be adjusted with identifiers if same scenarios are run with different co2 price
   # Generate scenario string
   g4m_scenario_string <- ""
   if (baseline) {
     for (i in 1:dim(downs_map)[1]){
-          s_str <- str_c(downs_map$MacroScen[i],"_",downs_map$IEAScen[i],"_",downs_map$BioenScen[i])
+          s_str <- str_c(downs_map$SCEN1[i],"_",downs_map$SCEN3[i],"_",downs_map$SCEN2[i])
           l <- str_c(str_glue("{PROJECT}_{DATE_LABEL}")," ",s_str," ",s_str," ",0,",")
           g4m_scenario_string <- c(g4m_scenario_string,l)
     }
   } else {
     for (i in 1:dim(downs_map)[1]){
-          sb_str <- str_c(downs_map$MacroScen[i],"_",downs_map$IEAScen[i],"_",downs_map$BioenScen[i])
-          s_str <- str_c(downs_map$MacroScen[i],"_",downs_map$IEAScen[i],"_",downs_map$BioenScen[i])
+          sb_str <- str_c(downs_map$SCEN1[i],"_",downs_map$SCEN3[i],"_",downs_map$SCEN2[i])
+          s_str <- str_c(downs_map$SCEN1[i],"_",downs_map$SCEN3[i],"_",downs_map$SCEN2[i])
           l <- str_c(str_glue("{PROJECT}_{DATE_LABEL}")," ",sb_str," ",s_str," ",-1,",")
           g4m_scenario_string <- c(g4m_scenario_string,l)
     }
@@ -294,7 +299,29 @@ get_g4m_jobs_new <- function(baseline = NULL){
   return(g4m_scenario_string)
 }
 
-# Function to compile outputs from g4m into csv file - temporary, will be changed to generate gdx?
+# Compile G4M
+compile_g4m_model <- function(){
+
+  # set path for exe file
+  g4m_path <- path(CD,WD_G4M,G4M_EXE)
+
+  # get source code path
+  source_path <- path(CD,WD_G4M,"forest_gui_cell_glob_param_EPA_4_4_newInterfaceTest.cpp")
+
+  if (!file_exists(g4m_path)){
+
+    # get path to Rtools g++
+    env_list <- Sys.getenv()
+    rtools_path <- path(env_list[which(str_detect(env_list,"rtools") & !str_detect(env_list,";"))],"mingw64","bin","g++")
+
+    # compile model
+    compile_string <- str_glue(rtools_path," -O3 {source_path} -o {g4m_path}")
+    system(compile_string)
+  }
+
+}
+
+# Compile outputs from g4m into csv file - temporary, will be changed to generate gdx?
 generate_g4M_report <- function(file_path,file_suffix,scenarios,scenario_names,N,co2){
 
   # Call report generator
