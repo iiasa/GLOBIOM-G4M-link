@@ -30,9 +30,9 @@ if (!baseline) CO2P = -1
 g4m_scen_table <- downs_map %>% filter(ScenLoop==scen)
 
 # Baseline scenario
-sb_str <- str_c(g4m_scen_table$MacroScen,"_",g4m_scen_table$IEAScen,"_",g4m_scen_table$BioenScen)
-# G4M Scenario - For now the same as baseline but may be tailored in the future
-s_str <- str_c(g4m_scen_table$MacroScen,"_",g4m_scen_table$IEAScen,"_",g4m_scen_table$BioenScen)
+sb_str <- str_c(g4m_scen_table$SCEN1,"_",g4m_scen_table$SCEN3,"_",g4m_scen_table$SCEN2)
+# For now the same but will identify a scenario
+s_str <- str_c(g4m_scen_table$SCEN1,"_",g4m_scen_table$SCEN3,"_",g4m_scen_table$SCEN2)
 
 # Run g4m
 system2(g4m_exe, args=c(lab,sb_str,sb_str,CO2P))
