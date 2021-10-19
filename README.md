@@ -40,6 +40,9 @@ Automatize the [link between GLOBIOM and G4M](https://iiasa.github.io/GLOBIOM/do
 
 The notebook depends on:
 - The [tidyverse](https://www.tidyverse.org/) curated R package collection.
+  * The [**dplyr**](https://dplyr.tidyverse.org/) package is part of the tidyverse,
+    but make sure you have at least version 1.0.3 installed, earlier versions are
+    lacking required functionality.
 - [**fs**](https://fs.r-lib.org/), for smooth file system handling.
 - [**gdxrrw**](https://github.com/GAMS-dev/gdxrrw), an R package for
   reading/writing GDX files from R. For a list of which binary package versions
