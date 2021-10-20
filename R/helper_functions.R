@@ -62,6 +62,30 @@ merge_gdx_down <- function(wd_out,s_list,s_cnt,c_nr,path_out){
   })
 }
 
+# Check for the occurrence of infeasibilities in GLOBIOM
+check_sol <- function(cluster_nr_globiom){
+
+  # Check for active ART_VARs
+  artvar <- gdx(path(CD,WD_GLOBIOM,"Model","gdx",str_glue("output_{PROJECT}_",cluster_nr_globiom,"_merged.gdx")))["ARTVAR_ACTIVE"]
+
+  # Check for negative OF values
+  obj <- gdx(path(CD,WD_GLOBIOM,"Model","gdx",str_glue("output_{PROJECT}_",cluster_nr_globiom,"_merged.gdx")))["Obj_Compare"]
+
+  # Retrieve scenarios with active ART_VAR
+  artvar_values <- as.integer(str_sub(unique(artvar[,1]), start= -6))
+
+  # Retrieve scenarios with negative OF
+  negative_values <- as.integer(str_sub(unique(obj[which(obj$value < 0),1]), start= -6))
+
+  if (length(artvar_values) > 0) {
+    warning(str_glue("Scenarios: ",str_flatten(artvar_values,",")," have active ART_VAR(s)"))
+  }
+
+  if (length(negative_values) > 0) {
+    warning(str_glue("Scenarios: ",str_flatten(negative_values,","),"have negative objective function value"))
+  }
+}
+
 # Search and replace function for adapting GLOBIOM scripts
 string_replace <- function(full_str,search_str,replace_str){
   # Search and replace using stringr
@@ -101,48 +125,10 @@ gdx_to_csv_for_g4m <- function() {
               row.names = F, quote = F)
   }
 
-  # Read downscaling outputs and filter input data
-#  downs_files <- as_tibble(gdx(str_glue("{WD_G4M}/Data/GLOBIOM/{PROJECT}_{DATE_LABEL}/downscaled_output_{PROJECT}_{DATE_LABEL}.gdx"))["LandCover_G4MID"])
-#  if (dim(downs_files)[2] == 8){
-#    downs_files <- downs_files[,-1]
-#    downs_files <- subset(downs_files, V6 == "Reserved")
-#  } else {
-#    downs_files <- subset(downs_files, V5 == "Reserved")
-#  }
-#
-#  downs_files <- downs_files[,-5]
-#  names(downs_files) <- c("g4m_05_id","MacroScen","IEA_SCEN","BioenScen","Year","value")
-#
-#  # Remap years to columns
-#  downs2 <- downs_files %>% spread(Year, value, fill = 0, convert = FALSE)
-#
-#  # Write csv file
-#  write.csv(downs2, str_glue("{WD_G4M}/Data/GLOBIOM/{PROJECT}_{DATE_LABEL}/GLOBIOM2G4M_output_LC_abs_{PROJECT}_{DATE_LABEL}.csv"),
-#            row.names = F, quote = F)
 }
 
 # Retrieve the mapping between globiom and downscaling scenarios
 get_mapping <- function(){
-
-
-  # # Read scenario mapping from globiom and create data frame
-  # globiom_scenario_map <- read_lines(path(str_glue(CD,"/",WD_GLOBIOM,"/Model/{GLOBIOM_SCEN_FILE}")))
-  #
-  # # Find start and end of scenario definition
-  # idx_start <- which(str_detect(globiom_scenario_map,regex("SCEN_MAP[:print:]+AllScenLOOP[:print:]+",ignore_case = T)))
-  # idx_end <- which(str_detect(globiom_scenario_map[(idx_start+2):length(globiom_scenario_map)],"/[:print:]+"))[1]+idx_start
-  #
-  # # Get number of dimensions
-  # scen_dims <- globiom_scenario_map[idx_start]
-  # scen_dims <- unlist(str_split(scen_dims,"[(),]"))
-  # scen_dims <- scen_dims[which(!scen_dims %in% c(regex("SCEN_MAP", ignore_case = T),""))]
-  #
-  # # Get mapping
-  # N <- length(scen_dims)
-  # scen_map <- globiom_scenario_map[(idx_start+1):(idx_end)]
-  # scen_map <- str_replace_all(scen_map, "[ \t\n\r\v\f]+", "")
-  # scen_map <- as_tibble(str_split_fixed(scen_map, "\\.",n=N), .name_repair="minimal")
-  # names(scen_map) <- scen_dims
 
   s_nr <-  sprintf("%06d", SCENARIOS[1])
   scen_map <- gdx(path(CD,WD_GLOBIOM,"Model","gdx",str_glue("output_{PROJECT}_",cluster_nr_globiom,".",s_nr,".gdx")))["SCEN_MAP"]
@@ -176,56 +162,8 @@ get_mapping <- function(){
 }
 
 
-# Generate G4M job string
-get_g4m_jobs <- function(baseline = NULL) {
-
-  # Get downscaling mapping
-  downs_map <-  unique(get_mapping()[-4])
-
-  # Read in scenario data and sort the baseline scenarios
-  f <- path(str_glue(CD,"/",PATH_FOR_G4M,"/output_globiom4g4mm_{PROJECT}_{DATE_LABEL}.gdx"))
-  downs_results <- as_tibble(gdx(f)["G4Mm_CO2PRICE"])
-  names(downs_results) <- c("Region","MacroScen","IEAScen","BioenScen","Year","value")
-  final_year <- max(downs_results$Year)
-  downs_results_base <- subset(downs_results, Year==final_year)
-
-  # Define IEA baselines and build scenario string - current same for baseline and final scenarios, will
-  # be modified according to standardized baseline/scenario runs in the future
-  macro <- unique(downs_results$MacroScen)
-  iea <- unique(downs_results$IEAScen)
-  base_scenarios <- unique(downs_results$BioenScen) #unique(downs_results_base$BioenScen[which(downs_results_base$value==0.01)])
-  g4M_scenarios <- unique(downs_results$BioenScen)
-
-  # Generate scenario string
-  g4m_scenario_string <- ""
-  if (baseline) {
-    for (i in 1:length(macro)){
-      for (j in 1:length(iea)){
-        for (k in 1:length(base_scenarios)){
-
-            l <- str_c(macro[i]," ",iea[j]," ",base_scenarios[k]," ",0,",")
-            g4m_scenario_string <- c(g4m_scenario_string,l)
-          }
-        }
-      }
-  } else {
-    for (i in 1:length(macro)){
-      for (j in 1:length(iea)){
-        for (k in 1:length(g4M_scenarios)){
-
-          l <- str_c(macro[i]," ",iea[j]," ",g4M_scenarios[k]," ",-1,",")
-          g4m_scenario_string <- c(g4m_scenario_string,l)
-        }
-      }
-    }
-  }
-
-  return(g4m_scenario_string)
-}
-
-
 # Generate G4M job string - new interface
-get_g4m_jobs_new <- function(baseline = NULL){
+get_g4m_jobs <- function(baseline = NULL){
 
   # Get downscaling mapping
   downs_map <-  unique(get_mapping()[-4])
@@ -236,8 +174,6 @@ get_g4m_jobs_new <- function(baseline = NULL){
   config <- list(lab,baseline,G4M_EXE)
   save(config, file=path(CD,WD_G4M,"Data","Default","config.RData"))
   save(downs_map, file=path(CD,WD_G4M,"Data","Default","scenario_map.RData"))
-
-  g4m_scen_table <- downs_map %>% relocate(SCEN2, .after = SCEN3)
 
  # For now all scenarios are run in the baseline - needs to be adjusted with identifiers if same scenarios are run with different co2 price
   # Generate scenario string
@@ -256,45 +192,6 @@ get_g4m_jobs_new <- function(baseline = NULL){
           g4m_scenario_string <- c(g4m_scenario_string,l)
     }
   }
-
-  # # Read in scenario data and sort the baseline scenarios
-  # f <- path(str_glue(CD,"/",PATH_FOR_G4M,"/output_globiom4g4mm_{PROJECT}_{DATE_LABEL}.gdx"))
-  # downs_results <- as_tibble(gdx(f)["G4Mm_CO2PRICE"])
-  # names(downs_results) <- c("Region","MacroScen","IEAScen","BioenScen","Year","value")
-  # final_year <- max(downs_results$Year)
-  # downs_results_base <- subset(downs_results, Year==final_year)
-  #
-  # # Define IEA baselines and build scenario string - current same for baseline and final scenarios, will
-  # # be modified according to standardized baseline/scenario runs in the future
-  # macro <- unique(downs_results$MacroScen)
-  # iea <- unique(downs_results$IEAScen)
-  # base_scenarios <- unique(downs_results$BioenScen) #unique(downs_results_base$BioenScen[which(downs_results_base$value==0.01)])
-  # g4M_scenarios <- unique(downs_results$BioenScen)
-  #
-  # # Generate scenario string
-  # g4m_scenario_string <- ""
-  # if (baseline) {
-  #   for (i in 1:length(macro)){
-  #     for (j in 1:length(iea)){
-  #       for (k in 1:length(base_scenarios)){
-  #         s_str <- str_c(macro[i],"_",iea[j],"_",base_scenarios[k])
-  #         l <- str_c(str_glue("{PROJECT}_{DATE_LABEL}")," ",s_str," ",s_str," ",0,",")
-  #         g4m_scenario_string <- c(g4m_scenario_string,l)
-  #       }
-  #     }
-  #   }
-  # } else {
-  #   for (i in 1:length(macro)){
-  #     for (j in 1:length(iea)){
-  #       for (k in 1:length(g4M_scenarios)){
-  #         sb_str <- str_c(macro[i],"_",iea[j],"_",base_scenarios[k])
-  #         s_str <- str_c(macro[i],"_",iea[j],"_",g4M_scenarios[k])
-  #         l <- str_c(str_glue("{PROJECT}_{DATE_LABEL}")," ",sb_str," ",s_str," ",-1,",")
-  #         g4m_scenario_string <- c(g4m_scenario_string,l)
-  #       }
-  #     }
-  #   }
-  # }
 
   return(g4m_scenario_string)
 }
@@ -334,3 +231,22 @@ generate_g4M_report <- function(file_path,file_suffix,scenarios,scenario_names,N
 
 }
 
+# Save the global environment to continue execution in case of a session crash
+save_environment <- function(step){
+
+  # Create dir to store environment data
+  if (!dir_exists(path(CD,"R","environment"))) dir_create(path(CD,"R","environment"))
+
+  # Save global environment to file
+  if (step == "downscaling") save.image(path(CD,"R","environment",str_glue("environment_{PROJECT}_{DATE_LABEL}_for_downscaling.RData")))
+  if (step == "g4m") save.image(path(CD,"R","environment",str_glue("environment_{PROJECT}_{DATE_LABEL}_for_g4m.RData")))
+}
+
+# Remove global environment files
+clear_environment <- function(){
+
+  # Remove global environement files
+  if (file_exists(path(CD,"R","environment",str_glue("environment_{PROJECT}_{DATE_LABEL}_for_g4m.RData")))) file_delete(path(CD,"R","environment",str_glue("environment_{PROJECT}_{DATE_LABEL}_for_g4m.RData")))
+  if (file_exists(path(CD,"R","environment",str_glue("environment_{PROJECT}_{DATE_LABEL}_for_downscaling.RData")))) file_delete(path(CD,"R","environment",str_glue("environment_{PROJECT}_{DATE_LABEL}_for_downscaling.RData")))
+
+}
