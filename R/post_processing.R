@@ -46,6 +46,9 @@ run_initial_postproc <- function(cluster_nr_globiom)
   finally = {
     setwd(prior_wd)
   })
+
+  # Save global environment
+  save_environment("downscaling")
 }
 
 #' Run final post-processing
@@ -160,4 +163,7 @@ run_final_postproc <- function(cluster_nr_globiom) {
   finally = {
     setwd(prior_wd)
   })
+
+  # Clean global environment files
+  clear_environment()
 }
