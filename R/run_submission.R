@@ -27,7 +27,7 @@ run_globiom_scenarios <- function() {
     'BUNDLE_EXCLUDE_DIRS = c(".git", ".svn", "225*", "doc")',
     'BUNDLE_EXCLUDE_FILES = c("**/*.~*", "**/*.log", "**/*.log~*", "**/*.lxi", "**/*.lst")',
     'BUNDLE_ADDITIONAL_FILES = c()',
-    'RESTART_FILE_PATH = "t/a4_r1.g00"',
+    'RESTART_FILE_PATH = "t/{GLOBIOM_RESTART_FILE}"',
     'G00_OUTPUT_DIR = "t"',
     'G00_OUTPUT_FILE = "a6_out.g00"',
     'GET_G00_OUTPUT = FALSE',
@@ -141,72 +141,11 @@ run_initial_downscaling <- function() {
 
   # Return the cluster number
   readr::parse_number(read_file(cluster_number_log))
+
 }
 
-#' Run G4M
-#'
-#' Run G4M by submitting jobs for parallel execution on an HTCondor cluster.
-#'
-#' @param baseline = TRUE|FALSE: set to TRUE to select baseline scenarios.
-run_g4m_old <- function(baseline = NULL) {
-  if (!is.logical(baseline))
-    stop("Set baseline parameter to TRUE or FALSE!")
 
-  # Configure and run scenarios using Condor_run.R
-
-  # Check if input data is empty
-  downs_input <- file_size(path(WD_G4M, "Data", "GLOBIOM", str_glue("{PROJECT}_{DATE_LABEL}"), str_glue("downscaled_output_{PROJECT}_{DATE_LABEL}.gdx")))
-  if (downs_input/1024 < 10) stop("Input gdx file might be empty - check reporting script")
-  glob_input <- file_size(path(WD_G4M, "Data", "GLOBIOM", str_glue("{PROJECT}_{DATE_LABEL}"), str_glue("output_globiom4g4mm_{PROJECT}_{DATE_LABEL}.gdx")))
-  if (glob_input/1024 < 10) stop("Input gdx file might be empty - check reporting script")
-
-  #g4m_jobs <- get_g4m_jobs(baseline = baseline)[-1] # EPA files for testing
-  g4m_jobs <- get_g4m_jobs_new(baseline = baseline)[-1] # implementation for the new G4M interface
-  if (length(g4m_jobs) == 1) g4m_jobs <- str_glue('"{g4m_jobs}"')
-
-  config_template <- c(
-    'PROJECT = "{PROJECT}"',
-    'PREFIX = "g4m"',
-    'DATE_LABEL = "{DATE_LABEL}"',
-    'G4M_EXE = "{G4M_EXE}"',
-    'JOBS =',
-    '{g4m_jobs}',
-    'SEED_FILES = ""',
-    'GAMS_CURDIR = ""', # optional, working directory for GAMS and its arguments relative to working directory, "" defaults to the working directory
-    'HOST_REGEXP = "^limpopo"',
-    'REQUEST_MEMORY = 3000',
-    'REQUEST_CPUS = 1',
-    'BUNDLE_INCLUDE = "*"',
-    'WAIT_FOR_RUN_COMPLETION = TRUE',
-    'BASELINE_RUN = {baseline}'
-  )
-
-  config_path <- path(TEMP_DIR, "config_g4m.R")
-
-  # Write config file
-  current_env <- environment()
-  write_lines(lapply(config_template, .envir=current_env, str_glue), config_path)
-  rm(config_template, current_env)
-
-  prior_wd <- getwd()
-  rc <- tryCatch ({
-    setwd(WD_G4M)
-    # Ensure that a sub directories for run logs and outputs exist
-    if (!dir_exists('Condor')) dir_create("Condor")
-
-    system(str_glue("Rscript --vanilla {CD}/{WD_G4M}/R/Condor_run.R {config_path}"))
-  },
-  finally = {
-    setwd(prior_wd)
-  })
-  if (rc != 0) stop("Condor run failed!")
-}
-
-# vvvv Below follows a partial attempt to get rid of customized G4M/RCondor_run.R
-
-# Define the job template for G4M. Need to double escape since this
-# is parsed twice, here and in the generated configuration file.
-# Note that {...} instances are escaped as {{...}},
+# Define the job template for G4M.
 # Note that as of R 4.0.0, r(...) raw string constants are an option,
 # but we want to support R < 4.0.0
 
@@ -264,6 +203,7 @@ run_g4m <- function(baseline = NULL) {
   } else {
     output_dir <- path("out", str_glue("{PROJECT}_{DATE_LABEL}"))
   }
+
   if (!dir_exists(path(CD, WD_G4M, output_dir)))
     dir_create(path(CD, WD_G4M, output_dir))
 
@@ -288,13 +228,13 @@ run_g4m <- function(baseline = NULL) {
 
 
   # Check if input data is empty
-  downs_input <- file_size(path(CD, WD_G4M, "Data", "GLOBIOM", str_glue("{PROJECT}_{DATE_LABEL}"), str_glue("GLOBIOM2G4M_output_LC_abs_{PROJECT}_{DATE_LABEL}.csv")))
+  downs_input <- file_size(path(CD, WD_G4M, "Data", str_glue("{WD_GLOBIOM}"), str_glue("{PROJECT}_{DATE_LABEL}"), str_glue("GLOBIOM2G4M_output_LC_abs_{PROJECT}_{DATE_LABEL}.csv")))
   if (downs_input/1024 < 10) stop("Input gdx file might be empty - check reporting script")
-  glob_input <- file_size(path(CD, WD_G4M, "Data", "GLOBIOM", str_glue("{PROJECT}_{DATE_LABEL}"), str_glue("output_globiom4g4mm_{PROJECT}_{DATE_LABEL}.gdx")))
-  if (glob_input/1024 < 10) stop("Input gdx file might be empty - check reporting script")
+  glob_input <- file_size(path(CD, WD_G4M, "Data", str_glue("{WD_GLOBIOM}"), str_glue("{PROJECT}_{DATE_LABEL}"), str_glue("output_globiom4g4mm_{PROJECT}_{DATE_LABEL}.gdx")))
+  if (glob_input/1024 < 5) stop("Input gdx file might be empty - check reporting script")
 
-  #g4m_jobs <- get_g4m_jobs(baseline = baseline)[-1] # EPA files for testing
-  g4m_jobs <- get_g4m_jobs_new(baseline = baseline)[-1] # implementation for the new G4M interface
+  # Retrieve jobs for G4M run
+  g4m_jobs <- get_g4m_jobs(baseline = baseline)[-1]
   if (length(g4m_jobs) == 1) g4m_jobs <- str_glue('"{g4m_jobs}"')
 
 
