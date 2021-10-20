@@ -21,7 +21,7 @@ run_globiom_scenarios <- function() {
     'GAMS_CURDIR = "Model"',
     'GAMS_FILE_PATH = "{GLOBIOM_SCEN_FILE}"',
     'GAMS_VERSION = "32.2"',
-    'GAMS_ARGUMENTS = "//nsim=%1 //yes_output=1 //ssp=SSP2 //scen_type={GLOBIOM_SCEN_TYPE} //water_bio=0 PC=2 PS=0 PW=130"',
+    'GAMS_ARGUMENTS = "{GLOBIOM_GAMS_ARGS}"',
     'BUNDLE_INCLUDE = "Model"',
     'BUNDLE_INCLUDE_DIRS = c("include")',
     'BUNDLE_EXCLUDE_DIRS = c(".git", ".svn", "225*", "doc")',
