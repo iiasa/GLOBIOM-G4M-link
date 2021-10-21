@@ -25,7 +25,7 @@ source("R/configuration/default.R")
 config_names <- ls()
 config_types <- lapply(lapply(config_names, get), typeof)
 
-# Read list of optional config settings and remove mandatory settings form the environment
+# Read list of optional config settings and remove mandatory settings from the environment
 source("R/configuration/optional.R")
 rm(list=config_names[!(config_names %in% OPTIONAL_CONFIG_SETTINGS)])
 ```
@@ -45,7 +45,7 @@ library(fs)
 ```{r}
 custom_configuration_file <- "R/configuration/custom.R"
 
-# Check that custom configuration exists, edit a new one otherwise.
+# Check that a custom configuration exists, edit a new one otherwise.
 if (!file_exists(custom_configuration_file)) {
   warning("Custom configuration file missing, please customize.")
   file_copy("R/configuration/default.R", custom_configuration_file)
@@ -131,7 +131,7 @@ print("Initial downscaling complete")
 merge_and_transfer(cluster_nr_downscaling)
 ```
 
-## 3c. Generate CSV input files for G4M 
+## 3c. Generate CSV input files for G4M
 
 ```{r}
 if (!file_exists(path(PATH_FOR_G4M, str_glue("GLOBIOM2G4M_output_LC_abs_{PROJECT}_{DATE_LABEL}.csv"))))
@@ -140,7 +140,7 @@ if (!file_exists(path(PATH_FOR_G4M, str_glue("GLOBIOM2G4M_output_LC_abs_{PROJECT
 gdx_to_csv_for_g4m()
 ```
 
-## 4. Preliminary: Run baseline G4M scenarios - needs data from the intial downscaling
+## 4. Preliminary: Run baseline G4M scenarios---needs data from the intial downscaling
 
 ```{r}
 run_g4m(baseline = TRUE)
@@ -148,7 +148,7 @@ run_g4m(baseline = TRUE)
 print("G4M baseline scenario run complete")
 ```
 
-## 5a. Preliminary: Run G4M scenarios - needs data from the intial downscaling and G4M baseline scenarios
+## 5a. Preliminary: Run G4M scenarios---needs data from the intial downscaling and G4M baseline scenarios
 
 ```{r}
 allfiles <- dir_ls(path(CD, str_glue("{WD_G4M}"), "out", str_glue("{PROJECT}_{DATE_LABEL}"), "baseline"))
@@ -161,18 +161,16 @@ run_g4m(baseline = FALSE)
 print("G4M scenario run complete")
 ```
 
-## 5b. Preliminary: Compile G4M data and produce the report for GLOBIOM  - needs data from the G4M run
+## 5b. Preliminary: Compile G4M data and produce the report for GLOBIOM---needs data from the G4M run
 
 ```{r}
 compile_g4m_data(baseline = FALSE)
 ```
 
-## 6. Preliminary: Perform the final post-processing - needs data from the G4M run
+## 6. Preliminary: Perform the final post-processing---needs data from the G4M run
 
 ```{r}
 run_final_postproc(cluster_nr_globiom)
 
 print("Final post-processing complete")
 ```
-
-
