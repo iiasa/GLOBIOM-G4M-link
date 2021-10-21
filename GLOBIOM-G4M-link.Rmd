@@ -87,6 +87,9 @@ source("R/transfer.R")
 source("R/post_processing.R")
 source("R/helper_functions.R")
 
+# Compile G4M
+compile_g4m_model()
+
 # Load dll with G4M report generation routine
 dyn.load(path(CD,WD_G4M,"/tableMergeForLinker/merge_files.so"))
 ```
@@ -148,7 +151,7 @@ print("G4M baseline scenario run complete")
 ## 5a. Preliminary: Run G4M scenarios - needs data from the intial downscaling and G4M baseline scenarios
 
 ```{r}
-allfiles <- dir_ls(path(CD, "G4M", "out", str_glue("{PROJECT}_{DATE_LABEL}"), "baseline"))
+allfiles <- dir_ls(path(CD, str_glue("{WD_G4M}"), "out", str_glue("{PROJECT}_{DATE_LABEL}"), "baseline"))
 base_files <- str_detect(allfiles,"NPVbau_[:print:]+.bin")
 if (!any(base_files)) stop("Baseline G4M run not found! Please run the baseline before the G4M scenarios")
 
