@@ -40,7 +40,6 @@ Automatize the [link between GLOBIOM and G4M](https://iiasa.github.io/GLOBIOM/do
 
 The notebook depends on:
 - R.
-- [**gdxtools**](https://github.com/lolow/gdxtools).
 - The [tidyverse](https://www.tidyverse.org/) curated R package collection.
   * The [**dplyr**](https://dplyr.tidyverse.org/) package is part of the tidyverse,
     but make sure you have at least version 1.0.3 installed, earlier versions are
