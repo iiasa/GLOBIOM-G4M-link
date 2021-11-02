@@ -34,7 +34,6 @@ rm(list=config_names[!(config_names %in% OPTIONAL_CONFIG_SETTINGS)])
 
 ```{r}
 library(gdxrrw)
-library(gdxtools)
 suppressWarnings(library(tidyverse))
 library(stringr) # part of the tidyverse, but not attached by default
 library(fs)
@@ -89,6 +88,9 @@ source("R/helper_functions.R")
 
 # Compile G4M
 compile_g4m_model()
+
+# Compile G4M output processing library
+compile_table_merger()
 
 # Load dll with G4M report generation routine
 dyn.load(path(CD,WD_G4M,"/tableMergeForLinker/merge_files.so"))
