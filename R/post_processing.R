@@ -9,7 +9,12 @@
 #' @param cluster_nr_globiom Cluster sequence number of prior GLOBIOM HTCondor submission
 run_initial_postproc <- function(cluster_nr_globiom)
 {
-  # Create downscaling input folder if absent
+  save_environment("1")
+
+  # Check solution for infeasibilities
+  check_sol(cluster_nr_globiom)
+
+   # Create downscaling input folder if absent
   if (!dir_exists(path(CD, WD_DOWNSCALING, "input"))) dir_create(path(CD, WD_DOWNSCALING, "input"))
 
   # Create G4M input folder if absent
@@ -48,7 +53,7 @@ run_initial_postproc <- function(cluster_nr_globiom)
   })
 
   # Save global environment
-  save_environment("downscaling")
+  save_environment("2")
 }
 
 #' Run final post-processing
@@ -73,15 +78,26 @@ run_final_postproc <- function(cluster_nr_globiom) {
   # Construct path for feedback file
   path_feedback <- path(WD_G4M, PATH_FOR_FEEDBACK)
 
-  # read in G4M output file
-  g4m_output <- read.csv(path(path_feedback, G4M_FEEDBACK_FILE), header=FALSE) # Will be modified in the future to work with gdx files
+  # rGet G4M scenario list
+  scen_map <-  subset(unique(get_mapping()[1,-4]), ScenLoop %in% SCENARIOS_FOR_G4M)
+  length_scen1 <- length(unlist(str_split(scen_map[1],"_")))
+  length_scen2 <- length(unlist(str_split(scen_map[3],"_")))
+  length_scen3 <- length(unlist(str_split(scen_map[2],"_")))
 
   # Define G4M scenarios
-  scen <- unique(g4m_output[,2])
+  scen <- matrix(unlist(str_split(get_g4m_jobs(baseline = FALSE)[-1]," ")),ncol=4,byrow=T)[,3]
   scen <- scen[which(scen != "")]
 
   # Split G4M scenarios into GLOBIOM dimensions
-  scen_globiom_map <- str_split_fixed(scen,"_",3)
+  scen_aux <- str_split(scen,"_")
+  scen_aux <- matrix(unlist(scen_aux),ncol = length(scen_aux[[1]]), byrow = TRUE)
+  scen_globiom_map <- array(dim=c(length(scen),3),data="")
+  for(i in 1:dim(scen_aux)[1]){
+    scen_globiom_map[i,1] <- do.call(str_glue, c(as.list(scen_aux[i,1:length_scen1]), .sep = "_"))
+    scen_globiom_map[i,2] <- do.call(str_glue, c(as.list(scen_aux[i,(length_scen1 + 1):(length_scen1 + length_scen2)]), .sep = "_"))
+    scen_globiom_map[i,3] <- do.call(str_glue, c(as.list(scen_aux[i,c(-1:-(length_scen1 + length_scen2))]), .sep = "_"))
+  }
+
 
   # Check if scenario name must be treated as string
   special_char <- FALSE
@@ -89,8 +105,8 @@ run_final_postproc <- function(cluster_nr_globiom) {
   if (special_char)  scen <- unlist(lapply(scen,function(x) str_glue("\"",x,"\"")))
 
   # Define column indices of Macro, Bioen and IEA scenarios
-  macro_idx <- which(str_detect(scen_globiom_map[1,],"SSP"))
-  iea_idx <- which(str_detect(scen_globiom_map[1,],"RCP"))
+  macro_idx <- which(str_detect(scen_globiom_map[1,],regex("SSP",ignore_case = T)))
+  iea_idx <- which(str_detect(scen_globiom_map[1,],regex("RCP",ignore_case = T)))
   bioen_idx <- 6 - macro_idx - iea_idx
 
   if(special_char) scen_globiom_map[,bioen_idx] <- unlist(lapply(scen_globiom_map[,bioen_idx],function(x) str_glue("\"",x,"\"")))
