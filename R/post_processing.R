@@ -143,15 +143,23 @@ run_final_postproc <- function(cluster_nr_globiom) {
   g4m_globiom_map <- c("G4MScen2","/",scen,"/","","G4M_SCEN_MAP(G4MScen2,*,*,*)",
                   "/",map_string,"/",";")
 
-  # Edit
+  # Edit mapping set
   tempString <- read_file(path(WD_GLOBIOM, "Model", "8c_rep_iamc_g4m.gms"))
   tempString <- string_replace(tempString,regex('G4MScen2[[:print:]*|[\r\n]*]*G4M_SCEN_MAP[[:print:]*|[\r\n]*]*/[\r\n\\s]+;'),
                             str_c(g4m_globiom_map,collapse="\n"))
 
+  # Edit feedback file
   path_for_feedback_file <-path_wd(path_feedback, G4M_FEEDBACK_FILE)
 
   tempString <- string_replace(tempString,"\\$include\\s+[:print:]*X[:print:]*",
                            str_glue('$include "{path_for_feedback_file}"'))
+
+  # Edit baseline scenario for forest management GHG accounting
+    ref_sum <-  str_glue("- G4M_SCENOUTPUT_DATA(REGION,\"{BASE_SCEN1}\",\"{BASE_SCEN2}\",\"{BASE_SCEN3}\",\"em_fm_bm_mtco2year\",ScenYear)")
+    ref <-  "-\\s+G4M_SCENOUTPUT_DATA[:print:]REGION,[:print:]+,\"em_fm_bm_mtco2year\",ScenYear[:print:]"
+
+    tempString <- string_replace_all(tempString,regex(ref, ignore_case = T),
+                                ref_sum)
 
   # Save edits and run post-processing script in the GLOBIOM Model directory
   prior_wd <- getwd()
