@@ -9,8 +9,13 @@
 #' @return cluster_nr Cluster sequence number of HTCondor submission
 run_globiom_scenarios <- function() {
 
+  # Get cluster number
   cluster_number_log <- path(TEMP_DIR, "cluster_number.log")
 
+  # Set MERGE_BIG parameter
+  if (MERGE_GDX_CUTOFF) {merge_big <- "MERGE_BIG = 1000000"} else {merge_big <- ""}
+
+  # Define configuration template
   config_template <- c(
     'EXPERIMENT = "{PROJECT}"',
     'PREFIX = "_globiom"',
@@ -34,6 +39,7 @@ run_globiom_scenarios <- function() {
     'GDX_OUTPUT_DIR = "gdx"',
     'GDX_OUTPUT_FILE = "output.gdx"',
     'GET_GDX_OUTPUT = TRUE',
+    '{merge_big}',
     'MERGE_GDX_OUTPUT = {MERGE_GDX}',
     'WAIT_FOR_RUN_COMPLETION = TRUE',
     'CLUSTER_NUMBER_LOG = "{cluster_number_log}"',
@@ -89,8 +95,10 @@ run_initial_downscaling <- function() {
   }
   scen_string <- str_glue(scen_string,")")
 
+  # Get cluster number
   cluster_number_log <- path(TEMP_DIR, "cluster_number.log")
 
+  # Define configuration template
   config_template <- c(
     'EXPERIMENT = "{PROJECT}"',
     'PREFIX = "_globiom"',
@@ -199,32 +207,31 @@ run_g4m <- function(baseline = NULL) {
 
   # Provide and output directory relative to WD_G4M
   if (baseline) {
-    output_dir <- path("out", str_glue("{PROJECT}_{DATE_LABEL}/baseline"))
+    output_dir <- path("out", str_glue("{PROJECT}_{DATE_LABEL}\\\\baseline"))
   } else {
     output_dir <- path("out", str_glue("{PROJECT}_{DATE_LABEL}"))
   }
 
-  if (!dir_exists(path(CD, WD_G4M, output_dir)))
-    dir_create(path(CD, WD_G4M, output_dir))
+  if (!dir_exists(path(CD, WD_G4M, output_dir))) dir_create(path(CD, WD_G4M, output_dir))
 
   # Determine files for bundle
   default_file_list <- dir_ls(path(CD, WD_G4M, "Data", "Default"))
   glob_file_list <- dir_ls(path(CD, WD_G4M, "Data", "GLOBIOM", str_glue("{PROJECT}_{DATE_LABEL}")))
   base_file_list <- c(default_file_list, glob_file_list)
   if (baseline) {
-    seed_files <- c(base_file_list, str_glue("{G4M_EXE}"),path(CD,"R","g4m_run.R"))
+    seed_files <- c(base_file_list, path(CD,WD_G4M,str_glue("{G4M_EXE}")),path(CD, WD_G4M,"g4m_run.R"))
     seed_files <- seed_files[which(!str_detect(seed_files, ".gdx"))]
     output_folder <- str_glue("out/{PROJECT}_{DATE_LABEL}/baseline")
     if (!dir_exists(output_folder)) dir_create(output_folder)
 
   } else {
-    bau_file_list <- dir_ls(path(CD, WD_G4M, "out", str_glue("{PROJECT}_{DATE_LABEL}"), "baseline"))
-    idx <- which(str_detect(bau_file_list, "biomass_bau") | str_detect(bau_file_list, "NPVbau"))
-    bau_file_list <- bau_file_list[idx]
-    seed_files <- c(base_file_list, bau_file_list, str_glue("{G4M_EXE}"),path(CD,"R","g4m_run.R"))
+    bau_file_list <- str_glue(path(CD, WD_G4M, "out", str_glue("{PROJECT}_{DATE_LABEL}"), "baseline"),"/*.bin")
+    seed_files <- c(base_file_list, bau_file_list, str_glue("{G4M_EXE}"),path(CD,WD_G4M,"g4m_run.R"))
     output_folder <- str_glue("out/{PROJECT}_{DATE_LABEL}")
     if (!dir_exists(output_folder)) dir_create(output_folder)
   }
+
+  seed_files <- str_replace_all(seed_files,"/","\\\\")
 
 
   # Check if input data is empty
@@ -277,4 +284,5 @@ run_g4m <- function(baseline = NULL) {
     setwd(prior_wd)
   })
   if (rc != 0) stop("Condor run failed!")
+  if (baseline) {save_environment("4")} else {save_environment("5a")}
 }
