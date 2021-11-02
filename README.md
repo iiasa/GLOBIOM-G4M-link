@@ -23,7 +23,7 @@ Automatize the [link between GLOBIOM and G4M](https://iiasa.github.io/GLOBIOM/do
    You may want or need to use ssh authentication instead. To do so you can have Git automatically
    substitute ssh equivalents for GitHub https URLs by issuing the following global configuration
    change command:  
-   ```git config --global url.'ssh://git@github.com.insteadOf' 'https://github.com'```  
+   `git config --global "url.ssh://git@github.com.insteadOf" "https://github.com"`  
    Note that the `--global` switch makes the configuration change apply to your global git config
    instead of the repositorie's git config.
    
