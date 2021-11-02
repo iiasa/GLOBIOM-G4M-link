@@ -101,6 +101,16 @@ string_replace <- function(full_str,search_str,replace_str){
 }
 
 
+# Search and replace function for adapting GLOBIOM scripts
+string_replace_all <- function(full_str,search_str,replace_str){
+  # Search and replace using stringr
+  if (any(str_detect(full_str,regex(search_str,ignore_case = T)))) {
+    return(str_replace_all(full_str,regex(search_str,ignore_case = T),replace_str))
+  } else {
+    stop("Pattern not found, file configuration failed")
+  }
+}
+
 # Convert gdx globiom files to csv for G4M input - only for testing
 gdx_to_csv_for_g4m <- function() {
 
