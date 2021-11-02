@@ -92,6 +92,7 @@ check_sol <- function(cluster_nr_globiom){
     affor <- rgdx.param(f,"ARTVAR_AFFOR_COMPARE")
 
     # Write to log file if active
+    if (!dir_exists(path(CD,"log"))) dir_create(path(CD,"log"))
     log_f <- path(CD,"log",str_glue("{PROJECT}_{DATE_LABEL}_log.txt"))
     if (dim(water)[1] > 0)  write_lines(str_glue("ART_VAR WATER","\n"),log_f,append = T); write_delim(water,log_f,append = T)
     if (dim(stover)[1] > 0) write_lines(str_glue("ART_VAR STOVER","\n"),log_f,append = T); write_delim(stover,log_f,append = T)
