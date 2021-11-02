@@ -18,18 +18,19 @@ batch_extract_tib <- function(items,files=NULL,gdxs=NULL){
 }
 
 # Merge gdx files if not set in the sample_config file
-merge_gdx <- function(project, wd, c_nr) {
+merge_gdx <- function(project, wd, c_nr, big_par) {
 
   merge_args <- c()
   merge_args <- c(merge_args, str_glue("output_",PROJECT,"_",c_nr,".*.gdx"))
   merge_args <- c(merge_args, str_glue("output=output_",PROJECT,"_",c_nr,"_merged.gdx"))
+  merge_args <- c(merge_args, str_glue("big=",big_par))
 
   # Invoke GDXMERGE in the provided working directory
   prior_wd <- getwd()
   tryCatch({
     setwd(wd)
     rc <- system2("gdxmerge", args=merge_args)
-    stop(str_glue("GDXMERGE failed with return code {rc}!"))
+    if (rc != 0) stop(str_glue("GDXMERGE failed with return code {rc}!"))
   },
   finally = {
     setwd(prior_wd)
@@ -65,11 +66,12 @@ merge_gdx_down <- function(wd_out,s_list,s_cnt,c_nr,path_out){
 # Check for the occurrence of infeasibilities in GLOBIOM
 check_sol <- function(cluster_nr_globiom){
 
+  f <- path(CD,WD_GLOBIOM,"Model","gdx",str_glue("output_{PROJECT}_",cluster_nr_globiom,"_merged.gdx"))
   # Check for active ART_VARs
-  artvar <- gdx(path(CD,WD_GLOBIOM,"Model","gdx",str_glue("output_{PROJECT}_",cluster_nr_globiom,"_merged.gdx")))["ARTVAR_ACTIVE"]
+  artvar <- rgdx.param(f,"ARTVAR_ACTIVE")
 
   # Check for negative OF values
-  obj <- gdx(path(CD,WD_GLOBIOM,"Model","gdx",str_glue("output_{PROJECT}_",cluster_nr_globiom,"_merged.gdx")))["Obj_Compare"]
+  obj <- rgdx.param(f,"Obj_Compare")
 
   # Retrieve scenarios with active ART_VAR
   artvar_values <- as.integer(str_sub(unique(artvar[,1]), start= -6))
@@ -78,11 +80,30 @@ check_sol <- function(cluster_nr_globiom){
   negative_values <- as.integer(str_sub(unique(obj[which(obj$value < 0),1]), start= -6))
 
   if (length(artvar_values) > 0) {
-    warning(str_glue("Scenarios: ",str_flatten(artvar_values,",")," have active ART_VAR(s)"))
+    warning(str_glue("*************************************","\n","Scenario(s): ",
+                     str_flatten(artvar_values,",")," has active ART_VAR(s), see log for details",
+                     "\n","*************************************","\n"))
+
+    # Get ART_VARs
+    water <- rgdx.param(f,"ARTVAR_WATER_COMPARE")
+    stover <- rgdx.param(f,"ARTVAR_STOVER_LU_COMPARE")
+    biomass <- rgdx.param(f,"ARTVAR_MESSAGE_BIOMASS_COMPARE")
+    process <- rgdx.param(f,"ARTVAR_COMPARE")
+    affor <- rgdx.param(f,"ARTVAR_AFFOR_COMPARE")
+
+    # Write to log file if active
+    log_f <- path(CD,"log",str_glue("{PROJECT}_{DATE_LABEL}_log.txt"))
+    if (dim(water)[1] > 0)  write_lines(str_glue("ART_VAR WATER","\n"),log_f,append = T); write_delim(water,log_f,append = T)
+    if (dim(stover)[1] > 0) write_lines(str_glue("ART_VAR STOVER","\n"),log_f,append = T); write_delim(stover,log_f,append = T)
+    if (dim(biomass)[1] > 0) write_lines(str_glue("ART_VAR MESSAGE BIOMASS","\n"),log_f,append = T); write_delim(biomass,log_f,append = T)
+    if (dim(process)[1] > 0) write_lines(str_glue("ART_VAR","\n"),log_f,append = T); write_delim(process,log_f,append = T)
+    if (dim(affor)[1] > 0) write_lines(str_glue("ART_VAR AFFOR","\n"),log_f,append = T); write_delim(affor,log_f,append = T)
   }
 
   if (length(negative_values) > 0) {
-    warning(str_glue("Scenarios: ",str_flatten(negative_values,","),"have negative objective function value"))
+    warning(str_glue("*************************************","\n","Scenario(s): ",
+                     str_flatten(negative_values,","),"has negative objective function value",
+                     "\n","*************************************","\n"))
   }
 }
 
@@ -100,13 +121,13 @@ string_replace <- function(full_str,search_str,replace_str){
 # Convert gdx globiom files to csv for G4M input - only for testing
 gdx_to_csv_for_g4m <- function() {
 
-  # Read globiom outputs
-  glob_files <- gdx(str_glue("{WD_G4M}/Data/GLOBIOM/{PROJECT}_{DATE_LABEL}/output_globiom4g4mm_{PROJECT}_{DATE_LABEL}.gdx"))
-  items <- all_items(glob_files)$parameters
+  # Path to globiom outputs
+  gdx_path <- path(CD,str_glue("{WD_G4M}/Data/GLOBIOM/{PROJECT}_{DATE_LABEL}/output_globiom4g4mm_{PROJECT}_{DATE_LABEL}.gdx"))
+  items <- c("G4Mm_SupplyResidues","G4Mm_SupplyWood","G4Mm_Wood_price","G4Mm_LandRent","G4Mm_CO2PRICE")
 
   # Read data tables and rearrange
   for(i in 1:length(items)){
-    var <- as_tibble(glob_files[items[i]])
+    var <- as_tibble(rgdx.param(gdx_path,items[i]))
     if (i <= 3) names(var) <- c("G4MmItem","G4MmLogs","REGION","SCEN1","SCEN3","SCEN2","Year","value")
     if (i==4) names(var) <- c("LC_TYPE","REGION","SCEN1","SCEN3","SCEN2","Year","value")
     if (i==5) names(var) <- c("REGION","SCEN1","SCEN3","SCEN2","Year","value")
@@ -125,13 +146,15 @@ gdx_to_csv_for_g4m <- function() {
               row.names = F, quote = F)
   }
 
+  save_environment("3c")
+
 }
 
 # Retrieve the mapping between globiom and downscaling scenarios
 get_mapping <- function(){
 
   s_nr <-  sprintf("%06d", SCENARIOS[1])
-  scen_map <- gdx(path(CD,WD_GLOBIOM,"Model","gdx",str_glue("output_{PROJECT}_",cluster_nr_globiom,".",s_nr,".gdx")))["SCEN_MAP"]
+  scen_map <- rgdx.set(path(CD,WD_GLOBIOM,"Model","gdx",str_glue("output_{PROJECT}_",cluster_nr_globiom,".",s_nr,".gdx")),"SCEN_MAP")
 
   scen_map <- scen_map  %>% na_if("") %>% na.omit
   scen_dims <- colnames(scen_map)
@@ -148,7 +171,7 @@ get_mapping <- function(){
   scen_map_solved$SCEN2 <- str_replace_all(scen_map_solved$SCEN2,"\"","")
 
   # Define GLOBIOM - Downscaling map
-  downs_input <- as_tibble(gdx(path(str_glue(CD,"/",WD_DOWNSCALING,"/input/output_landcover_{PROJECT}_{DATE_LABEL}.gdx")))["LANDCOVER_COMPARE_SCEN"])
+  downs_input <- as_tibble(rgdx.param(path(str_glue(CD,"/",WD_DOWNSCALING,"/input/output_landcover_{PROJECT}_{DATE_LABEL}.gdx")),"LANDCOVER_COMPARE_SCEN"))
   names(downs_input) <- c("ScenNr","LC","SCEN1","SCEN2","SCEN3","Year","value")
   downs_input <- subset(downs_input,ScenNr=="World" & LC=="TotLnd" & Year==2000)
   downs_input <- downs_input %>% uncount(RESOLUTION_DOWNSCALING)
@@ -209,10 +232,26 @@ compile_g4m_model <- function(){
 
     # get path to Rtools g++
     env_list <- Sys.getenv()
-    rtools_path <- path(env_list[which(str_detect(env_list,"rtools") & !str_detect(env_list,";"))],"mingw64","bin","g++")
+    rtools_path <- path(env_list[which(str_detect(env_list,"rtools") & !str_detect(env_list,";"))],"mingw32","bin","g++")
 
     # compile model
-    compile_string <- str_glue(rtools_path," -O3 {source_path} -o {g4m_path}")
+    compile_string <- str_glue(rtools_path," {source_path} -o {g4m_path}")
+    system(compile_string)
+  }
+
+}
+
+# Compile G4M output post-processing library
+compile_table_merger <- function(){
+
+  # Set wd
+  prior_wd <- getwd()
+  merger_path <- path(CD,WD_G4M,"tableMergeForLinker","merge_files.so")
+  source_path <- path(CD,WD_G4M,"tableMergeForLinker","tableMerge_EPA_csv_linker.cpp")
+
+  if (!file_exists(path(merger_path))) {
+    # Compile C++ code
+    compile_string <- str_glue("R CMD SHLIB -o {merger_path} ","{source_path} ")
     system(compile_string)
   }
 
@@ -238,15 +277,14 @@ save_environment <- function(step){
   if (!dir_exists(path(CD,"R","environment"))) dir_create(path(CD,"R","environment"))
 
   # Save global environment to file
-  if (step == "downscaling") save.image(path(CD,"R","environment",str_glue("environment_{PROJECT}_{DATE_LABEL}_for_downscaling.RData")))
-  if (step == "g4m") save.image(path(CD,"R","environment",str_glue("environment_{PROJECT}_{DATE_LABEL}_for_g4m.RData")))
+  save.image(path(CD,"R","environment",str_glue("environment_{PROJECT}_{DATE_LABEL}_",step,".RData")))
 }
 
 # Remove global environment files
 clear_environment <- function(){
 
   # Remove global environement files
-  if (file_exists(path(CD,"R","environment",str_glue("environment_{PROJECT}_{DATE_LABEL}_for_g4m.RData")))) file_delete(path(CD,"R","environment",str_glue("environment_{PROJECT}_{DATE_LABEL}_for_g4m.RData")))
-  if (file_exists(path(CD,"R","environment",str_glue("environment_{PROJECT}_{DATE_LABEL}_for_downscaling.RData")))) file_delete(path(CD,"R","environment",str_glue("environment_{PROJECT}_{DATE_LABEL}_for_downscaling.RData")))
+  unlink(path(CD,"R","environment",str_glue("environment_{PROJECT}_{DATE_LABEL}_*.RData")))
+
 
 }
