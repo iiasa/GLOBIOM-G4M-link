@@ -19,6 +19,14 @@ Automatize the [link between GLOBIOM and G4M](https://iiasa.github.io/GLOBIOM/do
    line Git client do  
    `git submodule update --init --recursive`  
    from the root of the cloned repository.
+3. The submodule URLs as configured in the `.gitmodules` file of this repository are https-based.
+   You may want or need to  ssh authentication instead. To do so you can have Git automatically
+   substitute ssh equivalents for GitHub https URLs by issuing the following global configuration
+   change command:  
+   ```git config --global url.'ssh://git@github.com.insteadOf' 'https://github.com'```  
+   Note that the `--global` switch makes the configuration change apply to your global git config
+   instead of the repositorie's git config.
+   
 3. Checkout a GLOBIOM branch from subversion by running the `checkout.bat` script from
    the command prompt or your bash shell. This requires the `svn` Subversion command line
    client to be accessible via your PATH environment variable (on-path). You may wish
