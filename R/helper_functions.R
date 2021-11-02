@@ -1,22 +1,4 @@
 
-
-# Extract a list of items from many GDX and return as tibble
-batch_extract_tib <- function(items,files=NULL,gdxs=NULL){
-  if(is.null(gdxs)){
-    gdxs = lapply(files, gdx)
-  }
-  lall = list()
-  for(item in items){
-    tt = lapply(gdxs,gdxtools::extract,item,addgdx=F)
-    tt = do.call("rbind",tt)
-    tt = list(tt)
-    names(tt) <- item
-    tt <- as_tibble(tt)
-    lall <- c(lall,tt)
-  }
-  return((lall))
-}
-
 # Merge gdx files if not set in the sample_config file
 merge_gdx <- function(project, wd, c_nr, big_par) {
 
