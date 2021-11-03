@@ -251,10 +251,11 @@ compile_table_merger <- function(){
 }
 
 # Compile outputs from g4m into csv file - temporary, will be changed to generate gdx?
-generate_g4M_report <- function(file_path,file_suffix,scenarios,scenario_names,N,co2){
+generate_g4M_report <- function(file_inpath,file_outpath,file_suffix,scenarios,scenario_names,N,co2){
 
   # Call report generator
-  .C('merge',path=as.character(file_path),
+  .C('merge',inpath=as.character(file_inpath),
+     outpath=as.character(file_outpath),
      suf=as.character(file_suffix),
      scen = as.character(scenarios),
      scen_name = as.character(scenario_names),
