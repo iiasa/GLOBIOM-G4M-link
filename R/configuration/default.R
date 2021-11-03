@@ -19,7 +19,6 @@ REPORTING_G4M = "yes" # reporting to G4M yes/no
 REPORTING_IAMC = "yes" # reporting to IAMC yes/no
 REPORTING_IAMC_G4M = "no" # reporting G4M to IAMC REGIONAL_AG/no
 REGIONAL_AG = "ggi" # regional aggregation level
-PATH_FOR_DOWNSCALING = "H:/Downscaling/Model/input/" # path to save gdx for downscaling
 
 #-------------------------------------------------------------------------------
 
@@ -55,6 +54,8 @@ G4M_FEEDBACK_FILE = stringr::str_glue("tabs_gui_{PROJECT}_{DATE_LABEL}_final_csv
 REPORTING_G4M_FINAL = "no" # reporting to G4M yes/no
 REPORTING_IAMC_FINAL = "yes" # reporting to IAMC yes/no
 REPORTING_IAMC_G4M_FINAL = "yes" #  reporting G4M to IAMC REGIONAL_AG/no
+GLOBIOM_POST_FILE = "8_merge_output_tmp.gms" # reporting script
+USE_LIMPOPO_POSTPROC = FALSE # logical, use limpopo to run the post-processing script (use only if out file is likely to exceed the local memory)
 BASE_SCEN1 = "SSP2" # SCEN1 to use as reference for forest management emissions
 BASE_SCEN2 = "SPA0" # SCEN2 to use as reference for forest management emissions
 BASE_SCEN3 = "scenRCPref" # SCEN3 to use as reference for forest management emissions
