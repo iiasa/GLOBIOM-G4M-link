@@ -47,7 +47,7 @@ Automatize the [link between GLOBIOM and G4M](https://iiasa.github.io/GLOBIOM/do
 ## R Dependencies
 
 The notebook depends on:
-- R.
+- R 4.0.0 or higher.
 - The [tidyverse](https://www.tidyverse.org/) curated R package collection.
   * The [**dplyr**](https://dplyr.tidyverse.org/) package is part of the tidyverse,
     but make sure you have at least version 1.0.3 installed. Use `packageVersion("dplyr")`
@@ -57,7 +57,7 @@ The notebook depends on:
   that fails, install via `install.packages("fs")`.
 - [**gdxrrw**](https://github.com/GAMS-dev/gdxrrw), an R package for
   reading/writing GDX files from R.
- - On Windows only: [Rtools](https://cran.r-project.org/bin/windows/Rtools/).
+ - On Windows only: [Rtools4](https://cran.r-project.org/bin/windows/Rtools/).
 
 Please read [these instructions](https://github.com/iiasa/xl2gdx#dependencies) for details on how to install them.
 
