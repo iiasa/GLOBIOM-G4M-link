@@ -96,7 +96,13 @@ compile_g4m_data <- function(baseline = NULL) {
     if (!dir_exists(aux_out_path))  dir_create(aux_out_path)
 
     # Path of output folder
-    file_path <- path_wd("out", str_glue("{PROJECT}_{DATE_LABEL}"))
+    if (USE_LIMPOPO_POSTPROC){
+      file_inpath <- path_wd("out", str_glue("{PROJECT}_{DATE_LABEL}"))
+      file_outpath <- path(CD,WD_GLOBIOM,"Model","output","g4m",str_glue("{PROJECT}_{DATE_LABEL}"))
+      if (!dir_exists(file_outpath))  dir_create(file_outpath)
+    } else {
+      file_inpath <- file_outpath <- path_wd("out", str_glue("{PROJECT}_{DATE_LABEL}"))
+    }
 
     # Suffix of scenario runs
     file_suffix <- str_glue("_{PROJECT}_{DATE_LABEL}_") # for now in future should be indexed by project and date label
@@ -115,7 +121,7 @@ compile_g4m_data <- function(baseline = NULL) {
     co2 <- abs(as.integer(str_replace(scenarios_split[,4],",","")))
 
     # Compile results
-    generate_g4M_report(file_path, file_suffix, scenarios, scenario_names, N, co2)
+    generate_g4M_report(file_inpath, file_outpath, file_suffix, scenarios, scenario_names, N, co2)
 
   },
   finally = {
