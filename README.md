@@ -50,9 +50,11 @@ The notebook depends on:
 - R.
 - The [tidyverse](https://www.tidyverse.org/) curated R package collection.
   * The [**dplyr**](https://dplyr.tidyverse.org/) package is part of the tidyverse,
-    but make sure you have at least version 1.0.3 installed, earlier versions are
-    lacking required functionality.
-- [**fs**](https://fs.r-lib.org/), for smooth file system handling.
+    but make sure you have at least version 1.0.3 installed. Use `packageVersion("dplyr")`
+    to determine the installed version.
+- [**fs**](https://fs.r-lib.org/), for smooth file system handling. Probably already
+  installed when installing the tidyverse. Try to load it with `library(fs)`. When
+  that fails, install via `install.packages("fs")`.
 - [**gdxrrw**](https://github.com/GAMS-dev/gdxrrw), an R package for
   reading/writing GDX files from R.
  - On Windows only: [Rtools](https://cran.r-project.org/bin/windows/Rtools/).
