@@ -7,5 +7,5 @@
 
 [submodule "G4M"]
 	path = G4M
-	url = https://github.com/iiasa/G4M_global_EPA
+	url = https://github.com/iiasa/G4M_global
 	branch = Link_version
