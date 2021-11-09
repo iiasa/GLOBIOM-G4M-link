@@ -44,6 +44,9 @@ rm(ds_type_map)
 # Check consistency among scenarios
 if (any(!SCENARIOS_FOR_DOWNSCALING %in% SCENARIOS)) stop("Downscaling scenario list must be equal or a subset of the GLOBIOM scenario list")
 if (any(!SCENARIOS_FOR_G4M %in% SCENARIOS_FOR_DOWNSCALING)) stop("G4M scenario list must be equal or a subset of the Downscaling scenario list")
+if (GENERATE_PLOTS){
+  if (any(!SCENARIOS_PLOT_GLOBIOM %in% SCENARIOS_FOR_G4M) | any(!SCENARIOs_PLOT_LOOKUP %in% SCENARIOS_FOR_G4M)) stop("Plot scenario list must be equal or a subset of the G4M scenario list")
+}
 
 # 3. Echos
 for (name in config_names)  {
