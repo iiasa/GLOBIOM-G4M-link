@@ -32,13 +32,13 @@ run_initial_postproc <- function(cluster_nr_globiom)
     setwd(path(WD_GLOBIOM, "Model"))
     rc <- system(str_glue('gams',
                           '8_merge_output.gms',
-                          '--limpopo "{LIMPOPO_RUN}"',
+                          '--limpopo yes',
                           '--limpopo_nr "{cluster_nr_globiom}"',
                           '--project "{PROJECT}"',
                           '--lab "{DATE_LABEL}"',
-                          '--rep_g4m "{REPORTING_G4M}"',
-                          '--rep_iamc_glo "{REPORTING_IAMC}"',
-                          '--rep_iamc_g4m "{REPORTING_IAMC_G4M}"',
+                          '--rep_g4m yes',
+                          '--rep_iamc_glo yes',
+                          '--rep_iamc_g4m no',
                           '--g4mfile "{G4M_FEEDBACK_FILE}"',
                           '--regionagg "{REGIONAL_AG}"',
                           '--output_landcover "{output_landcover}"',
@@ -64,19 +64,20 @@ run_initial_postproc <- function(cluster_nr_globiom)
 #' @param cluster_nr_globiom Cluster sequence number of prior GLOBIOM HTCondor submission
 run_final_postproc <- function(cluster_nr_globiom) {
 
+  # Create output file directory
+  out_dir <- path(CD,"output",str_glue("{PROJECT}_{DATE_LABEL}"))
+  out_dir_aux <- str_glue(str_replace_all(out_dir,"/","%X%"),"%X%")
+  if(!dir_exists(out_dir)) dir_create(out_dir)
+
   # Create a tmp copy of the merge output file with a tmp $include
   tempString <- read_lines(path(WD_GLOBIOM, "Model", "8_merge_output.gms"))
   if (!any(str_detect(tempString,"8c_rep_iamc_g4m_tmp.gms"))) tempString <- string_replace(tempString,"\\$include\\s+8c_rep_iamc_g4m.gms","$include 8c_rep_iamc_g4m_tmp.gms")
+  out_line <- str_glue("execute_unload '{out_dir_aux}Output4_IAMC_template_%project%_%lab%.gdx' Output4_SSP, Output4_SSP_AG, REGION_AG_MAP")
+  tempString[which(str_detect(tempString,"execute_unload[:print:]+.gdx"))] <- out_line
   write_lines(tempString, path(WD_GLOBIOM, "Model", "8_merge_output_tmp.gms"))
 
-  # Construct path of landcover output file
-  output_landcover <- path(CD, WD_DOWNSCALING, "input", str_glue("output_landcover_{PROJECT}_{DATE_LABEL}"))
-
-  # Construct path of output file for G4M
-  output_globiom4g4mm <- path(CD, PATH_FOR_G4M, str_glue("output_globiom4g4mm_{PROJECT}_{DATE_LABEL}"))
-
   # Construct path for feedback file
-  path_feedback <- path(WD_G4M, PATH_FOR_FEEDBACK)
+  path_feedback <- str_glue(".%X%output%X%g4m%X%{PROJECT}_{DATE_LABEL}%X%")
 
   # rGet G4M scenario list
   scen_map <-  subset(unique(get_mapping()[1,-4]), ScenLoop %in% SCENARIOS_FOR_G4M)
@@ -149,7 +150,7 @@ run_final_postproc <- function(cluster_nr_globiom) {
                             str_c(g4m_globiom_map,collapse="\n"))
 
   # Edit feedback file
-  path_for_feedback_file <-path_wd(path_feedback, G4M_FEEDBACK_FILE)
+  path_for_feedback_file <-path(path_feedback, G4M_FEEDBACK_FILE)
 
   tempString <- string_replace(tempString,"\\$include\\s+[:print:]*X[:print:]*",
                            str_glue('$include "{path_for_feedback_file}"'))
@@ -168,26 +169,32 @@ run_final_postproc <- function(cluster_nr_globiom) {
     write_lines(tempString, "8c_rep_iamc_g4m_tmp.gms")
     rc <- system(str_glue('gams',
                           '8_merge_output_tmp.gms',
-                          '--limpopo "{LIMPOPO_RUN}"',
+                          '--limpopo yes',
                           '--limpopo_nr "{cluster_nr_globiom}"',
                           '--project "{PROJECT}"',
                           '--lab "{DATE_LABEL}"',
-                          '--rep_g4m "{REPORTING_G4M_FINAL}"',
-                          '--rep_iamc_glo "{REPORTING_IAMC_FINAL}"',
-                          '--rep_iamc_g4m "{REPORTING_IAMC_G4M_FINAL}"',
+                          '--rep_g4m no',
+                          '--rep_iamc_glo yes',
+                          '--rep_iamc_g4m yes',
                           '--g4mfile "{G4M_FEEDBACK_FILE}"',
                           '--regionagg "{REGIONAL_AG}"',
-                          '--output_landcover "{output_landcover}"',
-                          '--output_globiom4g4mm "{output_globiom4g4mm}"',
                           .sep = ' '))
     if (rc != 0) {
       stop(str_glue("GAMS failed with return code {rc}! See https://www.gams.com/latest/docs/UG_GAMSReturnCodes.html#INDEX_return_21_codes_2d__21_error_21_codes"))
     }
+
+    # Clean global environment files
+    clear_environment()
+
+    # Remove G4M output files
+    clear_g4m_files()
+
+    # Generate plots for results
+    if (GENERATE_PLOTS) plot_results(SCENARIOs_PLOT_LOOKUP,SCENARIOS_PLOT_GLOBIOM)
   },
   finally = {
     setwd(prior_wd)
   })
 
-  # Clean global environment files
-  clear_environment()
+
 }
