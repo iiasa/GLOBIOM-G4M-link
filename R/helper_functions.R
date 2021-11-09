@@ -1,5 +1,10 @@
 
-# Merge gdx files if not set in the sample_config file
+#' Merge gdx files if not set in the sample_config file
+#'
+#' @param project project label
+#' @param wd directory of gdx files to be merged
+#' @param c_nr limpopo cluster number
+#' @param big_par BIG parameter (integer) to merge large gdx files
 merge_gdx <- function(project, wd, c_nr, big_par) {
 
   merge_args <- c()
@@ -19,7 +24,13 @@ merge_gdx <- function(project, wd, c_nr, big_par) {
   })
 }
 
-# Merge gdx files from downscaling according to the scenario number
+#' Merge gdx files from downscaling according to the scenario number
+#'
+#' @param wd_out directory of gdx files
+#' @param s_list list of scenarios to be merged
+#' @param s_cnt identifier for the merged output
+#' @param c_nr limpopo cluster number
+#' @param path_out output directory for the merged gdx
 merge_gdx_down <- function(wd_out,s_list,s_cnt,c_nr,path_out){
   prior_wd <- getwd()
   rc <- tryCatch ({
@@ -45,7 +56,9 @@ merge_gdx_down <- function(wd_out,s_list,s_cnt,c_nr,path_out){
   })
 }
 
-# Check for the occurrence of infeasibilities in GLOBIOM
+#' Check for the occurrence of infeasibilities in GLOBIOM solution
+#'
+#' @param cluster_nr_globiom Cluster sequence number of prior GLOBIOM HTCondor submission
 check_sol <- function(cluster_nr_globiom){
 
   f <- path(CD,WD_GLOBIOM,"Model","gdx",str_glue("output_{PROJECT}_",cluster_nr_globiom,"_merged.gdx"))
@@ -90,7 +103,11 @@ check_sol <- function(cluster_nr_globiom){
   }
 }
 
-# Search and replace function for adapting GLOBIOM scripts
+#' Search and replace function for adapting GLOBIOM scripts
+#'
+#' @param full_str string input
+#' @param search_str search pattern in input
+#' @param replace_str replace pattern in input
 string_replace <- function(full_str,search_str,replace_str){
   # Search and replace using stringr
   if (any(str_detect(full_str,regex(search_str,ignore_case = T)))) {
@@ -101,7 +118,11 @@ string_replace <- function(full_str,search_str,replace_str){
 }
 
 
-# Search and replace function for adapting GLOBIOM scripts
+#' Search and replace function for adapting GLOBIOM scripts
+#'
+#' @param full_str string input
+#' @param search_str search pattern in input
+#' @param replace_str replace pattern in input
 string_replace_all <- function(full_str,search_str,replace_str){
   # Search and replace using stringr
   if (any(str_detect(full_str,regex(search_str,ignore_case = T)))) {
@@ -111,7 +132,8 @@ string_replace_all <- function(full_str,search_str,replace_str){
   }
 }
 
-# Convert gdx globiom files to csv for G4M input - only for testing
+#' Convert gdx globiom files to csv for G4M input
+#'
 gdx_to_csv_for_g4m <- function() {
 
   # Path to globiom outputs
@@ -143,7 +165,8 @@ gdx_to_csv_for_g4m <- function() {
 
 }
 
-# Retrieve the mapping between globiom and downscaling scenarios
+#' Retrieve the mapping between globiom and downscaling scenarios
+#'
 get_mapping <- function(){
 
   s_nr <-  sprintf("%06d", SCENARIOS[1])
@@ -178,7 +201,9 @@ get_mapping <- function(){
 }
 
 
-# Generate G4M job string - new interface
+#' Generate G4M job string for the new G4M interface
+#'
+#' @param baseline = TRUE|FALSE: set to TRUE to select baseline scenarios.
 get_g4m_jobs <- function(baseline = NULL){
 
   # Get downscaling mapping
@@ -212,7 +237,8 @@ get_g4m_jobs <- function(baseline = NULL){
   return(g4m_scenario_string)
 }
 
-# Compile G4M
+#' Compile G4M model from source code
+#'
 compile_g4m_model <- function(){
 
   # set path for exe file
@@ -234,7 +260,8 @@ compile_g4m_model <- function(){
 
 }
 
-# Compile G4M output post-processing library
+#' Compile G4M output post-processing library from source code
+#'
 compile_table_merger <- function(){
 
   # Set wd
@@ -264,7 +291,9 @@ generate_g4M_report <- function(file_inpath,file_outpath,file_suffix,scenarios,s
 
 }
 
-# Save the global environment to continue execution in case of a session crash
+#' Save the global environment to continue execution in case of a session crash
+#'
+#' @param step identifier for the global environment at the focal chunk
 save_environment <- function(step){
 
   # Create dir to store environment data
@@ -274,11 +303,172 @@ save_environment <- function(step){
   save.image(path(CD,"R","environment",str_glue("environment_{PROJECT}_{DATE_LABEL}_",step,".RData")))
 }
 
-# Remove global environment files
-clear_environment <- function(){
+#' Remove G4M outputs not used in the link
+#'
+clear_g4m_files <- function(){
 
-  # Remove global environement files
-  unlink(path(CD,"R","environment",str_glue("environment_{PROJECT}_{DATE_LABEL}_*.RData")))
-
+  # Remove unused G4M files
+  unlink(path(CD,WD_G4M,"out",str_glue("{PROJECT}_{DATE_LABEL}"),"*.*"),recursive = TRUE)
+  unlink(path(CD,WD_G4M,"out",str_glue("{PROJECT}_{DATE_LABEL}"),"baseline","*.*"),recursive = TRUE)
 
 }
+
+#' Remove global environment files
+#'
+clear_environment <- function(){
+
+    # Remove global environment files
+  unlink(path(CD,"R","environment",str_glue("environment_{PROJECT}_{DATE_LABEL}_*.RData")))
+
+}
+
+#' Transfer final gdx to output folder
+#'
+transfer_outputs <- function(){
+
+  out_file <- dir_ls(path(CD,WD_GLOBIOM,"Model","output","iamc"),regexp=str_glue("Output4_IAMC_template_{PROJECT}_{DATE_LABEL}*.*gdx"))
+  new_dir <- path(CD,"output",str_glue("{PROJECT}_{DATE_LABEL}"),str_glue("Output4_IAMC_template_{PROJECT}_{DATE_LABEL}.gdx"))
+
+  # Transfer gdx to output folder
+  file_move(out_file,new_dir)
+
+}
+
+
+#' Plot GLOBIOM and lookup table results
+#'
+#' @param scenarios_for_lookup scenario selection for lookup table plots
+#' @param scenarios_for_globiom scenario selection for GLOBIOM plots
+plot_results <- function(scenarios_for_lookup,scenarios_for_globiom){
+
+  # Create plot directory
+  plot_dir <- path(CD,"output",str_glue("{PROJECT}_{DATE_LABEL}"),"plots")
+  if(!dir_exists(plot_dir)) dir_create(plot_dir)
+
+  # Read lookup table results
+  out_lookup <- rgdx.param(path(CD,"output",str_glue("{PROJECT}_{DATE_LABEL}"),
+                                str_glue("Output4_IAMC_template_{PROJECT}_{DATE_LABEL}.gdx")),"OUTPUT4_SSP")
+
+  # Read global lookup table results
+  out_lookup_world <- rgdx.param(path(CD,"output",str_glue("{PROJECT}_{DATE_LABEL}"),
+                                str_glue("Output4_IAMC_template_{PROJECT}_{DATE_LABEL}.gdx")),"OUTPUT4_SSP_AG")
+
+  # Read GLOBIOM output table
+  out_globiom <- as_tibble(rgdx.param(path(CD,WD_GLOBIOM,"Model","gdx",
+                                           str_glue("output_{PROJECT}_{cluster_nr_globiom}_merged.gdx")),"OUTPUT")[,-1])
+
+  # Read FAO data
+  out_fao <- read_csv(path(CD,WD_GLOBIOM,"Model","finaldata","OUTPUT_FAO_REGION_since1961.csv"),
+                      col_types =list("c","c","c","c","c","c","c","i","d"),col_names = F,quote = "'")
+
+  # Edit table names
+  colnames(out_fao) <- colnames(out_globiom) <- c("VAR_ID","UNIT","REGION","ITEM","SCEN1","SCEN2","SCEN3","YEAR","value")
+  colnames(out_lookup) <- colnames(out_lookup_world) <- c("REGION","VAR_ID","UNIT","SCEN1","SCEN2","SCEN3","YEAR","value")
+
+  # Add global aggregate
+  out_lookup_world <- subset(out_lookup_world,REGION=="World")
+  out_lookup <- rbind(out_lookup,out_lookup_world)
+
+  # Correct naming and format
+  out_fao$VAR_ID[which(out_fao$VAR_ID=="Food")] <- "food"
+  out_fao$VAR_ID[which(out_fao$VAR_ID=="PROD")] <- "Prod"
+  out_fao$ITEM[which(out_fao$ITEM=="ALL")] <- "TOT"
+  out_fao <- subset(out_fao,!ITEM %in% c("FLAX","CSil"))
+  out_globiom$YEAR <- as.integer(levels(out_globiom$YEAR))[out_globiom$YEAR]
+  out_lookup$YEAR <- as.integer(levels(out_lookup$YEAR))[out_lookup$YEAR]
+
+  # Extract variables
+  vars_lookup <- unique(out_lookup$VAR_ID)
+  vars_globiom <- unique(out_globiom$VAR_ID)
+  vars_fao <- unique(out_fao$VAR_ID)[-c(12:15)]
+
+  # Filter FAO variables for plotting
+  out_globiom <- subset(out_globiom, VAR_ID %in% vars_fao & UNIT %in% unique(out_fao$UNIT))
+
+  # Merge GLOBIOM and FAO output files
+  out_merged <- rbind(out_globiom,out_fao)
+
+  # Create y labels for lookup table
+  units <- unique(str_c(out_lookup$VAR_ID, "  [",out_lookup$UNIT,"]"))
+
+  # Merge scenarios into a single dimension
+  out_lookup <- cbind(out_lookup,Scenario=str_c(out_lookup$SCEN1,"_",out_lookup$SCEN2,"_",out_lookup$SCEN3))
+
+  # Select scenarios for plotting
+  scen_list <- unique(get_mapping()[,-4])
+  scen_for_plot <- subset(scen_list, ScenLoop %in% scenarios_for_lookup)
+  scen_for_plot <- str_c(scen_for_plot[,1],"_",scen_for_plot[,2],"_",scen_for_plot[,3])
+  out_lookup <- subset(out_lookup, Scenario %in% scen_for_plot)
+
+  # Correct FAO scenario naming
+  out_lookup$Scenario[which(out_lookup$Scenario == "FAO_FAO_FAO")] <- "FAO"
+
+  # Plot items and save to pdf
+  pdf(path(plot_dir,"plots_lookup.pdf"), width = 12, height = 14,onefile = T)
+  for (i in 1:length(vars_lookup)){
+    plot_data <- subset(out_lookup,VAR_ID == vars_lookup[i])
+    if (dim(plot_data)[1] > 0){
+      print(
+        ggplot(plot_data,aes(x=YEAR,y=value,col=as.factor(Scenario))) +
+          geom_line()  + facet_wrap(~factor(REGION), scales = "free") + theme_light() + labs(x="YEAR",y=units[i],col="Scenario") +
+          theme(legend.position = "bottom") + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
+          theme(strip.background =element_rect(fill="white"))+ theme(strip.text = element_text(colour = 'black'))
+
+      )
+    }
+  }
+  dev.off()
+
+  # Merge scenarios into a single dimension
+  out_merged <- cbind(out_merged,Scenario=str_c(out_merged$SCEN1,"_",out_merged$SCEN2,"_",out_merged$SCEN3))
+
+  # Select scenarios for plotting
+  scen_list <- unique(get_mapping()[,-4])
+  scen_for_plot <- subset(scen_list, ScenLoop %in% scenarios_for_globiom)
+  scen_for_plot <- str_c(scen_for_plot[,1],"_",scen_for_plot[,2],"_",scen_for_plot[,3])
+  out_merged <- subset(out_merged, Scenario %in% c(scen_for_plot,"FAO_FAO_FAO"))
+
+  # Aggregate regions for global outputs
+  world <- aggregate(out_merged["value"],by=out_merged[c("VAR_ID","UNIT","ITEM","SCEN1","SCEN2","SCEN3","YEAR")],FUN="sum")
+  world <- cbind(REGION="World",world,Scenario=str_c(world$SCEN1,"_",world$SCEN2,"_",world$SCEN3))
+  world <- world %>% relocate(REGION, .after = UNIT)
+
+  # Compute global yields
+  world_yld <- world[,-2] %>% filter(VAR_ID %in% c("Prod","Area"),Scenario != "FAO_FAO_FAO") %>% spread(VAR_ID,value,convert = F)
+  world_yld <- cbind(world_yld,VAR_ID = "YILM", UNIT = "t / ha", value=world_yld$Prod/world_yld$Area)
+  world_yld_fao <- world[,-2] %>% filter(VAR_ID %in% c("Prod","Area"),Scenario == "FAO_FAO_FAO") %>% spread(VAR_ID,value,convert = F)
+  world_yld_fao <- cbind(world_yld_fao,VAR_ID = "YILM", UNIT = "t / ha",value=world_yld_fao$Prod/world_yld_fao$Area)
+  world_yld <- world_yld[,-8:-9] %>% relocate(UNIT, .before = REGION)
+  world_yld_fao <- world_yld_fao[,-8:-9] %>% relocate(UNIT, .before = REGION)
+  world_yld <- world_yld %>% relocate(VAR_ID, .before = UNIT)
+  world_yld_fao <- world_yld_fao %>% relocate(VAR_ID, .before = UNIT)
+  world <- world %>% filter(VAR_ID != "YILM")
+
+  # Merge global outputs to data table
+  out_merged <- rbind(out_merged,world,world_yld,world_yld_fao)
+
+  # Correct FAO scenario naming
+  out_merged$Scenario[which(out_merged$Scenario == "FAO_FAO_FAO")] <- "FAO"
+
+  # Remove items not reported for GLOBIOM and filter units
+  out_merged <- subset(out_merged, ! ITEM %in% c("Oats","Rye","Peas","SugB"))
+
+  # Plot items and save to pdf
+  for (i in 1:length(vars_fao)){
+    pdf(path(plot_dir,str_glue("plots_globiom_",vars_fao[i],".pdf")), width = 14, height = 14,onefile = T)
+    plot_data <- subset(out_merged,VAR_ID == vars_fao[i])
+    items <-  unique(plot_data$ITEM)
+    for (j in 1:length(items)){
+      print(
+        ggplot(subset(plot_data,ITEM==items[j]),aes(x=YEAR,y=value,col=as.factor(Scenario))) +
+          geom_line()  + facet_wrap(~factor(REGION), scales = "free") + theme_light() + labs(x="YEAR",y=items[j],col="Scenario") +
+          theme(legend.position = "bottom") + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
+          theme(strip.background =element_rect(fill="white"))+ theme(strip.text = element_text(colour = 'black'))
+      )
+    }
+    dev.off()
+  }
+
+}
+
+
