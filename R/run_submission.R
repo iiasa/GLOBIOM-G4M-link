@@ -12,16 +12,13 @@ run_globiom_scenarios <- function() {
   # Get cluster number
   cluster_number_log <- path(TEMP_DIR, "cluster_number.log")
 
-  # Set MERGE_BIG parameter
-  if (MERGE_GDX_CUTOFF) {merge_big <- "MERGE_BIG = 1000000"} else {merge_big <- ""}
-
   # Define configuration template
   config_template <- c(
     'EXPERIMENT = "{PROJECT}"',
     'PREFIX = "_globiom"',
     'JOBS = c({str_c(SCENARIOS, collapse=",")})',
     'HOST_REGEXP = "^limpopo"',
-    'REQUEST_MEMORY = 18000',
+    'REQUEST_MEMORY = 13000',
     'REQUEST_CPUS = 1',
     'GAMS_CURDIR = "Model"',
     'GAMS_FILE_PATH = "{GLOBIOM_SCEN_FILE}"',
@@ -39,8 +36,8 @@ run_globiom_scenarios <- function() {
     'GDX_OUTPUT_DIR = "gdx"',
     'GDX_OUTPUT_FILE = "output.gdx"',
     'GET_GDX_OUTPUT = TRUE',
-    '{merge_big}',
-    'MERGE_GDX_OUTPUT = {MERGE_GDX}',
+    'MERGE_BIG = 1000000',
+    'MERGE_GDX_OUTPUT = TRUE',
     'WAIT_FOR_RUN_COMPLETION = TRUE',
     'CLUSTER_NUMBER_LOG = "{cluster_number_log}"',
     'CLEAR_LINES = FALSE'
@@ -108,7 +105,7 @@ run_initial_downscaling <- function() {
     'REQUEST_CPUS = 1',
     'GAMS_FILE_PATH = "{DOWNSCALING_SCRIPT}"',
     'GAMS_VERSION = "32.2"',
-    'GAMS_ARGUMENTS = "//project=\\\"{PROJECT}\\\" //lab=\\\"{DATE_LABEL}\\\" //gdx_path=\\\"gdx/{GDX_OUTPUT_NAME}.gdx\\\" //nsim=%1"',
+    'GAMS_ARGUMENTS = "//project=\\\"{PROJECT}\\\" //lab=\\\"{DATE_LABEL}\\\" //gdx_path=\\\"gdx/downscaled.gdx\\\" //nsim=%1"',
     'BUNDLE_INCLUDE_DIRS = c("include")',
     'BUNDLE_EXCLUDE_DIRS = c(".git", ".svn", "225*", "doc")',
     'BUNDLE_EXCLUDE_FILES = c("**/*.~*", "**/*.log", "**/*.log~*", "**/*.lxi", "**/*.lst")',
@@ -119,7 +116,7 @@ run_initial_downscaling <- function() {
     'GDX_OUTPUT_DIR = "gdx"',
     'GDX_OUTPUT_FILE = "downscaled.gdx"',
     'GET_GDX_OUTPUT = TRUE',
-    'MERGE_GDX_OUTPUT = {MERGE_GDX_DOWNSCALING}',
+    'MERGE_GDX_OUTPUT = FALSE',
     'WAIT_FOR_RUN_COMPLETION = TRUE',
     'CLUSTER_NUMBER_LOG = "{cluster_number_log}"',
     'CLEAR_LINES = FALSE'
@@ -208,11 +205,11 @@ run_g4m <- function(baseline = NULL) {
   # Provide and output directory relative to WD_G4M
   if (baseline) {
     output_dir <- path("out", str_glue("{PROJECT}_{DATE_LABEL}\\\\baseline"))
+    output_dir_aux <- path(CD, WD_G4M, "out", str_glue("{PROJECT}_{DATE_LABEL}"),"baseline")
+    if (!dir_exists(output_dir_aux)) dir_create(output_dir_aux)
   } else {
     output_dir <- path("out", str_glue("{PROJECT}_{DATE_LABEL}"))
   }
-
-  if (!dir_exists(path(CD, WD_G4M, output_dir))) dir_create(path(CD, WD_G4M, output_dir))
 
   # Determine files for bundle
   default_file_list <- dir_ls(path(CD, WD_G4M, "Data", "Default"))
@@ -297,17 +294,22 @@ run_g4m <- function(baseline = NULL) {
 #' @param cluster_nr_globiom Cluster sequence number of prior GLOBIOM HTCondor submission
 run_final_postproc_limpopo <- function(cluster_nr_globiom) {
 
+  # Output file directory
+  out_dir <- path(CD,"output",str_glue("{PROJECT}_{DATE_LABEL}"))
+  if(!dir_exists(out_dir)) dir_create(out_dir)
+  if (str_detect(CD,"H:")) {gdx_submit <- ""} else {gdx_submit <- str_glue("GDX_OUTPUT_DIR_SUBMIT = \"{out_dir}\"")}
+
   # Create a tmp copy of the merge output file with a tmp $include
   tempString <- read_lines(path(WD_GLOBIOM, "Model", "8_merge_output.gms"))
   if (!any(str_detect(tempString,"8c_rep_iamc_g4m_tmp.gms"))) tempString <- string_replace(tempString,"\\$include\\s+8c_rep_iamc_g4m.gms","$include 8c_rep_iamc_g4m_tmp.gms")
+  tempString[which(str_detect(tempString,regex("GDXIN[:print:]+merged")))] <- str_glue("$GDXIN ..%X%output_%project%_%limpopo_nr%_merged.gdx")
   write_lines(tempString, path(WD_GLOBIOM, "Model", "8_merge_output_tmp.gms"))
 
   # Construct path for feedback file
-  path_feedback <- str_glue(".%X%output%X%g4m%X%{PROJECT}_{DATE_LABEL}%X%")
-  path_feedback_aux <- path(CD,WD_G4M,"out",str_glue("{PROJECT}_{DATE_LABEL}"),G4M_FEEDBACK_FILE)
+  path_feedback <- str_glue("..%X%")
 
-  # rGet G4M scenario list
-  scen_map <-  subset(unique(get_mapping()[1,-4]), ScenLoop %in% SCENARIOS_FOR_G4M)
+  # Get G4M scenario list
+  scen_map <-  subset(unique(get_mapping()[,-4]), ScenLoop %in% SCENARIOS_FOR_G4M)[1,]
   length_scen1 <- length(unlist(str_split(scen_map[1],"_")))
   length_scen2 <- length(unlist(str_split(scen_map[3],"_")))
   length_scen3 <- length(unlist(str_split(scen_map[2],"_")))
@@ -391,6 +393,10 @@ run_final_postproc_limpopo <- function(cluster_nr_globiom) {
 
   write_lines(tempString, path(CD,WD_GLOBIOM,"Model","8c_rep_iamc_g4m_tmp.gms"))
 
+  # Define files to bundle
+  glob_file <- path(CD,WD_GLOBIOM,"Model","gdx",str_glue("output_{PROJECT}_{cluster_nr_globiom}_merged.gdx"))
+  g4m_file <- path(CD,WD_GLOBIOM,"Model","output","g4m",str_glue("{PROJECT}_{DATE_LABEL}"),G4M_FEEDBACK_FILE)
+
   # Save edits and run post-processing script in the GLOBIOM Model directory
   prior_wd <- getwd()
   rc <- tryCatch ({
@@ -406,15 +412,17 @@ run_final_postproc_limpopo <- function(cluster_nr_globiom) {
       'GAMS_CURDIR = "Model"',
       'GAMS_FILE_PATH = "{GLOBIOM_POST_FILE}"',
       'GAMS_VERSION = "32.2"',
-      'GAMS_ARGUMENTS = "//limpopo={LIMPOPO_RUN} //limpopo_nr={cluster_nr_globiom} //project={PROJECT} //lab={DATE_LABEL} //rep_g4m={REPORTING_G4M_FINAL} //rep_iamc_glo={REPORTING_IAMC_FINAL} //rep_iamc_g4m={REPORTING_IAMC_G4M_FINAL} //g4mfile={G4M_FEEDBACK_FILE} //regionagg={REGIONAL_AG} //nsim=%1"',
+      'GAMS_ARGUMENTS = "//limpopo=yes //limpopo_nr={cluster_nr_globiom} //project={PROJECT} //lab={DATE_LABEL} //rep_g4m=no //rep_iamc_glo=yes //rep_iamc_g4m=yes //g4mfile={G4M_FEEDBACK_FILE} //regionagg={REGIONAL_AG} //nsim=%1"',
       'BUNDLE_INCLUDE = "Model"',
       'BUNDLE_INCLUDE_DIRS = c("include")',
       'BUNDLE_EXCLUDE_DIRS = c(".git", ".svn", "225*", "doc")',
-      'BUNDLE_EXCLUDE_FILES = c("**/*.~*", "**/*.log", "**/*.log~*", "**/*.lxi", "**/*.lst")',
+      'BUNDLE_EXCLUDE_FILES = c("**/*.~*", "**/*.log", "**/*.log~*", "**/*.lxi", "**/*.lst","*/output/g4m/*/*.*","*/gdx/*.*")',
+      'BUNDLE_ADDITIONAL_FILES = c("{g4m_file}","{glob_file}")',
       'G00_OUTPUT_DIR = "t"',
       'G00_OUTPUT_FILE = "a8_out.g00"',
       'GET_G00_OUTPUT = FALSE',
-      'GDX_OUTPUT_DIR = "output/iamc/"',
+      'GDX_OUTPUT_DIR = "output/iamc"',
+      '{gdx_submit}',
       'GDX_OUTPUT_FILE = "Output4_IAMC_template_{PROJECT}_{DATE_LABEL}.gdx"',
       'GET_GDX_OUTPUT = TRUE',
       'MERGE_GDX_OUTPUT = FALSE',
@@ -439,12 +447,22 @@ run_final_postproc_limpopo <- function(cluster_nr_globiom) {
     })
     if (rc != 0) stop("Condor run failed!")
 
+    # Remove global environment files
+    clear_environment()
+
+    # Remove G4M output files
+    clear_g4m_files()
+
+    # Transfer files
+    if (gdx_submit == "") transfer_outputs()
+
+    # Generate plots for results
+    if (GENERATE_PLOTS) plot_results(SCENARIOs_PLOT_LOOKUP,SCENARIOS_PLOT_GLOBIOM)
+
   },
   finally = {
     setwd(prior_wd)
 
-    # Clean global environment files
-    clear_environment()
   })
 
 }
