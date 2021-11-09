@@ -7,12 +7,15 @@ merge_and_transfer <- function(cluster_nr_downscaling) {
 
   save_environment("3a")
 
+  # Define parameters
+  MERGE_GDX_DOWNSCALING = FALSE
+
   # Transfer gdx to G4M folder - in case files were merged on limpopo
   if (MERGE_GDX_DOWNSCALING){
 
     # Get downscaling output
     downs_files <- rgdx.param(path(CD,WD_DOWNSCALING,"gdx",
-                                   str_glue("{GDX_OUTPUT_NAME}_{PROJECT}_{cluster_nr_downscaling}_merged.gdx")),"LandCover_G4MID")
+                                   str_glue("downscaled_{PROJECT}_{cluster_nr_downscaling}_merged.gdx")),"LandCover_G4MID")
 
     # Select data for G4M
     if (dim(downs_files)[2] == 8) downs_files <- downs_files[,-1]
@@ -26,7 +29,8 @@ merge_and_transfer <- function(cluster_nr_downscaling) {
     downs2 <- downs_files %>% spread(Year, value, fill = 0, convert = FALSE)
 
     # Save to G4M folder
-    write_csv(downs2, str_glue(CD,"/{WD_G4M}/Data/GLOBIOM/{PROJECT}_{DATE_LABEL}/GLOBIOM2G4M_output_LC_abs_{PROJECT}_{DATE_LABEL}.csv"),
+    write_csv(downs2, path(CD,str_glue("{WD_G4M}"),"Data","GLOBIOM",str_glue("{PROJECT}_{DATE_LABEL}"),
+                           str_glue("GLOBIOM2G4M_output_LC_abs_{PROJECT}_{DATE_LABEL}.csv")),
               col_names = T)
 
   } else {
@@ -43,7 +47,7 @@ merge_and_transfer <- function(cluster_nr_downscaling) {
 
       # Read data for G4M
 
-      downs_files <- rgdx.param(path(CD,WD_DOWNSCALING,"gdx", str_glue("{GDX_OUTPUT_NAME}_{PROJECT}_{cluster_nr_downscaling}.",
+      downs_files <- rgdx.param(path(CD,WD_DOWNSCALING,"gdx", str_glue("downscaled_{PROJECT}_{cluster_nr_downscaling}.",
                                                                     s_list,".gdx")),"LandCover_G4MID")
 
       # Select data for G4M
@@ -57,14 +61,16 @@ merge_and_transfer <- function(cluster_nr_downscaling) {
       # Remap years to columns
       downs2 <- downs_files %>% spread(Year, value, fill = 0, convert = FALSE)
 
+      # Construct file path
+      f <- path(CD,str_glue("{WD_G4M}"),"Data","GLOBIOM",str_glue("{PROJECT}_{DATE_LABEL}"),
+                str_glue("GLOBIOM2G4M_output_LC_abs_{PROJECT}_{DATE_LABEL}.csv"))
+
       if (i==1) {
         # Write csv file
-        write_csv(downs2, str_glue(CD,"/{WD_G4M}/Data/GLOBIOM/{PROJECT}_{DATE_LABEL}/GLOBIOM2G4M_output_LC_abs_{PROJECT}_{DATE_LABEL}.csv"),
-                  col_names = T)
+        write_csv(downs2, f, col_names = T)
       } else {
         # Append to csv file
-        write_csv(downs2, str_glue(CD,"/{WD_G4M}/Data/GLOBIOM/{PROJECT}_{DATE_LABEL}/GLOBIOM2G4M_output_LC_abs_{PROJECT}_{DATE_LABEL}.csv"),
-                  append = T)
+        write_csv(downs2, f, append = T)
       }
 
 
@@ -91,18 +97,11 @@ compile_g4m_data <- function(baseline = NULL) {
   rc <- tryCatch ({
     setwd(WD_G4M)
 
-    # Create folder to store temporary output files
-    aux_out_path <- path(CD,WD_G4M,"out",str_glue("{PROJECT}_{DATE_LABEL}/outfiles"))
-    if (!dir_exists(aux_out_path))  dir_create(aux_out_path)
-
     # Path of output folder
-    if (USE_LIMPOPO_POSTPROC){
-      file_inpath <- path_wd("out", str_glue("{PROJECT}_{DATE_LABEL}"))
-      file_outpath <- path(CD,WD_GLOBIOM,"Model","output","g4m",str_glue("{PROJECT}_{DATE_LABEL}"))
-      if (!dir_exists(file_outpath))  dir_create(file_outpath)
-    } else {
-      file_inpath <- file_outpath <- path_wd("out", str_glue("{PROJECT}_{DATE_LABEL}"))
-    }
+    file_inpath <- path_wd("out", str_glue("{PROJECT}_{DATE_LABEL}"))
+    file_outpath <- path(CD,WD_GLOBIOM,"Model","output","g4m",str_glue("{PROJECT}_{DATE_LABEL}"))
+    if (!dir_exists(file_outpath))  dir_create(file_outpath)
+    if(file_exists(path(file_outpath,G4M_FEEDBACK_FILE))) file_delete(path(file_outpath,G4M_FEEDBACK_FILE))
 
     # Suffix of scenario runs
     file_suffix <- str_glue("_{PROJECT}_{DATE_LABEL}_") # for now in future should be indexed by project and date label
