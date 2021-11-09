@@ -37,6 +37,7 @@ library(gdxrrw)
 suppressWarnings(library(tidyverse))
 library(stringr) # part of the tidyverse, but not attached by default
 library(fs)
+library(ggplot2)
 ```
 
 ## Customize configuration
@@ -172,7 +173,11 @@ compile_g4m_data(baseline = FALSE)
 ## 6. Preliminary: Perform the final post-processing---needs data from the G4M run
 
 ```{r}
-run_final_postproc(cluster_nr_globiom)
+if (USE_LIMPOPO_POSTPROC) {
+  run_final_postproc_limpopo(cluster_nr_globiom)
+} else {
+  run_final_postproc(cluster_nr_globiom)
+}
 
 print("Final post-processing complete")
 ```
