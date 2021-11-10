@@ -8,8 +8,8 @@
 merge_gdx <- function(project, wd, c_nr, big_par) {
 
   merge_args <- c()
-  merge_args <- c(merge_args, str_glue("output_",PROJECT,"_",c_nr,".*.gdx"))
-  merge_args <- c(merge_args, str_glue("output=output_",PROJECT,"_",c_nr,"_merged.gdx"))
+  merge_args <- c(merge_args, str_glue("output_",project,"_",c_nr,".*.gdx"))
+  merge_args <- c(merge_args, str_glue("output=output_",project,"_",c_nr,"_merged.gdx"))
   merge_args <- c(merge_args, str_glue("big=",big_par))
 
   # Invoke GDXMERGE in the provided working directory
