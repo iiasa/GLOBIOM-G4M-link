@@ -14,8 +14,7 @@ run_globiom_scenarios <- function() {
 
   # Define configuration template
   config_template <- c(
-    'EXPERIMENT = "{PROJECT}"',
-    'PREFIX = "_globiom"',
+    'LABEL = "{PROJECT}"',
     'JOBS = c({str_c(SCENARIOS, collapse=",")})',
     'HOST_REGEXP = "^limpopo"',
     'REQUEST_MEMORY = 13000',
@@ -30,9 +29,6 @@ run_globiom_scenarios <- function() {
     'BUNDLE_EXCLUDE_FILES = c("**/*.~*", "**/*.log", "**/*.log~*", "**/*.lxi", "**/*.lst")',
     'BUNDLE_ADDITIONAL_FILES = c()',
     'RESTART_FILE_PATH = "t/{GLOBIOM_RESTART_FILE}"',
-    'G00_OUTPUT_DIR = "t"',
-    'G00_OUTPUT_FILE = "a6_out.g00"',
-    'GET_G00_OUTPUT = FALSE',
     'GDX_OUTPUT_DIR = "gdx"',
     'GDX_OUTPUT_FILE = "output.gdx"',
     'GET_GDX_OUTPUT = TRUE',
@@ -97,8 +93,7 @@ run_initial_downscaling <- function() {
 
   # Define configuration template
   config_template <- c(
-    'EXPERIMENT = "{PROJECT}"',
-    'PREFIX = "_globiom"',
+    'LABEL = "{PROJECT}"',
     'JOBS = c({scen_string})',
     'HOST_REGEXP = "^limpopo"',
     'REQUEST_MEMORY = 2500',
@@ -110,9 +105,6 @@ run_initial_downscaling <- function() {
     'BUNDLE_EXCLUDE_DIRS = c(".git", ".svn", "225*", "doc")',
     'BUNDLE_EXCLUDE_FILES = c("**/*.~*", "**/*.log", "**/*.log~*", "**/*.lxi", "**/*.lst")',
     'BUNDLE_ADDITIONAL_FILES = c()',
-    'G00_OUTPUT_DIR = "t"',
-    'G00_OUTPUT_FILE = "d1_out.g00"',
-    'GET_G00_OUTPUT = FALSE',
     'GDX_OUTPUT_DIR = "gdx"',
     'GDX_OUTPUT_FILE = "downscaled.gdx"',
     'GET_GDX_OUTPUT = TRUE',
@@ -146,7 +138,6 @@ run_initial_downscaling <- function() {
 
   # Return the cluster number
   readr::parse_number(read_file(cluster_number_log))
-
 }
 
 
@@ -245,7 +236,6 @@ run_g4m <- function(baseline = NULL) {
   # Configure parameters
   config_template <- c(
     'EXPERIMENT = "{PROJECT}"',
-    'PREFIX = "g4m"',
     'JOBS = c({str_c(SCENARIOS_FOR_G4M, collapse=",")})',
     'HOST_REGEXP = "^limpopo"',
     'REQUEST_MEMORY = 3000',
@@ -403,8 +393,7 @@ run_final_postproc_limpopo <- function(cluster_nr_globiom) {
 
     # Define configuration template
     config_template <- c(
-      'EXPERIMENT = "{PROJECT}"',
-      'PREFIX = "_globiom"',
+      'LABEL = "{PROJECT}"',
       'JOBS = 0',
       'HOST_REGEXP = "^limpopo"',
       'REQUEST_MEMORY = 200000',
@@ -418,9 +407,6 @@ run_final_postproc_limpopo <- function(cluster_nr_globiom) {
       'BUNDLE_EXCLUDE_DIRS = c(".git", ".svn", "225*", "doc")',
       'BUNDLE_EXCLUDE_FILES = c("**/*.~*", "**/*.log", "**/*.log~*", "**/*.lxi", "**/*.lst","*/output/g4m/*/*.*","*/gdx/*.*")',
       'BUNDLE_ADDITIONAL_FILES = c("{g4m_file}","{glob_file}")',
-      'G00_OUTPUT_DIR = "t"',
-      'G00_OUTPUT_FILE = "a8_out.g00"',
-      'GET_G00_OUTPUT = FALSE',
       'GDX_OUTPUT_DIR = "output/iamc"',
       '{gdx_submit}',
       'GDX_OUTPUT_FILE = "Output4_IAMC_template_{PROJECT}_{DATE_LABEL}.gdx"',
@@ -462,7 +448,5 @@ run_final_postproc_limpopo <- function(cluster_nr_globiom) {
   },
   finally = {
     setwd(prior_wd)
-
   })
-
 }
