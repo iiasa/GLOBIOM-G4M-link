@@ -252,7 +252,7 @@ run_g4m <- function(baseline = NULL) {
     'GET_OUTPUT = FALSE',
     'OUTPUT_DIR = "{output_folder}"',
     'OUTPUT_FILE = ""',
-    'RETAIN_BUNDLE = FALSE'
+    'CLEAR_LINES = FALSE'
   )
 
   config_path <- path(TEMP_DIR, "config_g4m.R")
