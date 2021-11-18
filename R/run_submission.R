@@ -23,7 +23,7 @@ run_globiom_scenarios <- function() {
     'GAMS_FILE_PATH = "{GLOBIOM_SCEN_FILE}"',
     'GAMS_VERSION = "32.2"',
     'GAMS_ARGUMENTS = "{GLOBIOM_GAMS_ARGS}"',
-    'BUNDLE_INCLUDE = "Model"',
+    'BUNDLE_INCLUDE = "*"',
     'BUNDLE_INCLUDE_DIRS = c("include")',
     'BUNDLE_EXCLUDE_DIRS = c(".git", ".svn", "225*", "doc")',
     'BUNDLE_EXCLUDE_FILES = c("**/*.~*", "**/*.log", "**/*.log~*", "**/*.lxi", "**/*.lst")',
