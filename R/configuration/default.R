@@ -36,6 +36,9 @@ RESOLUTION_DOWNSCALING = 37 # number of regions specified in the downscaling
 # 4th and 5th block - G4M run
 #-------------------------------------------------------------------------------
 G4M_EXE = "G4M_newInterface_ver_EPA_07052021.exe" # name of G4M executable
+BASE_SCEN1 = "SSP2" # SCEN1 to use as baseline
+BASE_SCEN2 = "SPA0" # SCEN2 to use as baseline
+BASE_SCEN3 = "scenRCPref" # SCEN3 to use as baseline
 G4M_SUBMISSION_SCRIPT = "g4m_run.R" # submission script to run G4M
 CO2_PRICE = -1 # co2 price for G4M run, -1 if read form a file or actual price otherwise
 SCENARIOS_FOR_G4M = c(0,15) # full set or subset of downscaled scenarios
@@ -48,9 +51,6 @@ PATH_FOR_FEEDBACK = stringr::str_glue("out/{PROJECT}_{DATE_LABEL}/") # directory
 G4M_FEEDBACK_FILE = stringr::str_glue("tabs_gui_{PROJECT}_{DATE_LABEL}_final_csv.csv") #Name of G4M output file
 GLOBIOM_POST_FILE = "8_merge_output_tmp.gms"
 USE_LIMPOPO_POSTPROC = TRUE # logical, use limpopo to run the post-processing script (use only if out file is likely to exceed the local memory)
-BASE_SCEN1 = "SSP2" # SCEN1 to use as reference for forest management emissions
-BASE_SCEN2 = "SPA0" # SCEN2 to use as reference for forest management emissions
-BASE_SCEN3 = "scenRCPref" # SCEN3 to use as reference for forest management emissions
 GENERATE_PLOTS = FALSE # logical, generate plots for the GLOBIOM and lookup table results
 SCENARIOs_PLOT_LOOKUP = c(0,15) # list of scenarios to include in diagnostic plots for the lookup table
 SCENARIOS_PLOT_GLOBIOM = c(0,15) # list of scenarios to include in diagnostic plots for the GLOBIOM results

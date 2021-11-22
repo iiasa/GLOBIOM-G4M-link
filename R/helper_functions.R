@@ -7,17 +7,19 @@
 #' @param big_par BIG parameter (integer) to merge large gdx files
 merge_gdx <- function(project, wd, c_nr, big_par) {
 
+  # Define arguments
   merge_args <- c()
-  merge_args <- c(merge_args, str_glue("output_",project,"_",c_nr,".*.gdx"))
-  merge_args <- c(merge_args, str_glue("output=output_",project,"_",c_nr,"_merged.gdx"))
-  merge_args <- c(merge_args, str_glue("big=",big_par))
+  merge_args <- c(merge_args, str_glue("output_", project, "_", c_nr, ".*.gdx"))
+  merge_args <- c(merge_args, str_glue("output=output_", project, "_", c_nr, "_merged.gdx"))
+  merge_args <- c(merge_args, str_glue("big=", big_par))
 
   # Invoke GDXMERGE in the provided working directory
   prior_wd <- getwd()
   tryCatch({
     setwd(wd)
-    rc <- system2("gdxmerge", args=merge_args)
-    if (rc != 0) stop(str_glue("GDXMERGE failed with return code {rc}!"))
+    rc <- system2("gdxmerge", args = merge_args)
+    if (rc != 0)
+      stop(str_glue("GDXMERGE failed with return code {rc}!"))
   },
   finally = {
     setwd(prior_wd)
@@ -183,16 +185,15 @@ get_mapping <- function(){
   colnames(scen_map)[c(loop_idx,macro_idx,bioen_idx,iea_idx)] <- c("ScenLoop","SCEN1","SCEN2","SCEN3")
 
   #Get solved scenarios
-  scen_map_solved <- subset(scen_map,ScenLoop %in% SCENARIOS)
+  scen_map_solved <- scen_map %>% filter(ScenLoop %in% SCENARIOS)
   scen_map_solved$SCEN2 <- str_replace_all(scen_map_solved$SCEN2,"\"","")
 
   # Define GLOBIOM - Downscaling map
   downs_input <- as_tibble(rgdx.param(path(str_glue(CD,"/",WD_DOWNSCALING,"/input/output_landcover_{PROJECT}_{DATE_LABEL}.gdx")),"LANDCOVER_COMPARE_SCEN"))
   names(downs_input) <- c("ScenNr","LC","SCEN1","SCEN2","SCEN3","Year","value")
-  downs_input <- subset(downs_input,ScenNr=="World" & LC=="TotLnd" & Year==2000)
-  downs_input <- downs_input %>% uncount(RESOLUTION_DOWNSCALING)
+  downs_input <- downs_input %>% filter(ScenNr=="World" & LC=="TotLnd" & Year==2000) %>% uncount(RESOLUTION_DOWNSCALING)
   downs_input$ScenNr <- 0:(length(downs_input$ScenNr)-1)
-  downs_input <- downs_input[,c(1,3:5)]
+  downs_input <- downs_input %>% dplyr::select(c(ScenNr,SCEN1,SCEN2,SCEN3))
 
   downscaling_scenarios <- merge(downs_input,scen_map_solved,by=c("SCEN1","SCEN2","SCEN3"))
 
@@ -207,12 +208,12 @@ get_mapping <- function(){
 get_g4m_jobs <- function(baseline = NULL){
 
   # Get downscaling mapping
-  downs_map <-  unique(get_mapping()[-4])
-  downs_map <- subset(downs_map, ScenLoop %in% SCENARIOS_FOR_G4M)
+  downs_map <-  get_mapping() %>% dplyr::select(-ScenNr) %>%
+                  filter(ScenLoop %in% SCENARIOS_FOR_G4M) %>% unique()
 
   # Save config files
   lab <- str_glue("{PROJECT}_{DATE_LABEL}")
-  config <- list(lab,baseline,G4M_EXE)
+  config <- list(lab,baseline,G4M_EXE,BASE_SCEN1,BASE_SCEN2,BASE_SCEN3)
   save(config, file=path(CD,WD_G4M,"Data","Default","config.RData"))
   save(downs_map, file=path(CD,WD_G4M,"Data","Default","scenario_map.RData"))
 
@@ -221,13 +222,13 @@ get_g4m_jobs <- function(baseline = NULL){
   g4m_scenario_string <- ""
   if (baseline) {
     for (i in 1:dim(downs_map)[1]){
-          s_str <- str_c(downs_map$SCEN1[i],"_",downs_map$SCEN3[i],"_",downs_map$SCEN2[i])
+          s_str <- str_glue("{BASE_SCEN1}_{BASE_SCEN3}_{BASE_SCEN2}")
           l <- str_c(str_glue("{PROJECT}_{DATE_LABEL}")," ",s_str," ",s_str," ",0,",")
           g4m_scenario_string <- c(g4m_scenario_string,l)
     }
   } else {
     for (i in 1:dim(downs_map)[1]){
-          sb_str <- str_c(downs_map$SCEN1[i],"_",downs_map$SCEN3[i],"_",downs_map$SCEN2[i])
+          sb_str <- str_glue("{BASE_SCEN1}_{BASE_SCEN3}_{BASE_SCEN2}")
           s_str <- str_c(downs_map$SCEN1[i],"_",downs_map$SCEN3[i],"_",downs_map$SCEN2[i])
           l <- str_c(str_glue("{PROJECT}_{DATE_LABEL}")," ",sb_str," ",s_str," ",-1,",")
           g4m_scenario_string <- c(g4m_scenario_string,l)
@@ -305,6 +306,24 @@ save_environment <- function(step){
 
 #' Remove G4M outputs not used in the link
 #'
+clear_glob_files <- function(){
+
+  # Remove GLOBIOM files
+  unlink(path(CD,WD_GLOBIOM,"gdx","*.*"),recursive = TRUE)
+
+}
+
+#' Remove Downscaling outputs not used in the link
+#'
+clear_downs_files <- function(){
+
+  # Remove downscaling files
+  unlink(path(CD,WD_DOWNSCALING,"gdx","*.*"),recursive = TRUE)
+
+}
+
+#' Remove G4M outputs not used in the link
+#'
 clear_g4m_files <- function(){
 
   # Remove unused G4M files
@@ -373,7 +392,7 @@ plot_results <- function(scenarios_for_lookup,scenarios_for_globiom){
   out_fao$VAR_ID[which(out_fao$VAR_ID=="Food")] <- "food"
   out_fao$VAR_ID[which(out_fao$VAR_ID=="PROD")] <- "Prod"
   out_fao$ITEM[which(out_fao$ITEM=="ALL")] <- "TOT"
-  out_fao <- subset(out_fao,!ITEM %in% c("FLAX","CSil"))
+  out_fao <- out_fao %>% filter(!ITEM %in% c("FLAX","CSil"))
   out_globiom$YEAR <- as.integer(levels(out_globiom$YEAR))[out_globiom$YEAR]
   out_lookup$YEAR <- as.integer(levels(out_lookup$YEAR))[out_lookup$YEAR]
 
@@ -383,7 +402,7 @@ plot_results <- function(scenarios_for_lookup,scenarios_for_globiom){
   vars_fao <- unique(out_fao$VAR_ID)[-c(12:15)]
 
   # Filter FAO variables for plotting
-  out_globiom <- subset(out_globiom, VAR_ID %in% vars_fao & UNIT %in% unique(out_fao$UNIT))
+  out_globiom <- out_globiom %>% filter(VAR_ID %in% vars_fao & UNIT %in% unique(out_fao$UNIT))
 
   # Merge GLOBIOM and FAO output files
   out_merged <- rbind(out_globiom,out_fao)
@@ -392,13 +411,13 @@ plot_results <- function(scenarios_for_lookup,scenarios_for_globiom){
   units <- unique(str_c(out_lookup$VAR_ID, "  [",out_lookup$UNIT,"]"))
 
   # Merge scenarios into a single dimension
-  out_lookup <- cbind(out_lookup,Scenario=str_c(out_lookup$SCEN1,"_",out_lookup$SCEN2,"_",out_lookup$SCEN3))
+  out_lookup <- out_lookup %>% mutate(Scenario=str_c(out_lookup$SCEN1,"_",out_lookup$SCEN2,"_",out_lookup$SCEN3))
 
   # Select scenarios for plotting
-  scen_list <- unique(get_mapping()[,-4])
-  scen_for_plot <- subset(scen_list, ScenLoop %in% scenarios_for_lookup)
+  scen_list <- unique(get_mapping()) %>% dplyr::select(-ScenNr)
+  scen_for_plot <- scen_list %>% filter(ScenLoop %in% scenarios_for_lookup)
   scen_for_plot <- str_c(scen_for_plot[,1],"_",scen_for_plot[,2],"_",scen_for_plot[,3])
-  out_lookup <- subset(out_lookup, Scenario %in% scen_for_plot)
+  out_lookup <- out_lookup %>% filter(Scenario %in% scen_for_plot)
 
   # Correct FAO scenario naming
   out_lookup$Scenario[which(out_lookup$Scenario == "FAO_FAO_FAO")] <- "FAO"
@@ -406,7 +425,7 @@ plot_results <- function(scenarios_for_lookup,scenarios_for_globiom){
   # Plot items and save to pdf
   pdf(path(plot_dir,"plots_lookup.pdf"), width = 12, height = 14,onefile = T)
   for (i in 1:length(vars_lookup)){
-    plot_data <- subset(out_lookup,VAR_ID == vars_lookup[i])
+    plot_data <- out_lookup %>% filter(VAR_ID == vars_lookup[i])
     if (dim(plot_data)[1] > 0){
       print(
         ggplot(plot_data,aes(x=YEAR,y=value,col=as.factor(Scenario))) +
@@ -420,26 +439,25 @@ plot_results <- function(scenarios_for_lookup,scenarios_for_globiom){
   dev.off()
 
   # Merge scenarios into a single dimension
-  out_merged <- cbind(out_merged,Scenario=str_c(out_merged$SCEN1,"_",out_merged$SCEN2,"_",out_merged$SCEN3))
+  out_merged <- out_merged %>% mutate(Scenario=str_c(out_merged$SCEN1,"_",out_merged$SCEN2,"_",out_merged$SCEN3))
 
   # Select scenarios for plotting
-  scen_list <- unique(get_mapping()[,-4])
-  scen_for_plot <- subset(scen_list, ScenLoop %in% scenarios_for_globiom)
+  scen_list <- unique(get_mapping()) %>% dplyr::select(-ScenNr)
+  scen_for_plot <- scen_list %>% filter(ScenLoop %in% scenarios_for_globiom)
   scen_for_plot <- str_c(scen_for_plot[,1],"_",scen_for_plot[,2],"_",scen_for_plot[,3])
-  out_merged <- subset(out_merged, Scenario %in% c(scen_for_plot,"FAO_FAO_FAO"))
+  out_merged <-out_merged %>% filter(Scenario %in% c(scen_for_plot,"FAO_FAO_FAO"))
 
   # Aggregate regions for global outputs
   world <- aggregate(out_merged["value"],by=out_merged[c("VAR_ID","UNIT","ITEM","SCEN1","SCEN2","SCEN3","YEAR")],FUN="sum")
-  world <- cbind(REGION="World",world,Scenario=str_c(world$SCEN1,"_",world$SCEN2,"_",world$SCEN3))
-  world <- world %>% relocate(REGION, .after = UNIT)
+  world <- world %>% mutate(REGION="World",Scenario=str_c(world$SCEN1,"_",world$SCEN2,"_",world$SCEN3)) %>% relocate(REGION, .after = UNIT)
 
   # Compute global yields
-  world_yld <- world[,-2] %>% filter(VAR_ID %in% c("Prod","Area"),Scenario != "FAO_FAO_FAO") %>% spread(VAR_ID,value,convert = F)
-  world_yld <- cbind(world_yld,VAR_ID = "YILM", UNIT = "t / ha", value=world_yld$Prod/world_yld$Area)
-  world_yld_fao <- world[,-2] %>% filter(VAR_ID %in% c("Prod","Area"),Scenario == "FAO_FAO_FAO") %>% spread(VAR_ID,value,convert = F)
-  world_yld_fao <- cbind(world_yld_fao,VAR_ID = "YILM", UNIT = "t / ha",value=world_yld_fao$Prod/world_yld_fao$Area)
-  world_yld <- world_yld[,-8:-9] %>% relocate(UNIT, .before = REGION)
-  world_yld_fao <- world_yld_fao[,-8:-9] %>% relocate(UNIT, .before = REGION)
+  world_yld <- world %>% dplyr::select(-UNIT) %>% filter(VAR_ID %in% c("Prod","Area"),Scenario != "FAO_FAO_FAO") %>% spread(VAR_ID,value,convert = F)
+  world_yld <- world_yld %>% mutate(VAR_ID = "YILM", UNIT = "t / ha", value=Prod/Area)
+  world_yld_fao <- world %>% dplyr::select(-UNIT) %>% filter(VAR_ID %in% c("Prod","Area"),Scenario == "FAO_FAO_FAO") %>% spread(VAR_ID,value,convert = F)
+  world_yld_fao <- world_yld_fao %>% mutate(VAR_ID = "YILM", UNIT = "t / ha",value=Prod/Area)
+  world_yld <- world_yld %>% dplyr::select(c(-Area,-Prod)) %>% relocate(UNIT, .before = REGION)
+  world_yld_fao <- world_yld_fao %>% dplyr::select(c(-Area,-Prod)) %>% relocate(UNIT, .before = REGION)
   world_yld <- world_yld %>% relocate(VAR_ID, .before = UNIT)
   world_yld_fao <- world_yld_fao %>% relocate(VAR_ID, .before = UNIT)
   world <- world %>% filter(VAR_ID != "YILM")
@@ -451,16 +469,17 @@ plot_results <- function(scenarios_for_lookup,scenarios_for_globiom){
   out_merged$Scenario[which(out_merged$Scenario == "FAO_FAO_FAO")] <- "FAO"
 
   # Remove items not reported for GLOBIOM and filter units
-  out_merged <- subset(out_merged, ! ITEM %in% c("Oats","Rye","Peas","SugB"))
+  out_merged <- out_merged %>% filter(! ITEM %in% c("Oats","Rye","Peas","SugB"))
 
   # Plot items and save to pdf
   for (i in 1:length(vars_fao)){
     pdf(path(plot_dir,str_glue("plots_globiom_",vars_fao[i],".pdf")), width = 14, height = 14,onefile = T)
-    plot_data <- subset(out_merged,VAR_ID == vars_fao[i])
+    plot_data <- out_merged %>% filter(VAR_ID == vars_fao[i])
     items <-  unique(plot_data$ITEM)
     for (j in 1:length(items)){
       print(
-        ggplot(subset(plot_data,ITEM==items[j]),aes(x=YEAR,y=value,col=as.factor(Scenario))) +
+      plot_data %>% filter(ITEM==items[j]) %>%
+        ggplot(aes(x=YEAR,y=value,col=as.factor(Scenario))) +
           geom_line()  + facet_wrap(~factor(REGION), scales = "free") + theme_light() + labs(x="YEAR",y=items[j],col="Scenario") +
           theme(legend.position = "bottom") + theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1)) +
           theme(strip.background =element_rect(fill="white"))+ theme(strip.text = element_text(colour = 'black'))
