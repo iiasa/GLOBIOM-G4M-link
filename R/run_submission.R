@@ -232,8 +232,8 @@ run_g4m <- function(baseline = NULL) {
   if (glob_input/1024 < 5) stop("Input gdx file might be empty - check reporting script")
 
   # Retrieve jobs for G4M run
-#  g4m_jobs <- get_g4m_jobs(baseline = baseline)[-1]
-#  if (length(g4m_jobs) == 1) g4m_jobs <- str_glue('"{g4m_jobs}"')
+  g4m_jobs <- get_g4m_jobs(baseline = baseline)[-1]
+  if (length(g4m_jobs) == 1) g4m_jobs <- str_glue('"{g4m_jobs}"')
 
   if (baseline) {
     scen_4_g4m <- get_mapping() %>% dplyr::select(-ScenNr) %>%
