@@ -23,7 +23,7 @@ run_globiom_scenarios <- function() {
     'GAMS_FILE_PATH = "{GLOBIOM_SCEN_FILE}"',
     'GAMS_VERSION = "32.2"',
     'GAMS_ARGUMENTS = "{GLOBIOM_GAMS_ARGS}"',
-    'BUNDLE_INCLUDE = "*"',
+    'BUNDLE_INCLUDE = "Model"',
     'BUNDLE_INCLUDE_DIRS = c("include")',
     'BUNDLE_EXCLUDE_DIRS = c(".git", ".svn", "225*", "doc")',
     'BUNDLE_EXCLUDE_FILES = c("**/*.~*", "**/*.log", "**/*.log~*", "**/*.lxi", "**/*.lst")',
@@ -100,10 +100,10 @@ run_initial_downscaling <- function() {
     'REQUEST_CPUS = 1',
     'GAMS_FILE_PATH = "{DOWNSCALING_SCRIPT}"',
     'GAMS_VERSION = "32.2"',
-    'GAMS_ARGUMENTS = "//project=\\\"{PROJECT}\\\" //lab=\\\"{DATE_LABEL}\\\" //gdx_path=\\\"gdx/downscaled.gdx\\\" //nsim=%1"',
+    'GAMS_ARGUMENTS = "//project={PROJECT} //lab={DATE_LABEL} //gdx_path=gdx/downscaled.gdx //nsim=%1"',
     'BUNDLE_INCLUDE_DIRS = c("include")',
     'BUNDLE_EXCLUDE_DIRS = c(".git", ".svn", "225*", "doc")',
-    'BUNDLE_EXCLUDE_FILES = c("**/*.~*", "**/*.log", "**/*.log~*", "**/*.lxi", "**/*.lst")',
+    'BUNDLE_EXCLUDE_FILES = c("**/*.~*", "**/*.log", "**/*.log~*", "**/*.lxi", "**/*.lst","**/gdx/*.*")',
     'BUNDLE_ADDITIONAL_FILES = c()',
     'GDX_OUTPUT_DIR = "gdx"',
     'GDX_OUTPUT_FILE = "downscaled.gdx"',
@@ -202,6 +202,9 @@ run_g4m <- function(baseline = NULL) {
     output_dir <- path("out", str_glue("{PROJECT}_{DATE_LABEL}"))
   }
 
+  save(config, file=path(CD,WD_G4M,"Data","Default","config.RData"))
+  save(downs_map, file=path(CD,WD_G4M,"Data","Default","scenario_map.RData"))
+
   # Determine files for bundle
   default_file_list <- dir_ls(path(CD, WD_G4M, "Data", "Default"))
   glob_file_list <- dir_ls(path(CD, WD_G4M, "Data", "GLOBIOM", str_glue("{PROJECT}_{DATE_LABEL}")))
@@ -229,14 +232,22 @@ run_g4m <- function(baseline = NULL) {
   if (glob_input/1024 < 5) stop("Input gdx file might be empty - check reporting script")
 
   # Retrieve jobs for G4M run
-  g4m_jobs <- get_g4m_jobs(baseline = baseline)[-1]
-  if (length(g4m_jobs) == 1) g4m_jobs <- str_glue('"{g4m_jobs}"')
+#  g4m_jobs <- get_g4m_jobs(baseline = baseline)[-1]
+#  if (length(g4m_jobs) == 1) g4m_jobs <- str_glue('"{g4m_jobs}"')
 
+  if (baseline) {
+    scen_4_g4m <- get_mapping() %>% dplyr::select(-ScenNr) %>%
+      filter(SCEN1==BASE_SCEN1 & SCEN2==BASE_SCEN2 & SCEN3==BASE_SCEN3) %>%
+      unique() %>% droplevels()
+    scen_4_g4m <- scen_4_g4m$ScenLoop
+  } else {
+    scen_4_g4m <- SCENARIOS_FOR_G4M
+  }
 
   # Configure parameters
   config_template <- c(
     'EXPERIMENT = "{PROJECT}"',
-    'JOBS = c({str_c(SCENARIOS_FOR_G4M, collapse=",")})',
+    'JOBS = c({str_c(scen_4_g4m, collapse=",")})',
     'HOST_REGEXP = "^limpopo"',
     'REQUEST_MEMORY = 3000',
     'REQUEST_CPUS = 1',
@@ -433,17 +444,8 @@ run_final_postproc_limpopo <- function(cluster_nr_globiom) {
     })
     if (rc != 0) stop("Condor run failed!")
 
-    # Remove global environment files
-    clear_environment()
-
-    # Remove G4M output files
-    clear_g4m_files()
-
     # Transfer files
     if (gdx_submit == "") transfer_outputs()
-
-    # Generate plots for results
-    if (GENERATE_PLOTS) plot_results(SCENARIOs_PLOT_LOOKUP,SCENARIOS_PLOT_GLOBIOM)
 
   },
   finally = {
