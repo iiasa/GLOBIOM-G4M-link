@@ -80,10 +80,10 @@ run_final_postproc <- function(cluster_nr_globiom) {
   path_feedback <- str_glue(".%X%output%X%g4m%X%{PROJECT}_{DATE_LABEL}%X%")
 
   # rGet G4M scenario list
-  scen_map <-  subset(unique(get_mapping()[1,-4]), ScenLoop %in% SCENARIOS_FOR_G4M)
-  length_scen1 <- length(unlist(str_split(scen_map[1],"_")))
-  length_scen2 <- length(unlist(str_split(scen_map[3],"_")))
-  length_scen3 <- length(unlist(str_split(scen_map[2],"_")))
+  scen_map <-  droplevels(subset(unique(get_mapping()[1,-4]), ScenLoop %in% SCENARIOS_FOR_G4M))
+  length_scen1 <- length(unlist(str_split(scen_map[,1],"_")))
+  length_scen2 <- length(unlist(str_split(scen_map[,3],"_")))
+  length_scen3 <- length(unlist(str_split(scen_map[,2],"_")))
 
   # Define G4M scenarios
   scen <- matrix(unlist(str_split(get_g4m_jobs(baseline = FALSE)[-1]," ")),ncol=4,byrow=T)[,3]
