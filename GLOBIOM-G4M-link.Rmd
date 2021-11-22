@@ -180,3 +180,22 @@ if (USE_LIMPOPO_POSTPROC) {
 
 print("Final post-processing complete")
 ```
+
+## 7. Remove files and plot results
+
+```{r}
+# Generate plots for results
+if (GENERATE_PLOTS) plot_results(SCENARIOs_PLOT_LOOKUP,SCENARIOS_PLOT_GLOBIOM)
+
+# Remove global environment files
+clear_environment()
+
+# Remove GLOBIOM gdx files
+clear_glob_files()
+
+# Remove Downscaling gdx files
+clear_downs_files()
+
+# Remove G4M output files
+clear_g4m_files()
+```
