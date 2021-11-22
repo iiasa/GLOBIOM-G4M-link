@@ -183,14 +183,6 @@ run_final_postproc <- function(cluster_nr_globiom) {
       stop(str_glue("GAMS failed with return code {rc}! See https://www.gams.com/latest/docs/UG_GAMSReturnCodes.html#INDEX_return_21_codes_2d__21_error_21_codes"))
     }
 
-    # Clean global environment files
-    clear_environment()
-
-    # Remove G4M output files
-    clear_g4m_files()
-
-    # Generate plots for results
-    if (GENERATE_PLOTS) plot_results(SCENARIOs_PLOT_LOOKUP,SCENARIOS_PLOT_GLOBIOM)
   },
   finally = {
     setwd(prior_wd)
