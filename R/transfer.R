@@ -20,10 +20,9 @@ merge_and_transfer <- function(cluster_nr_downscaling) {
     # Select data for G4M
     if (dim(downs_files)[2] == 8) downs_files <- downs_files[,-1]
 
-    downs_files <- subset(downs_files, downs_files[,5] == "Reserved")
-    downs_files <- downs_files[,-5]
+    names(downs_files) <- c("g4m_05_id","SCEN1","SCEN3","SCEN2","LC","Year","value")
 
-    names(downs_files) <- c("g4m_05_id","SCEN1","SCEN3","SCEN2","Year","value")
+    downs_files <- downs_files %>% filter(LC == "Reserved") %>% dplyr::select(-LC)
 
     # Remap years to columns
     downs2 <- downs_files %>% spread(Year, value, fill = 0, convert = FALSE)
@@ -49,12 +48,11 @@ merge_and_transfer <- function(cluster_nr_downscaling) {
 
       downs_files <- rgdx.param(path(CD,WD_DOWNSCALING,"gdx", str_glue("downscaled_{PROJECT}_{cluster_nr_downscaling}.",
                                                                     s_list,".gdx")),"LandCover_G4MID")
-
       # Select data for G4M
       if (dim(downs_files)[2] == 8) downs_files <- downs_files[,-1]
+      names(downs_files) <- c("g4m_05_id","SCEN1","SCEN3","SCEN2","LC","Year","value")
 
-      downs_files <- subset(downs_files, downs_files[,5] == "Reserved")
-      downs_files <- downs_files[,-5]
+      downs_files <- downs_files %>% filter(LC == "Reserved") %>% dplyr::select(-LC)
 
       names(downs_files) <- c("g4m_05_id","SCEN1","SCEN3","SCEN2","Year","value")
 
