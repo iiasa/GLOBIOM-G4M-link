@@ -77,7 +77,7 @@ run_initial_downscaling <- function() {
   scenario_mapping <- get_mapping() # Matching by string for now - should come directly from globiom in the future
 
   # Define scenarios for downscaling
-  downscaling_scenarios <- subset(scenario_mapping, ScenLoop %in% SCENARIOS_FOR_DOWNSCALING)
+  downscaling_scenarios <- scenario_mapping %>% filter(ScenLoop %in% SCENARIOS_FOR_DOWNSCALING)
 
   # Define downscaling scenarios for limpopo run
   scen_string <- "c("
@@ -202,6 +202,13 @@ run_g4m <- function(baseline = NULL) {
     output_dir <- path("out", str_glue("{PROJECT}_{DATE_LABEL}"))
   }
 
+  # Get downscaling mapping
+  downs_map <-  get_mapping() %>% dplyr::select(-ScenNr) %>%
+    filter(ScenLoop %in% SCENARIOS_FOR_G4M) %>% unique()
+
+  # Save config files
+  lab <- str_glue("{PROJECT}_{DATE_LABEL}")
+  config <- list(lab,baseline,G4M_EXE,BASE_SCEN1,BASE_SCEN2,BASE_SCEN3)
   save(config, file=path(CD,WD_G4M,"Data","Default","config.RData"))
   save(downs_map, file=path(CD,WD_G4M,"Data","Default","scenario_map.RData"))
 
@@ -231,9 +238,6 @@ run_g4m <- function(baseline = NULL) {
   glob_input <- file_size(path(CD, WD_G4M, "Data", str_glue("{WD_GLOBIOM}"), str_glue("{PROJECT}_{DATE_LABEL}"), str_glue("output_globiom4g4mm_{PROJECT}_{DATE_LABEL}.gdx")))
   if (glob_input/1024 < 5) stop("Input gdx file might be empty - check reporting script")
 
-  # Retrieve jobs for G4M run
-  g4m_jobs <- get_g4m_jobs(baseline = baseline)[-1]
-  if (length(g4m_jobs) == 1) g4m_jobs <- str_glue('"{g4m_jobs}"')
 
   if (baseline) {
     scen_4_g4m <- get_mapping() %>% dplyr::select(-ScenNr) %>%
@@ -307,13 +311,15 @@ run_final_postproc_limpopo <- function(cluster_nr_globiom) {
   write_lines(tempString, path(WD_GLOBIOM, "Model", "8_merge_output_tmp.gms"))
 
   # Construct path for feedback file
-  path_feedback <- str_glue("..%X%")
+  path_feedback <- "..%X%"
 
   # Get G4M scenario list
-  scen_map <-  subset(unique(get_mapping()[,-4]), ScenLoop %in% SCENARIOS_FOR_G4M)[1,]
-  length_scen1 <- length(unlist(str_split(scen_map[1],"_")))
-  length_scen2 <- length(unlist(str_split(scen_map[3],"_")))
-  length_scen3 <- length(unlist(str_split(scen_map[2],"_")))
+  scen_map <-  get_mapping() %>% dplyr::select(-ScenNr) %>%
+    filter(ScenLoop %in% SCENARIOS_FOR_G4M) %>% unique()  %>% slice(1)
+
+  length_scen1 <- length(unlist(str_split(scen_map[,1],"_")))
+  length_scen2 <- length(unlist(str_split(scen_map[,3],"_")))
+  length_scen3 <- length(unlist(str_split(scen_map[,2],"_")))
 
   # Define G4M scenarios
   scen <- matrix(unlist(str_split(get_g4m_jobs(baseline = FALSE)[-1]," ")),ncol=4,byrow=T)[,3]
