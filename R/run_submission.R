@@ -233,9 +233,9 @@ run_g4m <- function(baseline = NULL) {
 
 
   # Check if input data is empty
-  downs_input <- file_size(path(CD, WD_G4M, "Data", str_glue("{WD_GLOBIOM}"), str_glue("{PROJECT}_{DATE_LABEL}"), str_glue("GLOBIOM2G4M_output_LC_abs_{PROJECT}_{DATE_LABEL}.csv")))
+  downs_input <- file_size(path(CD, WD_G4M, "Data","GLOBIOM", str_glue("{PROJECT}_{DATE_LABEL}"), str_glue("GLOBIOM2G4M_output_LC_abs_{PROJECT}_{DATE_LABEL}.csv")))
   if (downs_input/1024 < 10) stop("Input gdx file might be empty - check reporting script")
-  glob_input <- file_size(path(CD, WD_G4M, "Data", str_glue("{WD_GLOBIOM}"), str_glue("{PROJECT}_{DATE_LABEL}"), str_glue("output_globiom4g4mm_{PROJECT}_{DATE_LABEL}.gdx")))
+  glob_input <- file_size(path(CD, WD_G4M, "Data", "GLOBIOM", str_glue("{PROJECT}_{DATE_LABEL}"), str_glue("output_globiom4g4mm_{PROJECT}_{DATE_LABEL}.gdx")))
   if (glob_input/1024 < 5) stop("Input gdx file might be empty - check reporting script")
 
 
