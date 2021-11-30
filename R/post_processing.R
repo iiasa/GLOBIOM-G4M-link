@@ -150,7 +150,7 @@ run_final_postproc <- function(cluster_nr_globiom) {
                             str_c(g4m_globiom_map,collapse="\n"))
 
   # Edit feedback file
-  path_for_feedback_file <-path(path_feedback, G4M_FEEDBACK_FILE)
+  path_for_feedback_file <-str_glue(path_feedback, G4M_FEEDBACK_FILE)
 
   tempString <- string_replace(tempString,"\\$include\\s+[:print:]*X[:print:]*",
                            str_glue('$include "{path_for_feedback_file}"'))
