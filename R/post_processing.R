@@ -31,7 +31,7 @@ run_initial_postproc <- function(cluster_nr_globiom)
   rc <- tryCatch ({
     setwd(path(WD_GLOBIOM, "Model"))
     rc <- system(str_glue('gams',
-                          '8_merge_output.gms',
+                          '"{GLOBIOM_POSTPROC_FILE}"',
                           '--limpopo yes',
                           '--limpopo_nr "{cluster_nr_globiom}"',
                           '--project "{PROJECT}"',
@@ -70,11 +70,14 @@ run_final_postproc <- function(cluster_nr_globiom) {
   if(!dir_exists(out_dir)) dir_create(out_dir)
 
   # Create a tmp copy of the merge output file with a tmp $include
-  tempString <- read_lines(path(WD_GLOBIOM, "Model", "8_merge_output.gms"))
-  if (!any(str_detect(tempString,"8c_rep_iamc_g4m_tmp.gms"))) tempString <- string_replace(tempString,"\\$include\\s+8c_rep_iamc_g4m.gms","$include 8c_rep_iamc_g4m_tmp.gms")
+  tempString <- read_lines(path(WD_GLOBIOM, "Model", str_glue("{GLOBIOM_POSTPROC_FILE}")))
+  g4m_postproc_file <- string_replace(tempString[which(str_detect(tempString,"8c_[:print:]+.gms"))],c("\\$include\\s+"),"") %>% string_replace(".gms","")
+  globiom_postproc_file <- string_replace(GLOBIOM_POSTPROC_FILE,".gms","")
+
+  if (!any(str_detect(tempString,str_glue("{g4m_postproc_file}_tmp.gms")))) tempString <- string_replace(tempString,str_glue("\\$include\\s+{g4m_postproc_file}.gms"),str_glue("$include {g4m_postproc_file}_tmp.gms"))
   out_line <- str_glue("execute_unload '{out_dir_aux}Output4_IAMC_template_%project%_%lab%.gdx' Output4_SSP, Output4_SSP_AG, REGION_AG_MAP")
   tempString[which(str_detect(tempString,"execute_unload[:print:]+.gdx"))] <- out_line
-  write_lines(tempString, path(WD_GLOBIOM, "Model", "8_merge_output_tmp.gms"))
+  write_lines(tempString, path(WD_GLOBIOM, "Model", str_glue("{globiom_postproc_file}_tmp.gms")))
 
   # Construct path for feedback file
   path_feedback <- str_glue(".%X%output%X%g4m%X%{PROJECT}_{DATE_LABEL}%X%")
@@ -145,7 +148,7 @@ run_final_postproc <- function(cluster_nr_globiom) {
                   "/",map_string,"/",";")
 
   # Edit mapping set
-  tempString <- read_file(path(WD_GLOBIOM, "Model", "8c_rep_iamc_g4m.gms"))
+  tempString <- read_file(path(WD_GLOBIOM, "Model", str_glue("{g4m_postproc_file}.gms")))
   tempString <- string_replace(tempString,regex('G4MScen2[[:print:]*|[\r\n]*]*G4M_SCEN_MAP[[:print:]*|[\r\n]*]*/[\r\n\\s]+;'),
                             str_c(g4m_globiom_map,collapse="\n"))
 
@@ -166,9 +169,9 @@ run_final_postproc <- function(cluster_nr_globiom) {
   prior_wd <- getwd()
   rc <- tryCatch ({
     setwd(path(WD_GLOBIOM, "Model"))
-    write_lines(tempString, "8c_rep_iamc_g4m_tmp.gms")
+    write_lines(tempString, str_glue("{g4m_postproc_file}_tmp.gms"))
     rc <- system(str_glue('gams',
-                          '8_merge_output_tmp.gms',
+                          '{globiom_postproc_file}_tmp.gms',
                           '--limpopo yes',
                           '--limpopo_nr "{cluster_nr_globiom}"',
                           '--project "{PROJECT}"',

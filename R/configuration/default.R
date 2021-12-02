@@ -8,6 +8,7 @@ SCENARIOS = c(0,15) # scenarios to run
 GLOBIOM_RESTART_FILE = "a4_r1.g00" # restart file name from GLOBIOM
 GLOBIOM_GAMS_ARGS = "//nsim=%1 //yes_output=1 //ssp=SSP2 //scen_type=feedback //water_bio=0 PC=2 PS=0 PW=130" # GAMS arguments for the GLOBIOM run
 GLOBIOM_SCEN_FILE = "6_scenarios.gms"
+GLOBIOM_POSTPROC_FILE = "8_merge_output.gms"
 
 #-------------------------------------------------------------------------------
 

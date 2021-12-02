@@ -305,10 +305,13 @@ run_final_postproc_limpopo <- function(cluster_nr_globiom) {
   if (str_detect(CD,"H:")) {gdx_submit <- ""} else {gdx_submit <- str_glue("GDX_OUTPUT_DIR_SUBMIT = \"{out_dir}\"")}
 
   # Create a tmp copy of the merge output file with a tmp $include
-  tempString <- read_lines(path(WD_GLOBIOM, "Model", "8_merge_output.gms"))
-  if (!any(str_detect(tempString,"8c_rep_iamc_g4m_tmp.gms"))) tempString <- string_replace(tempString,"\\$include\\s+8c_rep_iamc_g4m.gms","$include 8c_rep_iamc_g4m_tmp.gms")
+  tempString <- read_lines(path(WD_GLOBIOM, "Model", str_glue("{GLOBIOM_POSTPROC_FILE}")))
+  g4m_postproc_file <- string_replace(tempString[which(str_detect(tempString,"8c_[:print:]+.gms"))],c("\\$include\\s+"),"") %>% string_replace(".gms","")
+  globiom_postproc_file <- string_replace(GLOBIOM_POSTPROC_FILE,".gms","")
+
+  if (!any(str_detect(tempString,str_glue("{g4m_postproc_file}_tmp.gms")))) tempString <- string_replace(tempString,str_glue("\\$include\\s+{g4m_postproc_file}.gms"),str_glue("$include {g4m_postproc_file}_tmp.gms"))
   tempString[which(str_detect(tempString,regex("GDXIN[:print:]+merged")))] <- str_glue("$GDXIN ..%X%output_%project%_%limpopo_nr%_merged.gdx")
-  write_lines(tempString, path(WD_GLOBIOM, "Model", "8_merge_output_tmp.gms"))
+  write_lines(tempString, path(WD_GLOBIOM, "Model", str_glue("{globiom_postproc_file}_tmp.gms")))
 
   # Construct path for feedback file
   path_feedback <- "..%X%"
@@ -381,7 +384,7 @@ run_final_postproc_limpopo <- function(cluster_nr_globiom) {
                        "/",map_string,"/",";")
 
   # Edit mapping set
-  tempString <- read_file(path(WD_GLOBIOM, "Model", "8c_rep_iamc_g4m.gms"))
+  tempString <- read_file(path(WD_GLOBIOM, "Model", str_glue("{g4m_postproc_file}.gms")))
   tempString <- string_replace(tempString,regex('G4MScen2[[:print:]*|[\r\n]*]*G4M_SCEN_MAP[[:print:]*|[\r\n]*]*/[\r\n\\s]+;'),
                                str_c(g4m_globiom_map,collapse="\n"))
 
@@ -398,7 +401,7 @@ run_final_postproc_limpopo <- function(cluster_nr_globiom) {
   tempString <- string_replace_all(tempString,regex(ref, ignore_case = T),
                                    ref_sum)
 
-  write_lines(tempString, path(CD,WD_GLOBIOM,"Model","8c_rep_iamc_g4m_tmp.gms"))
+  write_lines(tempString, path(CD,WD_GLOBIOM,"Model",str_glue("{g4m_postproc_file}_tmp.gms")))
 
   # Define files to bundle
   glob_file <- path(CD,WD_GLOBIOM,"Model","gdx",str_glue("output_{PROJECT}_{cluster_nr_globiom}_merged.gdx"))
@@ -416,7 +419,7 @@ run_final_postproc_limpopo <- function(cluster_nr_globiom) {
       'REQUEST_MEMORY = 200000',
       'REQUEST_CPUS = 1',
       'GAMS_CURDIR = "Model"',
-      'GAMS_FILE_PATH = "{GLOBIOM_POST_FILE}"',
+      'GAMS_FILE_PATH = "{globiom_postproc_file}_tmp.gms"',
       'GAMS_VERSION = "32.2"',
       'GAMS_ARGUMENTS = "//limpopo=yes //limpopo_nr={cluster_nr_globiom} //project={PROJECT} //lab={DATE_LABEL} //rep_g4m=no //rep_iamc_glo=yes //rep_iamc_g4m=yes //g4mfile={G4M_FEEDBACK_FILE} //regionagg={REGIONAL_AG} //nsim=%1"',
       'BUNDLE_INCLUDE = "Model"',
