@@ -4,8 +4,3 @@
 [submodule "Condor_run_R"]
 	path = Condor_run_R
 	url = https://github.com/iiasa/Condor_run_R
-
-[submodule "G4M"]
-	path = G4M
-	url = https://github.com/iiasa/G4M_global
-	branch = Link_version
