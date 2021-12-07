@@ -105,7 +105,7 @@ run_initial_downscaling <- function() {
     'GET_GDX_OUTPUT = TRUE',
     'GDX_OUTPUT_DIR = "gdx"',
     'GDX_OUTPUT_FILE = "downscaled.gdx"',
-    'CLUSTER_NUMBER_LOG = "{cluster_number_log}"',
+    'CLUSTER_NUMBER_LOG = "{cluster_number_log}"'
   )
   config_path <- file.path(TEMP_DIR, "config_down.R")
 
