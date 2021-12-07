@@ -42,6 +42,9 @@ Automatize the [link between GLOBIOM and G4M](https://iiasa.github.io/GLOBIOM/do
    6 (comment out the stages >= 6). This will provide a restart file in the `GLOBIOM/Model/t`
    directory that is used by the notebook to perform parallel scenario (stage 6)
    runs on the Limpopo cluster.
+   
+   Make sure you have a single GAMS installation directory in your path, preferably the lastest
+   GAMS version available.
 6. Install the R dependencies if needed.
 
 ## R Dependencies
