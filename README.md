@@ -28,11 +28,14 @@ Automatize the [link between GLOBIOM and G4M](https://iiasa.github.io/GLOBIOM/do
    instead of the repositorie's git config.
    
 3. Checkout a GLOBIOM branch from subversion by running the `checkout.bat` script from
-   the command prompt or your bash shell. This requires the `svn` Subversion command line
-   client to be accessible via your PATH environment variable (on-path). You may wish
+   the command prompt or your bash shell with a Trunk commit/revision number as only
+   argument. The link has been tested with Trunk commit/revision 3554. You may wish
    to change the Subversion URL in `checkout.bat` to check out a different branch. The
-   branch should be close to the Trunk version of GLOBIOM.
+   branch should be close to the Trunk version of GLOBIOM for it to be likely to work.
    
+   For the script to work, the `svn` Subversion command line client must be accessible
+   via your PATH environment variable (on-path). On Windows, the Subverison command line
+   client is an optional advanced installation option when installing [TortoiseSVN](https://tortoisesvn.net/).   
    If you don't have `svn` on-path, perform the `svn` step in `checkout.bat` with a
    graphical client like TortoiseSVN, making sure the working copy goes into a `GLOBIOM`
    subdirectory of the root level of your clone of this repository. Also, make a `Condor`
