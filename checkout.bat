@@ -5,8 +5,8 @@ if not "%~1"=="" goto continue
 echo "This batch file requires a Trunk commit/revision number as only argument."
 exit /b 1
 :continue
-echo Checking out commit %~1 from the GLOBIOM Trunk
-echo win svn checkout --revision %~1 svn://hpg909/svn_globiom/globiom_live/Trunk GLOBIOM
+echo Checking out commit/revision %~1 from the GLOBIOM Trunk
+svn checkout --revision %~1 svn://hpg909/svn_globiom/globiom_live/Trunk GLOBIOM
 popd
 exit /b :: end batch script processing
 BATCH
@@ -21,5 +21,6 @@ if [ -z "$1" ] #
     exit 1 #
 fi #
 set -e #
-echo sh svn checkout --revision $1 svn://hpg909/svn_globiom/globiom_live/Trunk GLOBIOM #
+echo Checking out commit/revision $1 from the GLOBIOM Trunk #
+svn checkout --revision $1 svn://hpg909/svn_globiom/globiom_live/Trunk GLOBIOM #
 popd #
