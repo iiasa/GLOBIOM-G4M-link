@@ -12,7 +12,7 @@ run_globiom_scenarios <- function() {
   # Get cluster number
   cluster_number_log <- path(TEMP_DIR, "cluster_number.log")
 
-  # Define configuration template
+  # Define configuration template as per https://github.com/iiasa/Condor_run_R/blob/master/configuring.md
   config_template <- c(
     'LABEL = "{PROJECT}"',
     'JOBS = c({str_c(SCENARIOS, collapse=",")})',
@@ -25,18 +25,16 @@ run_globiom_scenarios <- function() {
     'GAMS_ARGUMENTS = "{GLOBIOM_GAMS_ARGS}"',
     'BUNDLE_INCLUDE = "Model"',
     'BUNDLE_INCLUDE_DIRS = c("include")',
-    'BUNDLE_EXCLUDE_DIRS = c(".git", ".svn", "225*", "doc")',
-    'BUNDLE_EXCLUDE_FILES = c("**/*.~*", "**/*.log", "**/*.log~*", "**/*.lxi", "**/*.lst")',
     'BUNDLE_ADDITIONAL_FILES = c()',
     'RESTART_FILE_PATH = "t/{GLOBIOM_RESTART_FILE}"',
+    'WAIT_FOR_RUN_COMPLETION = TRUE',
+    'CLEAR_LINES = FALSE',
+    'GET_GDX_OUTPUT = TRUE',
     'GDX_OUTPUT_DIR = "gdx"',
     'GDX_OUTPUT_FILE = "output.gdx"',
-    'GET_GDX_OUTPUT = TRUE',
-    'MERGE_BIG = 1000000',
     'MERGE_GDX_OUTPUT = TRUE',
-    'WAIT_FOR_RUN_COMPLETION = TRUE',
-    'CLUSTER_NUMBER_LOG = "{cluster_number_log}"',
-    'CLEAR_LINES = FALSE'
+    'MERGE_BIG = 1000000',
+    'CLUSTER_NUMBER_LOG = "{cluster_number_log}"'
   )
 
   config_path <- path(TEMP_DIR, "config_glob.R")
@@ -91,7 +89,7 @@ run_initial_downscaling <- function() {
   # Get cluster number
   cluster_number_log <- path(TEMP_DIR, "cluster_number.log")
 
-  # Define configuration template
+  # Define configuration template as per https://github.com/iiasa/Condor_run_R/blob/master/configuring.md
   config_template <- c(
     'LABEL = "{PROJECT}"',
     'JOBS = c({scen_string})',
@@ -102,16 +100,12 @@ run_initial_downscaling <- function() {
     'GAMS_VERSION = "32.2"',
     'GAMS_ARGUMENTS = "//project={PROJECT} //lab={DATE_LABEL} //gdx_path=gdx/downscaled.gdx //nsim=%1"',
     'BUNDLE_INCLUDE_DIRS = c("include")',
-    'BUNDLE_EXCLUDE_DIRS = c(".git", ".svn", "225*", "doc")',
-    'BUNDLE_EXCLUDE_FILES = c("**/*.~*", "**/*.log", "**/*.log~*", "**/*.lxi", "**/*.lst","**/gdx/*.*")',
-    'BUNDLE_ADDITIONAL_FILES = c()',
+    'WAIT_FOR_RUN_COMPLETION = TRUE',
+    'CLEAR_LINES = FALSE',
+    'GET_GDX_OUTPUT = TRUE',
     'GDX_OUTPUT_DIR = "gdx"',
     'GDX_OUTPUT_FILE = "downscaled.gdx"',
-    'GET_GDX_OUTPUT = TRUE',
-    'MERGE_GDX_OUTPUT = FALSE',
-    'WAIT_FOR_RUN_COMPLETION = TRUE',
-    'CLUSTER_NUMBER_LOG = "{cluster_number_log}"',
-    'CLEAR_LINES = FALSE'
+    'CLUSTER_NUMBER_LOG = "{cluster_number_log}"'
   )
   config_path <- file.path(TEMP_DIR, "config_down.R")
 
@@ -139,7 +133,6 @@ run_initial_downscaling <- function() {
   # Return the cluster number
   readr::parse_number(read_file(cluster_number_log))
 }
-
 
 # Define the job template for G4M.
 # Note that as of R 4.0.0, r(...) raw string constants are an option,
@@ -248,7 +241,9 @@ run_g4m <- function(baseline = NULL) {
     scen_4_g4m <- SCENARIOS_FOR_G4M
   }
 
-  # Configure parameters
+  if (dim(scen_4_g4m)[1]==0) stop("Scenario(s) not found - check that the G4M baseline is included in the solved scenarios")
+
+  # Define configuration template as per https://github.com/iiasa/Condor_run_R/blob/master/configuring.md
   config_template <- c(
     'EXPERIMENT = "{PROJECT}"',
     'JOBS = c({str_c(scen_4_g4m, collapse=",")})',
@@ -261,13 +256,13 @@ run_g4m <- function(baseline = NULL) {
     'DATE_LABEL = "{DATE_LABEL}"',
     'BUNDLE_INCLUDE = ',
     '{seed_files}',
-    'WAIT_FOR_RUN_COMPLETION = TRUE',
     'JOB_TEMPLATE = ',
     '{G4M_JOB_TEMPLATE}',
+    'WAIT_FOR_RUN_COMPLETION = TRUE',
+    'CLEAR_LINES = FALSE',
     'GET_OUTPUT = FALSE',
     'OUTPUT_DIR = "{output_folder}"',
-    'OUTPUT_FILE = ""',
-    'CLEAR_LINES = FALSE'
+    'OUTPUT_FILE = ""'
   )
 
   config_path <- path(TEMP_DIR, "config_g4m.R")
@@ -288,8 +283,6 @@ run_g4m <- function(baseline = NULL) {
   if (rc != 0) stop("Condor run failed!")
   if (baseline) {save_environment("4")} else {save_environment("5a")}
 }
-
-
 
 #' Run final post-processing
 #'
@@ -411,7 +404,7 @@ run_final_postproc_limpopo <- function(cluster_nr_globiom) {
   prior_wd <- getwd()
   rc <- tryCatch ({
 
-    # Define configuration template
+    # Define configuration template as per https://github.com/iiasa/Condor_run_R/blob/master/configuring.md
     config_template <- c(
       'LABEL = "{PROJECT}"',
       'JOBS = 0',
@@ -424,16 +417,13 @@ run_final_postproc_limpopo <- function(cluster_nr_globiom) {
       'GAMS_ARGUMENTS = "//limpopo=yes //limpopo_nr={cluster_nr_globiom} //project={PROJECT} //lab={DATE_LABEL} //rep_g4m=no //rep_iamc_glo=yes //rep_iamc_g4m=yes //g4mfile={G4M_FEEDBACK_FILE} //regionagg={REGIONAL_AG} //nsim=%1"',
       'BUNDLE_INCLUDE = "Model"',
       'BUNDLE_INCLUDE_DIRS = c("include")',
-      'BUNDLE_EXCLUDE_DIRS = c(".git", ".svn", "225*", "doc")',
-      'BUNDLE_EXCLUDE_FILES = c("**/*.~*", "**/*.log", "**/*.log~*", "**/*.lxi", "**/*.lst","*/output/g4m/*/*.*","*/gdx/*.*")',
       'BUNDLE_ADDITIONAL_FILES = c("{g4m_file}","{glob_file}")',
+      'WAIT_FOR_RUN_COMPLETION = TRUE',
+      'CLEAR_LINES = FALSE',
+      'GET_GDX_OUTPUT = TRUE',
       'GDX_OUTPUT_DIR = "output/iamc"',
       '{gdx_submit}',
-      'GDX_OUTPUT_FILE = "Output4_IAMC_template_{PROJECT}_{DATE_LABEL}.gdx"',
-      'GET_GDX_OUTPUT = TRUE',
-      'MERGE_GDX_OUTPUT = FALSE',
-      'WAIT_FOR_RUN_COMPLETION = TRUE',
-      'CLEAR_LINES = FALSE'
+      'GDX_OUTPUT_FILE = "Output4_IAMC_template_{PROJECT}_{DATE_LABEL}.gdx"'
     )
 
     config_path <- path(TEMP_DIR, "config_glob.R")
