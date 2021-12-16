@@ -25,6 +25,7 @@ run_globiom_scenarios <- function() {
     'GAMS_ARGUMENTS = "{GLOBIOM_GAMS_ARGS}"',
     'BUNDLE_INCLUDE = "Model"',
     'BUNDLE_INCLUDE_DIRS = c("include")',
+    'BUNDLE_EXCLUDE_FILES = c("**/*.~*", "**/*.log", "**/*.log~*", "**/*.lxi", "**/*.lst","**/output/iamc/*.*","**/output/g4m/*.*","**/gdx/*.*") # supports wildcards',
     'BUNDLE_ADDITIONAL_FILES = c()',
     'RESTART_FILE_PATH = "t/{GLOBIOM_RESTART_FILE}"',
     'WAIT_FOR_RUN_COMPLETION = TRUE',
