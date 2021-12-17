@@ -490,4 +490,14 @@ plot_results <- function(scenarios_for_lookup,scenarios_for_globiom){
 
 }
 
-
+# Get the return values of job log files, or NA when a job did not terminate normally.
+get_return_values <- function(log_directory, log_file_names) {
+  return_values <- c()
+  return_value_regexp <- "\\(1\\) Normal termination \\(return value (\\d+)\\)"
+  for (name in log_file_names) {
+    loglines <- readLines(path(log_directory, name))
+    return_value <- as.integer(str_match(tail(grep(return_value_regexp, loglines, value=TRUE), 1), return_value_regexp)[2])
+    return_values <- c(return_values, return_value)
+  }
+  return(return_values)
+}

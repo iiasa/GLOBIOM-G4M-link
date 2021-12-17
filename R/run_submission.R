@@ -129,7 +129,90 @@ run_initial_downscaling <- function() {
   finally = {
     setwd(prior_wd)
   })
-  if (rc != 0) stop("Condor run failed!")
+  if (rc != 0) {
+    # Try to re-run infeasible scenarios with econometric dwonscaling
+
+    # Retrieve GAMS return codes from submitted jobs
+    run_dir <- path(CD, WD_DOWNSCALING, "Condor", str_glue("{PROJECT}"))
+    cluster <- readr::parse_number(read_file(cluster_number_log))
+    scens <- eval(parse(text = scen_string))
+    return_values <-
+      get_return_values(run_dir, lapply(scens, function(job)
+        return(
+          str_glue("job_{cluster}.{job}.log")
+        )))
+
+    # Update downscaling script
+    DOWNSCALING_SCRIPT = "1_downscalingEconometric.gms"
+
+    # Get infeasible jobs
+    infeasible_jobs <- scens[which(return_values != 0)]
+    scen_string <- str_c(infeasible_jobs,collapse=",")
+
+    # Define configuration template as per https://github.com/iiasa/Condor_run_R/blob/master/configuring.md
+    config_template <- c(
+      'LABEL = "{PROJECT}"',
+      'JOBS = c({scen_string})',
+      'HOST_REGEXP = "^limpopo"',
+      'REQUEST_MEMORY = 2500',
+      'REQUEST_CPUS = 1',
+      'GAMS_FILE_PATH = "{DOWNSCALING_SCRIPT}"',
+      'GAMS_VERSION = "32.2"',
+      'GAMS_ARGUMENTS = "//project={PROJECT} //lab={DATE_LABEL} //gdx_path=gdx/downscaled.gdx //nsim=%1"',
+      'BUNDLE_INCLUDE_DIRS = c("include")',
+      'WAIT_FOR_RUN_COMPLETION = TRUE',
+      'CLEAR_LINES = FALSE',
+      'GET_GDX_OUTPUT = TRUE',
+      'GDX_OUTPUT_DIR = "gdx"',
+      'GDX_OUTPUT_FILE = "downscaled.gdx"',
+      'CLUSTER_NUMBER_LOG = "{cluster_number_log}"'
+    )
+    config_path <- file.path(TEMP_DIR, "config_down.R")
+
+    # Re-submit infeasible jobs
+    current_env <- environment()
+    write_lines(lapply(config_template, .envir=current_env, str_glue), config_path)
+    rm(config_template, current_env)
+
+    rc <- tryCatch ({
+      setwd(WD_DOWNSCALING)
+      # Ensure that required directories exist
+      if (!dir_exists('gdx')) dir_create("gdx")
+      if (!dir_exists('output')) dir_create("output")
+      if (!dir_exists('t')) dir_create("t")
+
+      system(str_glue("Rscript --vanilla {CD}/Condor_run_R/Condor_run.R {config_path}"))
+    },
+    finally = {
+      setwd(prior_wd)
+    })
+
+    # If still infeasible stop
+    if (rc != 0) stop("Condor run failed!")
+
+    # Harmonize file naming
+    current_cluster <- readr::parse_number(read_file(cluster_number_log))
+
+    lapply(dir_ls(
+      path(CD, WD_DOWNSCALING, "gdx"),
+      regexp = str_glue("downscaled_{PROJECT}_{current_cluster}.*.gdx")
+    ),
+    function(x) {
+      scen_nr <- str_sub(x, -10, -5)
+
+      file_move(x, path(
+        CD,
+        WD_DOWNSCALING,
+        "gdx",
+        str_glue("downscaled_{PROJECT}_{cluster}.{scen_nr}.gdx")
+      ))
+
+    })
+
+    # Set cluster number to original value
+    write_file(as.character(cluster),cluster_number_log)
+
+  }
 
   # Return the cluster number
   readr::parse_number(read_file(cluster_number_log))
