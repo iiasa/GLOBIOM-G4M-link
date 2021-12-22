@@ -325,7 +325,7 @@ run_g4m <- function(baseline = NULL) {
     scen_4_g4m <- SCENARIOS_FOR_G4M
   }
 
-  if (dim(scen_4_g4m)[1]==0) stop("Scenario(s) not found - check that the G4M baseline is included in the solved scenarios")
+  if (length(scen_4_g4m)==0) stop("Scenario(s) not found - check that the G4M baseline is included in the solved scenarios")
 
   # Define configuration template as per https://github.com/iiasa/Condor_run_R/blob/master/configuring.md
   config_template <- c(
