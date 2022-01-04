@@ -223,17 +223,17 @@ run_initial_downscaling <- function() {
 # but we want to support R < 4.0.0
 
 G4M_JOB_TEMPLATE <- c(
-  "executable = {job_bat}",
+  "executable = {bat_path}",
   "arguments = $(job)",
   "universe = vanilla",
   "",
   "nice_user = {ifelse(NICE_USER, 'True', 'False')}",
   "",
   "# Job log, output, and error files",
-  "log = {run_dir}/{PREFIX}_{EXPERIMENT}_$(cluster).$(job).log", # don't use $$() expansion here: Condor creates the log file before it can resolve the expansion
-  "output = {run_dir}/{PREFIX}_{EXPERIMENT}_$(cluster).$(job).out",
+  "log = {log_dir}/{PREFIX}_$(cluster).$(job).log", # don't use $$() expansion here: Condor creates the log file before it can resolve the expansion
+  "output = {log_dir}/{PREFIX}_$(cluster).$(job).out",
   "stream_output = True",
-  "error = {run_dir}/{PREFIX}_{EXPERIMENT}_$(cluster).$(job).err",
+  "error = {log_dir}/{PREFIX}_$(cluster).$(job).err",
   "stream_error = True",
   "",
   "periodic_release =  (NumJobStarts <= {JOB_RELEASES}) && (JobStatus == 5) && ((CurrentTime - EnteredCurrentStatus) > 120)", # if seed job goes on hold for more than 2 minutes, release it up to JOB_RELEASES times
