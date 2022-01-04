@@ -17,7 +17,7 @@ run_globiom_scenarios <- function() {
     'LABEL = "{PROJECT}"',
     'JOBS = c({str_c(SCENARIOS, collapse=",")})',
     'HOST_REGEXP = "^limpopo"',
-    'REQUEST_MEMORY = 13000',
+    'REQUEST_MEMORY = 18000',
     'REQUEST_CPUS = 1',
     'GAMS_CURDIR = "Model"',
     'GAMS_FILE_PATH = "{GLOBIOM_SCEN_FILE}"',
