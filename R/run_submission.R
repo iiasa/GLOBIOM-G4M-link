@@ -501,6 +501,7 @@ run_final_postproc_limpopo <- function(cluster_nr_globiom) {
       'GAMS_ARGUMENTS = "//limpopo=yes //limpopo_nr={cluster_nr_globiom} //project={PROJECT} //lab={DATE_LABEL} //rep_g4m=no //rep_iamc_glo=yes //rep_iamc_g4m=yes //g4mfile={G4M_FEEDBACK_FILE} //regionagg={REGIONAL_AG} //nsim=%1"',
       'BUNDLE_INCLUDE = "Model"',
       'BUNDLE_INCLUDE_DIRS = c("include")',
+      'BUNDLE_EXCLUDE_FILES = c("**/*.~*", "**/*.log", "**/*.log~*", "**/*.lxi", "**/*.lst","**/output/iamc/*.*","**/output/g4m/*.*","**/gdx/*.*") # supports wildcards',
       'BUNDLE_ADDITIONAL_FILES = c("{g4m_file}","{glob_file}")',
       'WAIT_FOR_RUN_COMPLETION = TRUE',
       'CLEAR_LINES = FALSE',
