@@ -160,10 +160,10 @@ run_final_postproc <- function(cluster_nr_globiom) {
 
   # Edit baseline scenario for forest management GHG accounting
     ref_sum_reg <-  str_glue("- G4M_SCENOUTPUT_DATA(REGION,\"{BASE_SCEN1}\",\"{BASE_SCEN2}\",\"{BASE_SCEN3}\",\"em_fm_bm_mtco2year\",ScenYear)")
-    ref_reg <-  "-\\s+G4M_SCENOUTPUT_DATA[:print:]REGION,[:print:]+,\"em_fm_bm_mtco2year\",ScenYear[:print:]"+
+    ref_reg <-  "-\\s*G4M_SCENOUTPUT_DATA[:print:]REGION,[:print:]+,\"em_fm_bm_mtco2year\",ScenYear[:print:]"
 
-    ref_sum_ctry <-  str_glue("- G4M_SCENOUTPUT_DATA(COUNTRY,\"{BASE_SCEN1}\",\"{BASE_SCEN2}\",\"{BASE_SCEN3}\",\"em_fm_bm_mtco2year\",ScenYear)")
-    ref_ctry <-  "-\\s+G4M_SCENOUTPUT_DATA[:print:]COUNTRY,[:print:]+,\"em_fm_bm_mtco2year\",ScenYear[:print:]"
+    ref_sum_ctry <-  str_glue("- G4M_SCENOUTPUT_DATA(COUNTRY,\"{BASE_SCEN1}\",\"{BASE_SCEN2}\",\"{BASE_SCEN3}\",\"em_fm_bm_mtco2year\",ALLYEAR)")
+    ref_ctry <-  "-\\s*G4M_SCENOUTPUT_DATA[:print:]COUNTRY,[:print:]+,\"em_fm_bm_mtco2year\",ALLYEAR[:print:]"
 
   # Check if aggregation is done at country or region level
     country_aggregation <- str_detect(tempString,regex(ref_ctry, ignore_case = T))
