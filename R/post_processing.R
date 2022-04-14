@@ -94,13 +94,13 @@ run_final_postproc <- function(cluster_nr_globiom) {
   scen <- scen[which(scen != "")]
 
   # Split G4M scenarios into GLOBIOM dimensions
-  scen_aux <- str_split(scen,"_")
-  scen_aux <- matrix(unlist(scen_aux),ncol = length(scen_aux[[1]]), byrow = TRUE)
   scen_globiom_map <- array(dim=c(length(scen),3),data="")
-  for(i in 1:dim(scen_aux)[1]){
-    scen_globiom_map[i,1] <- do.call(str_glue, c(as.list(scen_aux[i,1:length_scen1[i]]), .sep = "_"))
-    scen_globiom_map[i,2] <- do.call(str_glue, c(as.list(scen_aux[i,(length_scen1[i] + 1):(length_scen1[i] + length_scen2[i])]), .sep = "_"))
-    scen_globiom_map[i,3] <- do.call(str_glue, c(as.list(scen_aux[i,c(-1:-(length_scen1[i] + length_scen2[i]))]), .sep = "_"))
+
+  for(i in 1:length(scen)){
+    scen_aux <- scen[i] %>% str_split("_") %>% unlist()
+    scen_globiom_map[i,1] <- do.call(str_glue, c(as.list(scen_aux[1:length_scen1[i]]), .sep = "_"))
+    scen_globiom_map[i,2] <- do.call(str_glue, c(as.list(scen_aux[(length_scen1[i] + 1):(length_scen1[i] + length_scen2[i])]), .sep = "_"))
+    scen_globiom_map[i,3] <- do.call(str_glue, c(as.list(scen_aux[c(-1:-(length_scen1[i] + length_scen2[i]))]), .sep = "_"))
   }
 
 
