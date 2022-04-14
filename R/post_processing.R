@@ -83,10 +83,11 @@ run_final_postproc <- function(cluster_nr_globiom) {
   path_feedback <- str_glue(".%X%output%X%g4m%X%{PROJECT}_{DATE_LABEL}%X%")
 
   # rGet G4M scenario list
-  scen_map <-  droplevels(subset(unique(get_mapping()[1,-4]), ScenLoop %in% SCENARIOS_FOR_G4M))
-  length_scen1 <- length(unlist(str_split(scen_map[,1],"_")))
-  length_scen2 <- length(unlist(str_split(scen_map[,3],"_")))
-  length_scen3 <- length(unlist(str_split(scen_map[,2],"_")))
+  scen_map <-  get_mapping() %>% select(-4) %>% unique() %>%
+    filter(ScenLoop %in% SCENARIOS_FOR_G4M) %>% droplevels()
+  length_scen1 <- scen_map[,1] %>% lapply(FUN=function(x) {x %>% str_split("_") %>% unlist() %>% length() }) %>% unlist()
+  length_scen2 <- scen_map[,3] %>% lapply(FUN=function(x) {x %>% str_split("_") %>% unlist() %>% length() }) %>% unlist()
+  length_scen3 <- scen_map[,2] %>% lapply(FUN=function(x) {x %>% str_split("_") %>% unlist() %>% length() }) %>% unlist()
 
   # Define G4M scenarios
   scen <- matrix(unlist(str_split(get_g4m_jobs(baseline = FALSE)[-1]," ")),ncol=4,byrow=T)[,3]
@@ -97,9 +98,9 @@ run_final_postproc <- function(cluster_nr_globiom) {
   scen_aux <- matrix(unlist(scen_aux),ncol = length(scen_aux[[1]]), byrow = TRUE)
   scen_globiom_map <- array(dim=c(length(scen),3),data="")
   for(i in 1:dim(scen_aux)[1]){
-    scen_globiom_map[i,1] <- do.call(str_glue, c(as.list(scen_aux[i,1:length_scen1]), .sep = "_"))
-    scen_globiom_map[i,2] <- do.call(str_glue, c(as.list(scen_aux[i,(length_scen1 + 1):(length_scen1 + length_scen2)]), .sep = "_"))
-    scen_globiom_map[i,3] <- do.call(str_glue, c(as.list(scen_aux[i,c(-1:-(length_scen1 + length_scen2))]), .sep = "_"))
+    scen_globiom_map[i,1] <- do.call(str_glue, c(as.list(scen_aux[i,1:length_scen1[i]]), .sep = "_"))
+    scen_globiom_map[i,2] <- do.call(str_glue, c(as.list(scen_aux[i,(length_scen1[i] + 1):(length_scen1[i] + length_scen2[i])]), .sep = "_"))
+    scen_globiom_map[i,3] <- do.call(str_glue, c(as.list(scen_aux[i,c(-1:-(length_scen1[i] + length_scen2[i]))]), .sep = "_"))
   }
 
 
