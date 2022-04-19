@@ -16,7 +16,7 @@ run_globiom_scenarios <- function() {
   config_template <- c(
     'LABEL = "{PROJECT}"',
     'JOBS = c({str_c(SCENARIOS, collapse=",")})',
-    'HOST_REGEXP = "^limpopo"',
+    'REQUIREMENTS = c("GLOBIOM")',
     'REQUEST_MEMORY = 18000',
     'REQUEST_DISK = 2200000',
     'REQUEST_CPUS = 1',
@@ -81,14 +81,10 @@ DOWNSCALING_JOB_TEMPLATE <- c(
   "error = {log_dir}/{PREFIX}_$(cluster).$(job).err",
   "stream_error = True",
   "", # If a job goes on hold for more than JOB_RELEASE_DELAY seconds, release it up to JOB_RELEASES times
-  "periodic_release =  (NumJobStarts <= {JOB_RELEASES}) && (JobStatus == 5) && ((CurrentTime - EnteredCurrentStatus) > {JOB_RELEASE_DELAY})",
+  "periodic_release =  (NumJobStarts <= {JOB_RELEASES}) && ((time() - EnteredCurrentStatus) > {JOB_RELEASE_DELAY})",
   "periodic_remove =  (JobStatus == 5)",
   "",
-  "requirements = \\",
-  '  ( (Arch =="INTEL")||(Arch =="X86_64") ) && \\',
-  '  ( (OpSys == "WINDOWS")||(OpSys == "WINNT61") ) && \\',
-  "  ( GLOBIOM =?= True ) && \\",
-  "  ( ( TARGET.Machine == \"{str_c(hostdoms, collapse='\" ) || ( TARGET.Machine == \"')}\") )",
+  "{build_requirements_expression(REQUIREMENTS, hostdoms)}",
   "request_memory = {REQUEST_MEMORY}",
   "request_cpus = {REQUEST_CPUS}", # Number of "CPUs" (hardware threads) to reserve for each job
   "request_disk = {request_disk}",
@@ -143,7 +139,7 @@ run_initial_downscaling <- function() {
   config_template <- c(
     'LABEL = "{PROJECT}"',
     'JOBS = c({scen_string})',
-    'HOST_REGEXP = "^limpopo"',
+    'REQUIREMENTS = c("GAMS")',
     'REQUEST_MEMORY = 2500',
     'REQUEST_DISK = 1400000',
     'REQUEST_CPUS = 1',
@@ -210,6 +206,7 @@ run_initial_downscaling <- function() {
       'LABEL = "{PROJECT}"',
       'JOBS = c({scen_string})',
       'HOST_REGEXP = "^limpopo[5-6]"',
+      'REQUIREMENTS = c("GAMS")',
       'REQUEST_MEMORY = 2500',
       'REQUEST_DISK = 1400000',
       'REQUEST_CPUS = 1',
@@ -297,13 +294,9 @@ G4M_JOB_TEMPLATE <- c(
   "error = {log_dir}/{PREFIX}_$(cluster).$(job).err",
   "stream_error = True",
   "", # If a job goes on hold for more than JOB_RELEASE_DELAY seconds, release it up to JOB_RELEASES times
-  "periodic_release =  (NumJobStarts <= {JOB_RELEASES}) && (JobStatus == 5) && ((CurrentTime - EnteredCurrentStatus) > {JOB_RELEASE_DELAY})",
+  "periodic_release =  (NumJobStarts <= {JOB_RELEASES}) && ((time() - EnteredCurrentStatus) > {JOB_RELEASE_DELAY})",
   "",
-  "requirements = \\",
-  '  ( (Arch =="INTEL")||(Arch =="X86_64") ) && \\',
-  '  ( (OpSys == "WINDOWS")||(OpSys == "WINNT61") ) && \\',
-  "  ( GLOBIOM =?= True ) && \\",
-  "  ( ( TARGET.Machine == \"{str_c(hostdoms, collapse='\" ) || ( TARGET.Machine == \"')}\") )",
+  "{build_requirements_expression(REQUIREMENTS, hostdoms)}",
   "request_memory = {REQUEST_MEMORY}",
   "request_cpus = {REQUEST_CPUS}", # Number of "CPUs" (hardware threads) to reserve for each job
   "request_disk = {request_disk}",
@@ -392,7 +385,7 @@ run_g4m <- function(baseline = NULL) {
   config_template <- c(
     'EXPERIMENT = "{PROJECT}"',
     'JOBS = c({str_c(scen_4_g4m, collapse=",")})',
-    'HOST_REGEXP = "^limpopo"',
+    'REQUIREMENTS = c("R")',
     'REQUEST_MEMORY = 3000',
     'REQUEST_DISK = 1400000',
     'REQUEST_CPUS = 1',
@@ -556,7 +549,7 @@ run_final_postproc_limpopo <- function(cluster_nr_globiom) {
     config_template <- c(
       'LABEL = "{PROJECT}"',
       'JOBS = 0',
-      'HOST_REGEXP = "^limpopo"',
+      'REQUIREMENTS = c("GLOBIOM")',
       'REQUEST_MEMORY = 200000',
       'REQUEST_DISK = 4000000',
       'REQUEST_CPUS = 1',
