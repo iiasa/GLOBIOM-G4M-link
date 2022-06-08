@@ -83,7 +83,7 @@ run_final_postproc <- function(cluster_nr_globiom) {
   path_feedback <- str_glue(".%X%output%X%g4m%X%{PROJECT}_{DATE_LABEL}%X%")
 
   # rGet G4M scenario list
-  scen_map <-  get_mapping() %>% select(-4) %>% unique() %>%
+  scen_map <-  get_mapping() %>% dplyr::select(-4) %>% unique() %>%
     filter(ScenLoop %in% SCENARIOS_FOR_G4M) %>% droplevels()
   length_scen1 <- scen_map[,1] %>% lapply(FUN=function(x) {x %>% str_split("_") %>% unlist() %>% length() }) %>% unlist()
   length_scen2 <- scen_map[,3] %>% lapply(FUN=function(x) {x %>% str_split("_") %>% unlist() %>% length() }) %>% unlist()

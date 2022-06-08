@@ -25,13 +25,17 @@ REGIONAL_AG = "ggi" # regional aggregation level
 #-------------------------------------------------------------------------------
 
 # Downscaling configuration
-DOWNSCALING_TYPE = "default" # optional, one of "default", "econometric", or "econometricMNL"
+DOWNSCALING_TYPE = "default" # optional, one of "default", "econometric", "econometricMNL" or "downscalr"
 WD_DOWNSCALING = "DownScale" # optional, working directory for downscaling relative to root directory
 WD_G4M = "G4M" # optional, working directory for G4M relative to root directory
 PATH_FOR_G4M = stringr::str_glue("{WD_G4M}/Data/GLOBIOM/{PROJECT}_{DATE_LABEL}") # directory where to save GDX for G4M run
 SCENARIOS_FOR_DOWNSCALING = c(0,15) # full set or subset of scenarios defined previously
 RESOLUTION_DOWNSCALING = 37 # number of regions specified in the downscaling
 
+# Specific parameters for statistical downscaling (DOWNSCALING_TYPE = downscalr)
+ISIMIP = FALSE # Use starting land cover maps from ISIMIP
+CLUSTER = TRUE # runs downscaling on the cluster
+DOWNSCALR_SCRIPT = "downscaling_GAMSlink_GGL.R"
 #-------------------------------------------------------------------------------
 
 # 4th and 5th block - G4M run

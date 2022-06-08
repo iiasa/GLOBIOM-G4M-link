@@ -33,7 +33,8 @@ if (!dir_exists(WD_G4M)) stop(str_glue('Directory WD_G4M = "{WD_G4M}" does not e
 ds_type_map <- list(
   default        = "1_downscaling.gms",
   econometric    = "1_downscalingEconometric.gms",
-  econometricMNL = "1_downscalingEconometricMNL.gms"
+  econometricMNL = "1_downscalingEconometricMNL.gms",
+  downscalr = "downscaling_GAMSlink_GGL.R"
 )
 if (!(DOWNSCALING_TYPE %in% names(ds_type_map))) {
   stop(str_glue("Invalid DOWNSCALING_TYPE '{DOWNSCALING_TYPE}'! Allowed values: {str_c(names(ds_type_map), collapse=', ')}."))

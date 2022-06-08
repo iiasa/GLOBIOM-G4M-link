@@ -16,7 +16,7 @@ run_globiom_scenarios <- function() {
   config_template <- c(
     'LABEL = "{PROJECT}"',
     'JOBS = c({str_c(SCENARIOS, collapse=",")})',
-    'REQUIREMENTS = c("GLOBIOM")',
+    'HOST_REGEXP = "^limpopo"',
     'REQUEST_MEMORY = 18000',
     'REQUEST_DISK = 2200000',
     'REQUEST_CPUS = 1',
@@ -81,10 +81,14 @@ DOWNSCALING_JOB_TEMPLATE <- c(
   "error = {log_dir}/{PREFIX}_$(cluster).$(job).err",
   "stream_error = True",
   "", # If a job goes on hold for more than JOB_RELEASE_DELAY seconds, release it up to JOB_RELEASES times
-  "periodic_release =  (NumJobStarts <= {JOB_RELEASES}) && ((time() - EnteredCurrentStatus) > {JOB_RELEASE_DELAY})",
+  "periodic_release =  (NumJobStarts <= {JOB_RELEASES}) && (JobStatus == 5) && ((CurrentTime - EnteredCurrentStatus) > {JOB_RELEASE_DELAY})",
   "periodic_remove =  (JobStatus == 5)",
   "",
-  "{build_requirements_expression(REQUIREMENTS, hostdoms)}",
+  "requirements = \\",
+  '  ( (Arch =="INTEL")||(Arch =="X86_64") ) && \\',
+  '  ( (OpSys == "WINDOWS")||(OpSys == "WINNT61") ) && \\',
+  "  ( GLOBIOM =?= True ) && \\",
+  "  ( ( TARGET.Machine == \"{str_c(hostdoms, collapse='\" ) || ( TARGET.Machine == \"')}\") )",
   "request_memory = {REQUEST_MEMORY}",
   "request_cpus = {REQUEST_CPUS}", # Number of "CPUs" (hardware threads) to reserve for each job
   "request_disk = {request_disk}",
@@ -102,7 +106,6 @@ DOWNSCALING_JOB_TEMPLATE <- c(
   "",
   "queue job in ({str_c(JOBS,collapse=',')})"
 )
-
 
 
 #' Run initial downscaling
@@ -135,82 +138,20 @@ run_initial_downscaling <- function() {
   # Get cluster number
   cluster_number_log <- path(TEMP_DIR, "cluster_number.log")
 
-  # Define configuration template as per https://github.com/iiasa/Condor_run_R/blob/master/configuring.md
-  config_template <- c(
-    'LABEL = "{PROJECT}"',
-    'JOBS = c({scen_string})',
-    'REQUIREMENTS = c("GAMS")',
-    'REQUEST_MEMORY = 2500',
-    'REQUEST_DISK = 1400000',
-    'REQUEST_CPUS = 1',
-    'JOB_RELEASES = 3',
-    'JOB_RELEASE_DELAY = 120',
-    'GAMS_FILE_PATH = "{DOWNSCALING_SCRIPT}"',
-    'GAMS_VERSION = "32.2"',
-    'GAMS_ARGUMENTS = "//project={PROJECT} //lab={DATE_LABEL} //gdx_path=gdx/downscaled.gdx //nsim=%1"',
-    'BUNDLE_INCLUDE_DIRS = c("include")',
-    'WAIT_FOR_RUN_COMPLETION = TRUE',
-    'CLEAR_LINES = FALSE',
-    'GET_GDX_OUTPUT = TRUE',
-    'GDX_OUTPUT_DIR = "gdx"',
-    'GDX_OUTPUT_FILE = "downscaled.gdx"',
-    'JOB_TEMPLATE = ',
-    '{DOWNSCALING_JOB_TEMPLATE}',
-    'CLUSTER_NUMBER_LOG = "{cluster_number_log}"'
-  )
-  config_path <- file.path(TEMP_DIR, "config_down.R")
+  # Check if cross-entropy optimization or statistical downscaling is performed
+  if (!DOWNSCALING_TYPE == "downscalr") {
 
-  # Write config file
-  current_env <- environment()
-  write_lines(lapply(config_template, .envir=current_env, str_glue), config_path)
-  rm(config_template, current_env)
-
-  # Submit downscaling run and wait for run completion
-  prior_wd <- getwd()
-
-  rc <- tryCatch ({
-    setwd(WD_DOWNSCALING)
-    # Ensure that required directories exist
-    if (!dir_exists('gdx')) dir_create("gdx")
-    if (!dir_exists('output')) dir_create("output")
-    if (!dir_exists('t')) dir_create("t")
-
-    system(str_glue("Rscript --vanilla {CD}/Condor_run_R/Condor_run.R {config_path}"))
-  },
-  finally = {
-    setwd(prior_wd)
-  })
-
-  if (rc != 0) {
-    # Try to re-run infeasible scenarios with econometric downscaling
-
-    # Retrieve GAMS return codes from submitted jobs
-    run_dir <- path(CD, WD_DOWNSCALING, "Condor", str_glue("{PROJECT}"))
-    cluster <- readr::parse_number(read_file(cluster_number_log))
-    scens <- eval(parse(text = scen_string))
-    return_values <-
-      get_return_values(run_dir, lapply(scens, function(job)
-        return(
-          str_glue("job_{cluster}.{job}.log")
-        )))
-
-    # Update downscaling script
-    DOWNSCALING_SCRIPT = "1_downscalingEconometric.gms"
-
-    # Get infeasible jobs
-    infeasible_jobs <- scens[which(return_values != 0 | is.na(return_values))]
-    scen_string <- str_c(infeasible_jobs,collapse=",")
+    # Cross-entropy optimization variant
 
     # Define configuration template as per https://github.com/iiasa/Condor_run_R/blob/master/configuring.md
     config_template <- c(
       'LABEL = "{PROJECT}"',
       'JOBS = c({scen_string})',
-      'HOST_REGEXP = "^limpopo[5-6]"',
-      'REQUIREMENTS = c("GAMS")',
+      'HOST_REGEXP = "^limpopo"',
       'REQUEST_MEMORY = 2500',
       'REQUEST_DISK = 1400000',
       'REQUEST_CPUS = 1',
-      'JOB_RELEASES = 0',
+      'JOB_RELEASES = 3',
       'JOB_RELEASE_DELAY = 120',
       'GAMS_FILE_PATH = "{DOWNSCALING_SCRIPT}"',
       'GAMS_VERSION = "32.2"',
@@ -227,10 +168,13 @@ run_initial_downscaling <- function() {
     )
     config_path <- file.path(TEMP_DIR, "config_down.R")
 
-    # Re-submit infeasible jobs
+    # Write config file
     current_env <- environment()
     write_lines(lapply(config_template, .envir=current_env, str_glue), config_path)
     rm(config_template, current_env)
+
+    # Submit downscaling run and wait for run completion
+    prior_wd <- getwd()
 
     rc <- tryCatch ({
       setwd(WD_DOWNSCALING)
@@ -245,30 +189,159 @@ run_initial_downscaling <- function() {
       setwd(prior_wd)
     })
 
-    # If still infeasible stop
-    if (rc != 0) stop("Condor run failed!")
+    if (rc != 0) {
+      # Try to re-run infeasible scenarios with econometric downscaling
 
-    # Harmonize file naming
-    current_cluster <- readr::parse_number(read_file(cluster_number_log))
+      # Retrieve GAMS return codes from submitted jobs
+      run_dir <- path(CD, WD_DOWNSCALING, "Condor", str_glue("{PROJECT}"))
+      cluster <- readr::parse_number(read_file(cluster_number_log))
+      scens <- eval(parse(text = scen_string))
+      return_values <-
+        get_return_values(run_dir, lapply(scens, function(job)
+          return(
+            str_glue("job_{cluster}.{job}.log")
+          )))
 
-    lapply(dir_ls(
-      path(CD, WD_DOWNSCALING, "gdx"),
-      regexp = str_glue("downscaled_{PROJECT}_{current_cluster}.*.gdx")
-    ),
-    function(x) {
-      scen_nr <- str_sub(x, -10, -5)
+      # Update downscaling script
+      DOWNSCALING_SCRIPT = "1_downscalingEconometric.gms"
 
-      file_move(x, path(
-        CD,
-        WD_DOWNSCALING,
-        "gdx",
-        str_glue("downscaled_{PROJECT}_{cluster}.{scen_nr}.gdx")
-      ))
+      # Get infeasible jobs
+      infeasible_jobs <- scens[which(return_values != 0 | is.na(return_values))]
+      scen_string <- str_c(infeasible_jobs,collapse=",")
 
+      # Define configuration template as per https://github.com/iiasa/Condor_run_R/blob/master/configuring.md
+      config_template <- c(
+        'LABEL = "{PROJECT}"',
+        'JOBS = c({scen_string})',
+        'HOST_REGEXP = "^limpopo[5-6]"',
+        'REQUEST_MEMORY = 2500',
+        'REQUEST_DISK = 1400000',
+        'REQUEST_CPUS = 1',
+        'JOB_RELEASES = 0',
+        'JOB_RELEASE_DELAY = 120',
+        'GAMS_FILE_PATH = "{DOWNSCALING_SCRIPT}"',
+        'GAMS_VERSION = "32.2"',
+        'GAMS_ARGUMENTS = "//project={PROJECT} //lab={DATE_LABEL} //gdx_path=gdx/downscaled.gdx //nsim=%1"',
+        'BUNDLE_INCLUDE_DIRS = c("include")',
+        'WAIT_FOR_RUN_COMPLETION = TRUE',
+        'CLEAR_LINES = FALSE',
+        'GET_GDX_OUTPUT = TRUE',
+        'GDX_OUTPUT_DIR = "gdx"',
+        'GDX_OUTPUT_FILE = "downscaled.gdx"',
+        'JOB_TEMPLATE = ',
+        '{DOWNSCALING_JOB_TEMPLATE}',
+        'CLUSTER_NUMBER_LOG = "{cluster_number_log}"'
+      )
+      config_path <- file.path(TEMP_DIR, "config_down.R")
+
+      # Re-submit infeasible jobs
+      current_env <- environment()
+      write_lines(lapply(config_template, .envir=current_env, str_glue), config_path)
+      rm(config_template, current_env)
+
+      rc <- tryCatch ({
+        setwd(WD_DOWNSCALING)
+        # Ensure that required directories exist
+        if (!dir_exists('gdx')) dir_create("gdx")
+        if (!dir_exists('output')) dir_create("output")
+        if (!dir_exists('t')) dir_create("t")
+
+        system(str_glue("Rscript --vanilla {CD}/Condor_run_R/Condor_run.R {config_path}"))
+      },
+      finally = {
+        setwd(prior_wd)
+      })
+
+      # If still infeasible stop
+      if (rc != 0) stop("Condor run failed!")
+
+      # Harmonize file naming
+      current_cluster <- readr::parse_number(read_file(cluster_number_log))
+
+      lapply(dir_ls(
+        path(CD, WD_DOWNSCALING, "gdx"),
+        regexp = str_glue("downscaled_{PROJECT}_{current_cluster}.*.gdx")
+      ),
+      function(x) {
+        scen_nr <- str_sub(x, -10, -5)
+
+        file_move(x, path(
+          CD,
+          WD_DOWNSCALING,
+          "gdx",
+          str_glue("downscaled_{PROJECT}_{cluster}.{scen_nr}.gdx")
+        ))
+
+      })
+
+      # Set cluster number to original value
+      write_file(as.character(cluster),cluster_number_log)
+
+    }
+
+  } else {
+
+    # Statistical downscaling variant
+
+    # Define configuration template as per https://github.com/iiasa/Condor_run_R/blob/master/configuring.md
+    config_template <- c(
+      'EXPERIMENT = "{PROJECT}"',
+      'JOBS = c({scen_string})',
+      'HOST_REGEXP = "^limpopo"',
+      'REQUEST_MEMORY = 7500',
+      'REQUEST_DISK = 1500000',
+      'REQUEST_CPUS = 1',
+      'JOB_RELEASES = 3',
+      'JOB_RELEASE_DELAY = 120',
+      'LAUNCHER = "Rscript"',
+      'SCRIPT = "{DOWNSCALR_SCRIPT}"',
+      'ARGUMENTS = "%1"',
+      'DATE_LABEL = "{DATE_LABEL}"',
+      'BUNDLE_INCLUDE = "*"',
+      'BUNDLE_EXCLUDE_FILES = c("gdx/*.*")',
+      'WAIT_FOR_RUN_COMPLETION = TRUE',
+      'CLEAR_LINES = FALSE',
+      'GET_OUTPUT = TRUE',
+      'OUTPUT_DIR = "gdx"',
+      'OUTPUT_FILE = "output.RData"',
+      'CLUSTER_NUMBER_LOG = "{cluster_number_log}"'
+    )
+
+    config_path <- file.path(TEMP_DIR, "config_down.R")
+
+    # Write config file
+    current_env <- environment()
+    write_lines(lapply(config_template, .envir=current_env, str_glue), config_path)
+    rm(config_template, current_env)
+
+    # Submit downscaling run and wait for run completion
+    prior_wd <- getwd()
+
+    # Save scenario parameters
+    downscaling_pars <- list()
+
+    downscaling_pars[[1]] <- ISIMIP
+    downscaling_pars[[2]] <- CLUSTER
+    downscaling_pars[[3]] <- PROJECT
+    downscaling_pars[[4]] <- DATE_LABEL
+    #downscaling_pars[[5]] <- get_mapping() %>% arrange(ScenNr)
+    downscaling_pars[[5]] <- scenario_mapping
+
+    saveRDS(downscaling_pars,path(CD,WD_DOWNSCALING,"downscaling_pars.RData"))
+
+
+    rc <- tryCatch ({
+      setwd(WD_DOWNSCALING)
+      # Ensure that required directories exist
+      if (!dir_exists('gdx')) dir_create("gdx")
+      if (!dir_exists('output')) dir_create("output")
+      if (!dir_exists('t')) dir_create("t")
+
+      system(str_glue("Rscript --vanilla {CD}/Condor_run_R/Condor_run_basic.R {config_path}"))
+    },
+    finally = {
+      setwd(prior_wd)
     })
-
-    # Set cluster number to original value
-    write_file(as.character(cluster),cluster_number_log)
 
   }
 
@@ -294,9 +367,13 @@ G4M_JOB_TEMPLATE <- c(
   "error = {log_dir}/{PREFIX}_$(cluster).$(job).err",
   "stream_error = True",
   "", # If a job goes on hold for more than JOB_RELEASE_DELAY seconds, release it up to JOB_RELEASES times
-  "periodic_release =  (NumJobStarts <= {JOB_RELEASES}) && ((time() - EnteredCurrentStatus) > {JOB_RELEASE_DELAY})",
+  "periodic_release =  (NumJobStarts <= {JOB_RELEASES}) && (JobStatus == 5) && ((CurrentTime - EnteredCurrentStatus) > {JOB_RELEASE_DELAY})",
   "",
-  "{build_requirements_expression(REQUIREMENTS, hostdoms)}",
+  "requirements = \\",
+  '  ( (Arch =="INTEL")||(Arch =="X86_64") ) && \\',
+  '  ( (OpSys == "WINDOWS")||(OpSys == "WINNT61") ) && \\',
+  "  ( GLOBIOM =?= True ) && \\",
+  "  ( ( TARGET.Machine == \"{str_c(hostdoms, collapse='\" ) || ( TARGET.Machine == \"')}\") )",
   "request_memory = {REQUEST_MEMORY}",
   "request_cpus = {REQUEST_CPUS}", # Number of "CPUs" (hardware threads) to reserve for each job
   "request_disk = {request_disk}",
@@ -385,7 +462,7 @@ run_g4m <- function(baseline = NULL) {
   config_template <- c(
     'EXPERIMENT = "{PROJECT}"',
     'JOBS = c({str_c(scen_4_g4m, collapse=",")})',
-    'REQUIREMENTS = c("R")',
+    'HOST_REGEXP = "^limpopo"',
     'REQUEST_MEMORY = 3000',
     'REQUEST_DISK = 1400000',
     'REQUEST_CPUS = 1',
@@ -549,7 +626,7 @@ run_final_postproc_limpopo <- function(cluster_nr_globiom) {
     config_template <- c(
       'LABEL = "{PROJECT}"',
       'JOBS = 0',
-      'REQUIREMENTS = c("GLOBIOM")',
+      'HOST_REGEXP = "^limpopo"',
       'REQUEST_MEMORY = 200000',
       'REQUEST_DISK = 4000000',
       'REQUEST_CPUS = 1',
@@ -593,4 +670,87 @@ run_final_postproc_limpopo <- function(cluster_nr_globiom) {
   finally = {
     setwd(prior_wd)
   })
+}
+
+
+
+
+#' Run downscaling post-processing
+#'
+#' Downscales G4M outputs back to GLOBIOM SimUID
+#'
+run_downscaling_postproc <- function() {
+
+  # Get G4M scenario list
+  scenario_mapping <- get_mapping() %>% dplyr::select(-ScenNr) %>%
+    filter(ScenLoop %in% SCENARIOS_FOR_G4M)
+
+  # Define downscaling scenarios for limpopo run
+  scen_string <- "c("
+  for (i in 1: length(SCENARIOS_FOR_DOWNSCALING)){
+    scenarios_idx <- scenario_mapping$ScenNr[which(scenario_mapping$ScenLoop %in% SCENARIOS_FOR_DOWNSCALING[i])]
+    if (i==1) {scen_string <- str_glue(scen_string,str_glue(min(scenarios_idx),":",max(scenarios_idx)))} else {
+      scen_string <- str_glue(scen_string,",",str_glue(min(scenarios_idx),":",max(scenarios_idx)))}
+  }
+  scen_string <- str_glue(scen_string,")")
+
+  # Save scenario grid and additional configuration to input data
+  saveRDS(scenario_mapping,path(WD_DOWNSCALING,"input","scenario_grid.RData"))
+  saveRDS(c(PROJECT,DATE_LABEL,cluster_nr_downscaling),path(WD_DOWNSCALING,"input","config.RData"))
+
+  # Define files to bundle
+  downscaling_files <- dir_ls(path(CD,WD_DOWNSCALING,"gdx"),regexp = str_glue("output_{PROJECT}_{cluster_nr_downscaling}.*.RData")) %>%
+  str_replace_all("/","\\\\") %>% sort()
+
+  g4m_files <- dir_ls(path(CD,WD_G4M,"out",str_glue("{PROJECT}_{DATE_LABEL}")),
+                      regexep=str_glue(.Platform$file.sep,"area"))
+  idx <- which(!is.na(str_match(g4m_files,str_glue("area_harv"))))
+  g4m_files <- g4m_files[idx]
+  seed_files <- c(downscaling_files,g4m_files)
+  seed_files <- str_replace_all(seed_files,"/","\\\\")
+
+  if (!dir_exists(path(CD,WD_DOWNSCALING,"postproc"))) dir_create(path(CD,WD_DOWNSCALING,"postproc"))
+  file_copy(g4m_files,path(CD,WD_DOWNSCALING,"postproc"),overwrite = T)
+  file_copy(downscaling_files,path(CD,WD_DOWNSCALING,"postproc"),overwrite = T)
+  include <- str_glue(c("**/gdx/output_{PROJECT}_{DATE_LABEL}_{cluster_nr_downscaling}.*.RData"))
+
+    config_template <- c(
+      'EXPERIMENT = "{PROJECT}"',
+      'JOBS = {scen_string}',
+      'HOST_REGEXP = "^limpopo"',
+      'REQUEST_MEMORY = 5000',
+      'BUNDLE_EXCLUDE_FILES = c("**/gdx/*.*")',
+      'REQUEST_CPUS = 1',
+      'JOB_RELEASES = 3',
+      'JOB_RELEASE_DELAY = 120',
+      'LAUNCHER = "Rscript"',
+      'SCRIPT = "run_downscaling_postproc.R"',
+      'ARGUMENTS = "%1"',
+      'DATE_LABEL = "{DATE_LABEL}"',
+      'WAIT_FOR_RUN_COMPLETION = TRUE',
+      'CLEAR_LINES = FALSE',
+      'GET_OUTPUT = TRUE',
+      'OUTPUT_DIR = "gdx"',
+      'OUTPUT_FILE = "g4m_simu_out.RData"'
+    )
+
+  config_path <- path(TEMP_DIR, "config_postproc.R")
+
+  # Write config file
+  current_env <- environment()
+  write_lines(lapply(config_template, .envir=current_env, str_glue), config_path)
+  rm(config_template, current_env)
+
+  prior_wd <- getwd()
+  rc <- tryCatch ({
+    setwd(WD_DOWNSCALING)
+    system(str_glue("Rscript --vanilla {CD}/Condor_run_R//Condor_run_basic.R {config_path}"))
+  },
+  finally = {
+    setwd(prior_wd)
+  })
+  if (rc != 0) stop("Condor run failed!")
+
+  # remove temp files
+  clear_g4mtosimu_files()
 }

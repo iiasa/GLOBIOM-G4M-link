@@ -202,6 +202,62 @@ get_mapping <- function(){
 }
 
 
+#' Prepare data fro G4M when using downscalr for the downscaling step (Authored by Michael Wögerer)
+#'
+#' @param downscalr_res data table returned by downscalr
+#' @param curr.SCEN1 scenario dimension 1
+#' @param curr.SCEN2 scenario dimension 2
+#' @param curr.SCEN3 scenario dimension 3
+#' @param out.path output path
+
+G4M_link <- function(downscalr_res, curr.SCEN1, curr.SCEN2, curr.SCEN3){
+
+  mapping <- readRDS(file='source/g4m_mapping.RData')[[1]]
+  mapping <- data.frame(apply(mapping, 2, as.numeric))
+
+  dat <- downscalr_res$out.res
+  dat$ns <- as.numeric(dat$ns)
+  dat <- dat %>% left_join(mapping, by=c("ns"="SimUID")) %>% group_by(g4m_05_id, lu.from, times) %>%
+    summarise(value=sum(value)) %>% rename("ScenYear"="times", "LC_TYPES_EPIC"= "lu.from") %>%
+    mutate(LC_TYPES_EPIC=recode(LC_TYPES_EPIC, "Forest"="unreserved",
+                                "OthNatLnd"="unreserved",
+                                "PriFor"="unreserved",
+                                "MngFor"="unreserved",
+                                "protected_priforest"="unreserved",
+                                "protected_other"="unreserved",)) %>%
+    subset(LC_TYPES_EPIC!="unreserved") %>% ungroup() %>% group_by(g4m_05_id, ScenYear) %>%
+    summarise(value=sum(value)) %>% na.omit()
+
+  dat <- bind_cols(g4m_05_id=dat$g4m_05_id, SCEN1=curr.SCEN1, SCEN3=curr.SCEN3,SCEN2=curr.SCEN2,
+                   LC_TYPES_EPIC="Reserved", ScenYear=dat$ScenYear, value=dat$value) %>%
+                   pivot_wider(id_cols=c(g4m_05_id, SCEN1, SCEN3, SCEN2, LC_TYPES_EPIC),
+                               names_from = "ScenYear", values_from = "value")
+
+
+  return(dat)
+
+}
+
+
+#' Write gdx files for G4M from downsalr results
+#'
+#'
+export_gdx_for_g4m <- function(data,data_for_g4m){
+
+  attr(data, "symName") <- "Land_Cover_SU_Region_SCEN"
+  symDim <- 7
+  LC <- wgdx.reshape(data, symDim, symName = "Land_Cover_SU_Region_SCEN", tName = "ScenYear")
+
+  attr(data_for_g4m, "symName") <- "LandCover_G4MID"
+  symDim <- 6
+  G4M <- wgdx.reshape(data_for_g4m, symDim, symName = "LandCover_G4MID", tName = "ScenYears")
+
+  ## Not run:
+  # send the data to GDX
+  wgdx.lst(path(CD,WD_DOWNSCALING,"gdx"), LC,G4M[[7]])
+}
+
+
 #' Generate G4M job string for the new G4M interface
 #'
 #' @param baseline = TRUE|FALSE: set to TRUE to select baseline scenarios.
@@ -209,7 +265,7 @@ get_g4m_jobs <- function(baseline = NULL){
 
   # Get downscaling mapping
   downs_map <-  get_mapping() %>% dplyr::select(-ScenNr) %>%
-                  filter(ScenLoop %in% SCENARIOS_FOR_G4M) %>% unique()
+                filter(ScenLoop %in% SCENARIOS_FOR_G4M) %>% unique()
 
   # Save config files
   lab <- str_glue("{PROJECT}_{DATE_LABEL}")
@@ -350,6 +406,57 @@ transfer_outputs <- function(){
 
   # Transfer gdx to output folder
   file_move(out_file,new_dir)
+
+}
+
+
+#' Compute G4M results at the SimU level
+#'
+#'
+g4m_to_simu <- function(){
+
+  # Load G4M output conversion function
+  source(path(WD_DOWNSCALING,"G4M_DS_to_simu_link_final_v2.R"))
+
+  # Get downscaling mapping
+  downs_map <-  get_mapping() %>% dplyr::select(-REGION) %>%
+    filter(ScenLoop %in% SCENARIOS_FOR_G4M)
+
+  for (i in 1:dim(downs_map)[1]){
+
+    # Define loading function
+    rfunc <- function(x) readRDS(x)[[3]]$out.res
+
+    # Define scenarios
+    dscens <- downs_map %>% slice(i)
+
+    # Load in downscalr output
+    downscalr_out <- rfunc(path(WD_DOWNSCALING,"gdx",
+                            str_glue("output_",PROJECT,"_",cluster_nr_downscaling,".",
+                                              sprintf("%06d",dscens$ScenNr),".RData")))
+
+    # Get output
+    g4m_simu_out <- g4mid_to_simuid(downscalr_out,DATE_LABEL,PROJECT,dscens$SCEN1,
+                                    dscens$SCEN2,dscens$SCEN3)
+
+    # Write output
+    outpath <- path(WD_G4M,"out",str_glue(PROJECT,"_",DATE_LABEL),"simu_id")
+
+    if (!dir_exists(outpath)) dir_create(outpath)
+
+    saveRDS(g4m_simu_out,path(outpath,str_glue("g4m_simu_out","_",PROJECT,"_",cluster_nr_downscaling,".",
+                                                 sprintf("%06d",dscens$ScenNr),".RData")))
+
+  }
+
+}
+
+#' Remove downscaling temporary post-processing outputs
+#'
+clear_g4mtosimu_files <- function(){
+
+  # Remove unused G4M files
+  unlink(path(CD,WD_DOWNSCALING,"postproc"),recursive = TRUE)
 
 }
 
