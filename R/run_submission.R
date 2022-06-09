@@ -324,7 +324,6 @@ run_initial_downscaling <- function() {
     downscaling_pars[[2]] <- CLUSTER
     downscaling_pars[[3]] <- PROJECT
     downscaling_pars[[4]] <- DATE_LABEL
-    #downscaling_pars[[5]] <- get_mapping() %>% arrange(ScenNr)
     downscaling_pars[[5]] <- scenario_mapping
 
     saveRDS(downscaling_pars,path(CD,WD_DOWNSCALING,"downscaling_pars.RData"))
@@ -336,6 +335,12 @@ run_initial_downscaling <- function() {
       if (!dir_exists('gdx')) dir_create("gdx")
       if (!dir_exists('output')) dir_create("output")
       if (!dir_exists('t')) dir_create("t")
+
+      # Check that downscalr package is available and install
+      if (!dir_exists(renv::paths$library())) {
+        renv::init()
+        renv::install("tkrisztin/downscalr")
+      }
 
       system(str_glue("Rscript --vanilla {CD}/Condor_run_R/Condor_run_basic.R {config_path}"))
     },
