@@ -26,7 +26,7 @@ run_globiom_scenarios <- function() {
     'GAMS_ARGUMENTS = "{GLOBIOM_GAMS_ARGS}"',
     'BUNDLE_INCLUDE = "Model"',
     'BUNDLE_INCLUDE_DIRS = c("include")',
-    'BUNDLE_EXCLUDE_DIRS = c("Model/t")',
+    'BUNDLE_EXCLUDE_DIRS = c("Model/t",".git", ".svn", "225*", "doc")',
     'BUNDLE_EXCLUDE_FILES = c("**/*.~*", "**/*.log", "**/*.log~*", "**/*.lxi", "**/*.lst","**/output/iamc/*.*","**/output/g4m/*.*","**/gdx/*.*") # supports wildcards',
     'BUNDLE_ADDITIONAL_FILES = c()',
     'RESTART_FILE_PATH = "t/{GLOBIOM_RESTART_FILE}"',
@@ -687,7 +687,7 @@ run_final_postproc_limpopo <- function(cluster_nr_globiom) {
 run_downscaling_postproc <- function() {
 
   # Get G4M scenario list
-  scenario_mapping <- get_mapping() %>% dplyr::select(-ScenNr) %>%
+  scenario_mapping <- get_mapping() %>%
     filter(ScenLoop %in% SCENARIOS_FOR_G4M)
 
   # Define downscaling scenarios for limpopo run
