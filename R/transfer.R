@@ -36,63 +36,71 @@ merge_and_transfer <- function(cluster_nr_downscaling) {
 
     # Get scenario mapping and indices
     scenario_mapping <- get_mapping()
-    scenarios_idx <- scenario_mapping$ScenNr[which(scenario_mapping$ScenLoop %in% SCENARIOS_FOR_DOWNSCALING)] %>% sort()
 
-    # Extract land cover table for G4M
-    for (i in 1:length(scenarios_idx)){
+    # scenario counter
+    scen_cnt <- 1
 
-      # Get scenario number
-      s_list <-  sprintf("%06d", scenarios_idx[i])
+    for (k in 1: length(SCENARIOS_FOR_DOWNSCALING)){
 
-      # Read data for G4M
-      if (!DOWNSCALING_TYPE=="downscalr"){
-        downs_files <- rgdx.param(path(CD,WD_DOWNSCALING,"gdx", str_glue("downscaled_{PROJECT}_{cluster_nr_downscaling}.",
-                                                                         s_list,".gdx")),"LandCover_G4MID")
-      # Select data for G4M
-      if (dim(downs_files)[2] == 8) downs_files <- downs_files[,-1]
-      names(downs_files) <- c("g4m_05_id","SCEN1","SCEN3","SCEN2","LC","Year","value")
+      scenarios_idx <- scenario_mapping$ScenNr[which(scenario_mapping$ScenLoop %in% SCENARIOS_FOR_DOWNSCALING[k])] %>% sort()
 
-      downs_files <- downs_files %>% filter(LC == "Reserved") %>% dplyr::select(-LC)
+      # Extract land cover table for G4M
+      for (i in 1:length(scenarios_idx)){
 
-      names(downs_files) <- c("g4m_05_id","SCEN1","SCEN3","SCEN2","Year","value")
+        # Get scenario number
+        s_list <-  sprintf("%06d", scenarios_idx[i])
 
-      # Remap years to columns
-      downs2 <- downs_files %>% spread(Year, value, fill = 0, convert = FALSE)
+        # Read data for G4M
+        if (!DOWNSCALING_TYPE=="downscalr"){
+          downs_files <- rgdx.param(path(CD,WD_DOWNSCALING,"gdx", str_glue("downscaled_{PROJECT}_{cluster_nr_downscaling}.",
+                                                                           s_list,".gdx")),"LandCover_G4MID")
+          # Select data for G4M
+          if (dim(downs_files)[2] == 8) downs_files <- downs_files[,-1]
+          names(downs_files) <- c("g4m_05_id","SCEN1","SCEN3","SCEN2","LC","Year","value")
 
-      # Construct file path
-      f <- path(CD,str_glue("{WD_G4M}"),"Data","GLOBIOM",str_glue("{PROJECT}_{DATE_LABEL}"),
-                str_glue("GLOBIOM2G4M_output_LC_abs_{PROJECT}_{DATE_LABEL}.csv"))
+          downs_files <- downs_files %>% filter(LC == "Reserved") %>% dplyr::select(-LC)
 
-      if (i==1) {
-        # Write csv file
-        write_csv(downs2, f, col_names = T)
-      } else {
-        # Append to csv file
-        write_csv(downs2, f, append = T)
-      }
+          names(downs_files) <- c("g4m_05_id","SCEN1","SCEN3","SCEN2","Year","value")
 
-      } else {
+          # Remap years to columns
+          downs2 <- downs_files %>% spread(Year, value, fill = 0, convert = FALSE)
 
-        downs_files <- readRDS(path(CD,WD_DOWNSCALING,"gdx", str_glue("output_{PROJECT}_{cluster_nr_downscaling}.",
-                                                                      s_list,".RData")))[[2]] %>% select(-LC_TYPES_EPIC)
+          # Construct file path
+          f <- path(CD,str_glue("{WD_G4M}"),"Data","GLOBIOM",str_glue("{PROJECT}_{DATE_LABEL}"),
+                    str_glue("GLOBIOM2G4M_output_LC_abs_{PROJECT}_{DATE_LABEL}_{scen_cnt}.csv"))
 
-        f <- path(CD,str_glue("{WD_G4M}"),"Data","GLOBIOM",str_glue("{PROJECT}_{DATE_LABEL}"),
-                  str_glue("GLOBIOM2G4M_output_LC_abs_{PROJECT}_{DATE_LABEL}.csv"))
+          if (i==1) {
+            # Write csv file
+            write_csv(downs2, f, col_names = T)
+          } else {
+            # Append to csv file
+            write_csv(downs2, f, append = T)
+          }
 
-        if (i==1) {
-          # Write csv file
-          write_csv(downs_files, f, col_names = T)
         } else {
-          # Append to csv file
-          write_csv(downs_files, f, append = T)
+
+          downs_files <- readRDS(path(CD,WD_DOWNSCALING,"gdx", str_glue("output_{PROJECT}_{cluster_nr_downscaling}.",
+                                                                        s_list,".RData")))[[2]] %>% select(-LC_TYPES_EPIC)
+
+          f <- path(CD,str_glue("{WD_G4M}"),"Data","GLOBIOM",str_glue("{PROJECT}_{DATE_LABEL}"),
+                    str_glue("GLOBIOM2G4M_output_LC_abs_{PROJECT}_{DATE_LABEL}_{scen_cnt}.csv"))
+
+          if (i==1) {
+            # Write csv file
+            write_csv(downs_files, f, col_names = T)
+          } else {
+            # Append to csv file
+            write_csv(downs_files, f, append = T)
+          }
+
         }
 
+
       }
-
-
+      scen_cnt <- scen_cnt + 1
     }
-
   }
+
 
   # Save global environment
   save_environment("3b")
