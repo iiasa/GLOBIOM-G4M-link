@@ -491,7 +491,6 @@ run_g4m <- function(baseline = NULL) {
     '{G4M_JOB_TEMPLATE}',
     'WAIT_FOR_RUN_COMPLETION = TRUE',
     'CLEAR_LINES = FALSE',
-    'RETAIN_BUNDLE=TRUE',
     'GET_OUTPUT = FALSE',
     'OUTPUT_DIR = "{output_folder}"',
     'OUTPUT_FILE = ""'
