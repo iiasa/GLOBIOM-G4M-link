@@ -481,7 +481,7 @@ run_g4m <- function(baseline = NULL) {
     'SCRIPT = "{G4M_SUBMISSION_SCRIPT}"',
     'ARGUMENTS = "%1"',
     'DATE_LABEL = "{DATE_LABEL}"',
-    'BUNDLE_INCLUDE_FILES = "Data/GLOBIOM/{PROJECT}_{DATE_LABEL}/*.*"',
+    'BUNDLE_ADDITIONAL_FILES = "Data/GLOBIOM/{PROJECT}_{DATE_LABEL}/*.*"',
     'BUNDLE_INCLUDE = ',
     '{seed_files}',
     'JOB_TEMPLATE = ',
