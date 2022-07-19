@@ -153,6 +153,7 @@ run_initial_downscaling <- function() {
       'REQUEST_CPUS = 1',
       'JOB_RELEASES = 3',
       'JOB_RELEASE_DELAY = 120',
+      'BUNDLE_EXCLUDE_FILES = gdx/*.*',
       'GAMS_FILE_PATH = "{DOWNSCALING_SCRIPT}"',
       'GAMS_VERSION = "32.2"',
       'GAMS_ARGUMENTS = "//project={PROJECT} //lab={DATE_LABEL} //gdx_path=gdx/downscaled.gdx //nsim=%1"',
@@ -219,6 +220,7 @@ run_initial_downscaling <- function() {
         'REQUEST_CPUS = 1',
         'JOB_RELEASES = 0',
         'JOB_RELEASE_DELAY = 120',
+        'BUNDLE_EXCLUDE_FILES = gdx/*.*',
         'GAMS_FILE_PATH = "{DOWNSCALING_SCRIPT}"',
         'GAMS_VERSION = "32.2"',
         'GAMS_ARGUMENTS = "//project={PROJECT} //lab={DATE_LABEL} //gdx_path=gdx/downscaled.gdx //nsim=%1"',
@@ -293,6 +295,7 @@ run_initial_downscaling <- function() {
       'REQUEST_CPUS = 1',
       'JOB_RELEASES = 3',
       'JOB_RELEASE_DELAY = 120',
+      'BUNDLE_EXCLUDE_FILES = gdx/*.*',
       'LAUNCHER = "Rscript"',
       'SCRIPT = "{DOWNSCALR_SCRIPT}"',
       'ARGUMENTS = "%1"',
@@ -428,7 +431,8 @@ run_g4m <- function(baseline = NULL) {
   # Determine files for bundle
   default_file_list <- dir_ls(path(CD, WD_G4M, "Data", "Default"))
   glob_file_list <- dir_ls(path(CD, WD_G4M, "Data", "GLOBIOM", str_glue("{PROJECT}_{DATE_LABEL}")))
-  base_file_list <- c(default_file_list, glob_file_list)
+#  base_file_list <- c(default_file_list, glob_file_list)
+  base_file_list <- c(default_file_list)
   if (baseline) {
     seed_files <- c(base_file_list, path(CD,WD_G4M,str_glue("{G4M_EXE}")),path(CD, WD_G4M,"g4m_run.R"))
     seed_files <- seed_files[which(!str_detect(seed_files, ".gdx"))]
@@ -477,6 +481,7 @@ run_g4m <- function(baseline = NULL) {
     'SCRIPT = "{G4M_SUBMISSION_SCRIPT}"',
     'ARGUMENTS = "%1"',
     'DATE_LABEL = "{DATE_LABEL}"',
+    'BUNDLE_INCLUDE_FILES = "Data/GLOBIOM/{PROJECT}_{DATE_LABEL}/*.*"',
     'BUNDLE_INCLUDE = ',
     '{seed_files}',
     'JOB_TEMPLATE = ',
@@ -758,4 +763,179 @@ run_downscaling_postproc <- function() {
 
   # remove temp files
   clear_g4mtosimu_files()
+}
+
+
+
+#' Run downscaling post-processing
+#'
+#' Downscales G4M outputs back to GLOBIOM SimUID in batches
+#' for each scenario, to avoid disk space bottlenecks on limpopo
+#'
+run_downscaling_postproc_split <- function() {
+
+  # Get G4M scenario list
+#  scenario_mapping <- get_mapping() %>%
+#    filter(ScenLoop %in% SCENARIOS_FOR_G4M)
+  scenario_mapping <-readRDS(path(CD,WD_GLOBIOM,"Model","gdx","scen_map.RData"))
+
+  # Save scenario grid and additional configuration to input data
+  saveRDS(scenario_mapping,path(WD_DOWNSCALING,"input","scenario_grid.RData"))
+  saveRDS(c(PROJECT,DATE_LABEL,cluster_nr_downscaling),path(WD_DOWNSCALING,"input","config.RData"))
+
+  # Define downscaling scenarios for limpopo run
+  for (i in 1: length(SCENARIOS_FOR_DOWNSCALING)){
+    scen_string <- ""
+    scenarios_idx <- scenario_mapping$ScenNr[which(scenario_mapping$ScenLoop %in% SCENARIOS_FOR_DOWNSCALING[i])]
+    scen_string <- str_glue("c(",scen_string,str_glue(min(scenarios_idx),":",max(scenarios_idx)),")")
+
+  # Define files to bundle
+  downscaling_files <- dir_ls(path(CD,WD_DOWNSCALING,"gdx"),regexp=str_glue("output_{PROJECT}_{cluster_nr_downscaling}.",
+                                                                    "*",".RData"))  %>% sort()
+  idx <-  which(!is.na(str_match(downscaling_files,sprintf("%06d",scenarios_idx))))
+  #  str_replace_all("/","\\\\") %>% sort()
+
+  downscaling_files <- downscaling_files[idx]
+
+  g4m_files <- dir_ls(path(CD,WD_G4M,"out",str_glue("{PROJECT}_{DATE_LABEL}")),
+                      regexep=str_glue(.Platform$file.sep,"area"))
+  s_nr <- which(scenario_mapping$ScenNr==scenarios_idx[1])
+  idx <- which(!is.na(str_match(g4m_files,str_glue("area_harv[:print:]+",paste(scenario_mapping$SCEN1[s_nr]),
+                                                   "_",paste(scenario_mapping$SCEN3[s_nr]),"_",
+                                                   paste(scenario_mapping$SCEN2[s_nr])))))
+  g4m_files <- g4m_files[idx]
+  seed_files <- c(downscaling_files,g4m_files)
+  #seed_files <- str_replace_all(seed_files,"/","\\\\")
+
+  if (!dir_exists(path(CD,WD_DOWNSCALING,"postproc"))) dir_create(path(CD,WD_DOWNSCALING,"postproc"))
+  file_copy(g4m_files,path(CD,WD_DOWNSCALING,"postproc"),overwrite = T)
+  file_copy(downscaling_files,path(CD,WD_DOWNSCALING,"postproc"),overwrite = T)
+  #include <- str_glue(c("**/gdx/output_{PROJECT}_{DATE_LABEL}_{cluster_nr_downscaling}.*.RData"))
+
+  config_template <- c(
+    'EXPERIMENT = "{PROJECT}"',
+    'JOBS = {scen_string}',
+    'HOST_REGEXP = "^limpopo"',
+    'REQUEST_MEMORY = 5000',
+    'BUNDLE_EXCLUDE_FILES = c("**/gdx/*.*","**/input/*.gdx")',
+    'BUNDLE_EXCLUDE_DIRS = c("output", "prior_module", "source","t")',
+    'REQUEST_CPUS = 1',
+    'REQUEST_DISK = 10000000',
+    'JOB_RELEASES = 3',
+    'JOB_RELEASE_DELAY = 120',
+    'LAUNCHER = "Rscript"',
+    'SCRIPT = "run_downscaling_postproc.R"',
+    'ARGUMENTS = "%1"',
+    'DATE_LABEL = "{DATE_LABEL}"',
+    'WAIT_FOR_RUN_COMPLETION = TRUE',
+    'CLEAR_LINES = FALSE',
+    'GET_OUTPUT = TRUE',
+    'OUTPUT_DIR = "gdx"',
+    'OUTPUT_FILE = "g4m_simu_out.RData"'
+  )
+
+  config_path <- path(TEMP_DIR, "config_postproc.R")
+
+  # Write config file
+  current_env <- environment()
+  write_lines(lapply(config_template, .envir=current_env, str_glue), config_path)
+  rm(config_template, current_env)
+
+  prior_wd <- getwd()
+  rc <- tryCatch ({
+    setwd(WD_DOWNSCALING)
+    system(str_glue("Rscript --vanilla {CD}/Condor_run_R//Condor_run_basic.R {config_path}"))
+  },
+  finally = {
+    setwd(prior_wd)
+  })
+
+  unlink(path(CD,WD_DOWNSCALING,"postproc","*.*"),recursive = TRUE)
+
+  if (rc != 0) stop("Condor run failed!")
+  }
+
+}
+
+
+
+
+#' Run downscaling post-processing
+#'
+#' Downscales G4M outputs back to GLOBIOM SimUID in batches
+#' for each scenario, to avoid disk space bottlenecks on limpopo
+#'
+run_merge_and_transfer <- function(cluster_nr_downscaling) {
+
+  # Get cluster number
+  cluster_number_log <- path(TEMP_DIR, "cluster_number.log")
+
+  config <- list()
+
+  # Save config file
+  config[[1]] <- get_mapping()
+  config[[2]] <- DOWNSCALING_TYPE
+  config[[3]] <- cluster_nr_downscaling
+  config[[4]] <- PROJECT
+
+  writeRDS(path(CD,WD_DOWNSCALING,"config.RData"))
+
+  # Define downscaling scenarios for limpopo run
+  scen_string <- "c("
+  for (i in 1: length(SCENARIOS_FOR_DOWNSCALING)){
+    scenarios_idx <- scenario_mapping$ScenNr[which(scenario_mapping$ScenLoop %in% SCENARIOS_FOR_DOWNSCALING[i])]
+    if (i==1) {scen_string <- str_glue(scen_string,str_glue(min(scenarios_idx),":",max(scenarios_idx)))} else {
+      scen_string <- str_glue(scen_string,",",str_glue(min(scenarios_idx),":",max(scenarios_idx)))}
+  }
+  scen_string <- str_glue(scen_string,")")
+
+  config_template <- c(
+    'EXPERIMENT = "{PROJECT}"',
+    'JOBS = {scen_string}',
+    'HOST_REGEXP = "^limpopo"',
+    'REQUEST_MEMORY = 5000',
+    'BUNDLE_EXCLUDE_FILES = c("input/*.gdx")',
+    'BUNDLE_EXCLUDE_DIRS = c("output", "prior_module", "source","t")',
+    'REQUEST_CPUS = 1',
+    'REQUEST_DISK = 20000000',
+    'JOB_RELEASES = 3',
+    'JOB_RELEASE_DELAY = 120',
+    'LAUNCHER = "Rscript"',
+    'SCRIPT = "compile_LC_data.R"',
+    'ARGUMENTS = "%1"',
+    'DATE_LABEL = "{DATE_LABEL}"',
+    'WAIT_FOR_RUN_COMPLETION = TRUE',
+    'CLEAR_LINES = FALSE',
+    'GET_OUTPUT = TRUE',
+    'OUTPUT_DIR = "gdx"',
+    'OUTPUT_FILE = "GLOBIOM2G4M_output_LC_abs_{PROJECT}_{DATE_LABEL}.csv"'
+  )
+
+  config_path <- path(TEMP_DIR, "config_merge.R")
+
+  # Write config file
+  current_env <- environment()
+  write_lines(lapply(config_template, .envir=current_env, str_glue), config_path)
+  rm(config_template, current_env)
+
+  prior_wd <- getwd()
+  rc <- tryCatch ({
+    setwd(WD_DOWNSCALING)
+    system(str_glue("Rscript --vanilla {CD}/Condor_run_R//Condor_run_basic.R {config_path}"))
+  },
+  finally = {
+    setwd(prior_wd)
+  })
+
+
+  cluter_nr <- readr::parse_number(read_file(cluster_number_log))
+
+  # rename and transfer to g4m
+  for (k in SCENARIOS_FOR_DOWNSCALING){
+    limpopo_f <- str_glue("GLOBIOM2G4M_output_LC_abs_{PROJECT}_{DATE_LABEL}_{cluter_nr}.",sprintf("%06d",k),".csv")
+    g4m_f <- str_glue("GLOBIOM2G4M_output_LC_abs_{PROJECT}_{DATE_LABEL}_",k+1,".csv")
+    file_move(path(CD,WD_DOWNSCALING,"gdx",limpopo_f),
+              path(CD,str_glue("{WD_G4M}"),"Data","GLOBIOM",str_glue("{PROJECT}_{DATE_LABEL}"),g4m_f))
+  }
+
 }
