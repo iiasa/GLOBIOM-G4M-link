@@ -37,7 +37,7 @@ run_initial_postproc <- function(cluster_nr_globiom)
                           '--project "{PROJECT}"',
                           '--lab "{DATE_LABEL}"',
                           '--rep_g4m yes',
-                          '--rep_iamc_glo yes',
+                          '--rep_iamc_glo no',
                           '--rep_iamc_g4m no',
                           '--g4mfile "{G4M_FEEDBACK_FILE}"',
                           '--regionagg "{REGIONAL_AG}"',
