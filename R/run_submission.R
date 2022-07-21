@@ -301,7 +301,6 @@ run_initial_downscaling <- function() {
       'ARGUMENTS = "%1"',
       'DATE_LABEL = "{DATE_LABEL}"',
       'BUNDLE_INCLUDE = "*"',
-      'BUNDLE_EXCLUDE_FILES = c("gdx/*.*")',
       'WAIT_FOR_RUN_COMPLETION = TRUE',
       'CLEAR_LINES = FALSE',
       'GET_OUTPUT = TRUE',
