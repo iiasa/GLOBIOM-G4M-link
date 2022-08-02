@@ -153,7 +153,7 @@ run_initial_downscaling <- function() {
       'REQUEST_CPUS = 1',
       'JOB_RELEASES = 3',
       'JOB_RELEASE_DELAY = 120',
-      'BUNDLE_EXCLUDE_FILES = gdx/*.*',
+      'BUNDLE_EXCLUDE_FILES = "**/gdx/*.*"',
       'GAMS_FILE_PATH = "{DOWNSCALING_SCRIPT}"',
       'GAMS_VERSION = "32.2"',
       'GAMS_ARGUMENTS = "//project={PROJECT} //lab={DATE_LABEL} //gdx_path=gdx/downscaled.gdx //nsim=%1"',
@@ -220,7 +220,7 @@ run_initial_downscaling <- function() {
         'REQUEST_CPUS = 1',
         'JOB_RELEASES = 0',
         'JOB_RELEASE_DELAY = 120',
-        'BUNDLE_EXCLUDE_FILES = gdx/*.*',
+        'BUNDLE_EXCLUDE_FILES = "**/gdx/*.*"',
         'GAMS_FILE_PATH = "{DOWNSCALING_SCRIPT}"',
         'GAMS_VERSION = "32.2"',
         'GAMS_ARGUMENTS = "//project={PROJECT} //lab={DATE_LABEL} //gdx_path=gdx/downscaled.gdx //nsim=%1"',
@@ -295,7 +295,7 @@ run_initial_downscaling <- function() {
       'REQUEST_CPUS = 1',
       'JOB_RELEASES = 3',
       'JOB_RELEASE_DELAY = 120',
-      'BUNDLE_EXCLUDE_FILES = gdx/*.*',
+      'BUNDLE_EXCLUDE_FILES = "**/gdx/*.*"',
       'LAUNCHER = "Rscript"',
       'SCRIPT = "{DOWNSCALR_SCRIPT}"',
       'ARGUMENTS = "%1"',
@@ -735,7 +735,7 @@ run_downscaling_postproc <- function() {
     config_template <- c(
       'EXPERIMENT = "{PROJECT}"',
       'JOBS = {scen_string}',
-      'HOST_REGEXP = "^limpopo"',
+      'HOST_REGEXP = "^limpopo[1-5]"',
       'REQUEST_MEMORY = 5000',
       'BUNDLE_EXCLUDE_FILES = c("**/gdx/*.*")',
       'REQUEST_CPUS = 1',
@@ -783,9 +783,8 @@ run_downscaling_postproc <- function() {
 run_downscaling_postproc_split <- function() {
 
   # Get G4M scenario list
-#  scenario_mapping <- get_mapping() %>%
-#    filter(ScenLoop %in% SCENARIOS_FOR_G4M)
-  scenario_mapping <-readRDS(path(CD,WD_GLOBIOM,"Model","gdx","scen_map.RData"))
+  scenario_mapping <- get_mapping() %>%
+    filter(ScenLoop %in% SCENARIOS_FOR_G4M)
 
   # Save scenario grid and additional configuration to input data
   saveRDS(scenario_mapping,path(WD_DOWNSCALING,"input","scenario_grid.RData"))
@@ -823,7 +822,7 @@ run_downscaling_postproc_split <- function() {
   config_template <- c(
     'EXPERIMENT = "{PROJECT}"',
     'JOBS = {scen_string}',
-    'HOST_REGEXP = "^limpopo"',
+    'HOST_REGEXP = "^limpopo[1-5]"',
     'REQUEST_MEMORY = 5000',
     'BUNDLE_EXCLUDE_FILES = c("**/gdx/*.*","**/input/*.gdx")',
     'BUNDLE_EXCLUDE_DIRS = c("output", "prior_module", "source","t")',
@@ -868,11 +867,10 @@ run_downscaling_postproc_split <- function() {
 
 
 
-#' Run downscaling post-processing
+#' Run merge and transfer
 #'
-#' Downscales G4M outputs back to GLOBIOM SimUID in batches
-#' for each scenario, to avoid disk space bottlenecks on limpopo
-#'
+#' Sends data compilation from Downscaling to G4M to limpopo
+#' @param cluster_nr_downscaling Cluster sequence number of the downscaling HTCondor submission
 run_merge_and_transfer <- function(cluster_nr_downscaling) {
 
   # Get cluster number
@@ -885,8 +883,12 @@ run_merge_and_transfer <- function(cluster_nr_downscaling) {
   config[[2]] <- DOWNSCALING_TYPE
   config[[3]] <- cluster_nr_downscaling
   config[[4]] <- PROJECT
+  config[[5]] <- DATE_LABEL
 
-  writeRDS(path(CD,WD_DOWNSCALING,"config.RData"))
+  saveRDS(config,path(CD,WD_DOWNSCALING,"config.RData"))
+
+  # get scenario mapping
+  scenario_mapping <- get_mapping()
 
   # Define downscaling scenarios for limpopo run
   scen_string <- "c("
@@ -897,13 +899,25 @@ run_merge_and_transfer <- function(cluster_nr_downscaling) {
   }
   scen_string <- str_glue(scen_string,")")
 
+  include_files <- str_glue("**/gdx/output_{PROJECT}_{cluster_nr_downscaling}.*.*")
+  exclude_files <- dir_ls(path(CD,WD_DOWNSCALING,"gdx")) %>%
+                    str_extract(str_glue("_[0-9]+.")) %>% unique() %>% na.omit()
+
+  exclude_string <- ""
+  for (e in exclude_files){
+    if (!str_detect(e,str_glue({cluster_nr_downscaling}))){
+      exclude_string <- str_glue(exclude_string,"\"",str_glue("gdx/*_*",e,"*.*","\"",","))
+    }
+  }
+
   config_template <- c(
     'EXPERIMENT = "{PROJECT}"',
     'JOBS = {scen_string}',
-    'HOST_REGEXP = "^limpopo"',
+    'HOST_REGEXP = "^limpopo[1-5]"',
     'REQUEST_MEMORY = 5000',
     'BUNDLE_EXCLUDE_FILES = c("input/*.gdx")',
-    'BUNDLE_EXCLUDE_DIRS = c("output", "prior_module", "source","t")',
+    'BUNDLE_INCLUDE_FILES = c("**/gdx/output_{PROJECT}_{cluster_nr_downscaling}.*.*")',
+    'BUNDLE_EXCLUDE_DIRS = c("output", "prior_module", "source","t","postproc","renv","gdx")',
     'REQUEST_CPUS = 1',
     'REQUEST_DISK = 20000000',
     'JOB_RELEASES = 3',
@@ -912,6 +926,7 @@ run_merge_and_transfer <- function(cluster_nr_downscaling) {
     'SCRIPT = "compile_LC_data.R"',
     'ARGUMENTS = "%1"',
     'DATE_LABEL = "{DATE_LABEL}"',
+    'RETAIN_BUNDLE = TRUE',
     'WAIT_FOR_RUN_COMPLETION = TRUE',
     'CLEAR_LINES = FALSE',
     'GET_OUTPUT = TRUE',
@@ -936,7 +951,7 @@ run_merge_and_transfer <- function(cluster_nr_downscaling) {
   })
 
 
-  cluter_nr <- readr::parse_number(read_file(cluster_number_log))
+   cluter_nr <- readr::parse_number(read_file(cluster_number_log))
 
   # rename and transfer to g4m
   for (k in SCENARIOS_FOR_DOWNSCALING){
