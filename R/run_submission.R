@@ -735,7 +735,7 @@ run_downscaling_postproc <- function() {
     config_template <- c(
       'EXPERIMENT = "{PROJECT}"',
       'JOBS = {scen_string}',
-      'HOST_REGEXP = "^limpopo[1-5]"',
+      'HOST_REGEXP = "^limpopo"',
       'REQUEST_MEMORY = 5000',
       'BUNDLE_EXCLUDE_FILES = c("**/gdx/*.*")',
       'REQUEST_CPUS = 1',
@@ -822,7 +822,7 @@ run_downscaling_postproc_split <- function() {
   config_template <- c(
     'EXPERIMENT = "{PROJECT}"',
     'JOBS = {scen_string}',
-    'HOST_REGEXP = "^limpopo[1-5]"',
+    'HOST_REGEXP = "^limpopo"',
     'REQUEST_MEMORY = 5000',
     'BUNDLE_EXCLUDE_FILES = c("**/gdx/*.*","**/input/*.gdx")',
     'BUNDLE_EXCLUDE_DIRS = c("output", "prior_module", "source","t")',
@@ -913,7 +913,7 @@ run_merge_and_transfer <- function(cluster_nr_downscaling) {
   config_template <- c(
     'EXPERIMENT = "{PROJECT}"',
     'JOBS = {scen_string}',
-    'HOST_REGEXP = "^limpopo[1-5]"',
+    'HOST_REGEXP = "^limpopo"',
     'REQUEST_MEMORY = 5000',
     'BUNDLE_EXCLUDE_FILES = c("input/*.gdx")',
     'BUNDLE_INCLUDE_FILES = c("**/gdx/output_{PROJECT}_{cluster_nr_downscaling}.*.*")',
