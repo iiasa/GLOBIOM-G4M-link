@@ -887,37 +887,29 @@ run_merge_and_transfer <- function(cluster_nr_downscaling) {
 
   saveRDS(config,path(CD,WD_DOWNSCALING,"config.RData"))
 
-  # get scenario mapping
-  scenario_mapping <- get_mapping()
-
-  # Define downscaling scenarios for limpopo run
-  scen_string <- "c("
-  for (i in 1: length(SCENARIOS_FOR_DOWNSCALING)){
-    scenarios_idx <- scenario_mapping$ScenNr[which(scenario_mapping$ScenLoop %in% SCENARIOS_FOR_DOWNSCALING[i])]
-    if (i==1) {scen_string <- str_glue(scen_string,str_glue(min(scenarios_idx),":",max(scenarios_idx)))} else {
-      scen_string <- str_glue(scen_string,",",str_glue(min(scenarios_idx),":",max(scenarios_idx)))}
+  # Get downscaled files (!transfer is faster than using BUNDLE_ADDITIONAL_FILES)
+  if (!DOWNSCALING_TYPE == "downscalr") {
+    include_files <- dir_ls(path(CD,WD_DOWNSCALING,"gdx"),regexp=str_glue("downscaled_{PROJECT}_{cluster_nr_downscaling}.*.*"))
+  } else {
+    include_files <- dir_ls(path(CD,WD_DOWNSCALING,"gdx"),regexp=str_glue("output_{PROJECT}_{cluster_nr_downscaling}.*.*"))
   }
-  scen_string <- str_glue(scen_string,")")
 
-  include_files <- str_glue("**/gdx/output_{PROJECT}_{cluster_nr_downscaling}.*.*")
   exclude_files <- dir_ls(path(CD,WD_DOWNSCALING,"gdx")) %>%
                     str_extract(str_glue("_[0-9]+.")) %>% unique() %>% na.omit()
 
-  exclude_string <- ""
-  for (e in exclude_files){
-    if (!str_detect(e,str_glue({cluster_nr_downscaling}))){
-      exclude_string <- str_glue(exclude_string,"\"",str_glue("gdx/*_*",e,"*.*","\"",","))
-    }
-  }
+  # File transfer is faster than BUNDLE_ADDITIONAL_FILES
+  if(!dir_exists(path(CD,WD_DOWNSCALING,"g4m_merge"))) dir_create(path(CD,WD_DOWNSCALING,"g4m_merge"))
+  file_copy(include_files,path(CD,WD_DOWNSCALING,"g4m_merge"),overwrite = T)
 
   config_template <- c(
     'EXPERIMENT = "{PROJECT}"',
-    'JOBS = {scen_string}',
+    'JOBS = {SCENARIOS_FOR_DOWNSCALING}',
     'HOST_REGEXP = "^limpopo"',
     'REQUEST_MEMORY = 5000',
-    'BUNDLE_EXCLUDE_FILES = c("input/*.gdx")',
-    'BUNDLE_INCLUDE_FILES = c("**/gdx/output_{PROJECT}_{cluster_nr_downscaling}.*.*")',
     'BUNDLE_EXCLUDE_DIRS = c("output", "prior_module", "source","t","postproc","renv","gdx")',
+    'BUNDLE_EXCLUDE_FILES = c(".Rprofile","renv.lock","input/*.gdx")',
+#    'BUNDLE_ADDITIONAL_FILES = ',
+#    '{include_files}',
     'REQUEST_CPUS = 1',
     'REQUEST_DISK = 20000000',
     'JOB_RELEASES = 3',
@@ -926,7 +918,7 @@ run_merge_and_transfer <- function(cluster_nr_downscaling) {
     'SCRIPT = "compile_LC_data.R"',
     'ARGUMENTS = "%1"',
     'DATE_LABEL = "{DATE_LABEL}"',
-    'RETAIN_BUNDLE = TRUE',
+    'RETAIN_BUNDLE = FALSE',
     'WAIT_FOR_RUN_COMPLETION = TRUE',
     'CLEAR_LINES = FALSE',
     'GET_OUTPUT = TRUE',
@@ -950,13 +942,19 @@ run_merge_and_transfer <- function(cluster_nr_downscaling) {
     setwd(prior_wd)
   })
 
+  # Clean temporary folder
+  unlink(path(CD,WD_DOWNSCALING,"g4m_merge","*.*"),recursive = TRUE)
 
-   cluter_nr <- readr::parse_number(read_file(cluster_number_log))
+  cluster_nr <- readr::parse_number(read_file(cluster_number_log))
 
   # rename and transfer to g4m
+  g4m_dir <- path(CD,str_glue("{WD_G4M}"),"Data","GLOBIOM",str_glue("{PROJECT}_{DATE_LABEL}"))
+  if (!dir_exists(g4m_dir)) dir_create(g4m_dir)
+
   for (k in SCENARIOS_FOR_DOWNSCALING){
-    limpopo_f <- str_glue("GLOBIOM2G4M_output_LC_abs_{PROJECT}_{DATE_LABEL}_{cluter_nr}.",sprintf("%06d",k),".csv")
+    limpopo_f <- str_glue("GLOBIOM2G4M_output_LC_abs_{PROJECT}_{DATE_LABEL}_{PROJECT}_{cluster_nr}.",sprintf("%06d",k),".csv")
     g4m_f <- str_glue("GLOBIOM2G4M_output_LC_abs_{PROJECT}_{DATE_LABEL}_",k+1,".csv")
+
     file_move(path(CD,WD_DOWNSCALING,"gdx",limpopo_f),
               path(CD,str_glue("{WD_G4M}"),"Data","GLOBIOM",str_glue("{PROJECT}_{DATE_LABEL}"),g4m_f))
   }
