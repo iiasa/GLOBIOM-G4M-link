@@ -14,6 +14,10 @@ run_initial_postproc <- function(cluster_nr_globiom)
   # Check solution for infeasibilities
   check_sol(cluster_nr_globiom)
 
+  # Check if merged GLOBIOM output exists, if not merge files
+  merged_globiom <- path(CD,WD_GLOBIOM,"Model","gdx",str_glue("output_{PROJECT}_{cluster_nr_globiom}_merged.gdx"))
+  if(!file_exists(merged_globiom)) merge_gdx(PROJECT,path(CD,WD_GLOBIOM,"Model","gdx"),cluster_nr_globiom,1000000)
+
    # Create downscaling input folder if absent
   if (!dir_exists(path(CD, WD_DOWNSCALING, "input"))) dir_create(path(CD, WD_DOWNSCALING, "input"))
 
