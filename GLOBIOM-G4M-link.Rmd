@@ -130,13 +130,20 @@ print("Initial downscaling complete")
 ```{r}
 
 # Transfer downscaled output to G4M input folder
-merge_and_transfer(cluster_nr_downscaling)
+
+# For large simulations parallelize file transfer 
+if (length(SCENARIOS_FOR_DOWNSCALING) < 50){
+  merge_and_transfer(cluster_nr_downscaling)
+} else {
+  run_merge_and_transfer(cluster_nr_downscaling)
+}
+
 ```
 
 ## 3c. Generate CSV input files for G4M
 
 ```{r}
-if (!file_exists(path(PATH_FOR_G4M, str_glue("GLOBIOM2G4M_output_LC_abs_{PROJECT}_{DATE_LABEL}.csv"))))
+if (!file_exists(path(PATH_FOR_G4M, str_glue("GLOBIOM2G4M_output_LC_abs_{PROJECT}_{DATE_LABEL}_1.csv"))))
   stop("File for G4M run not found! Please perform intial downscaling first.")
 
 gdx_to_csv_for_g4m()
