@@ -185,15 +185,21 @@ get_mapping <- function(){
   colnames(scen_map)[c(loop_idx,macro_idx,bioen_idx,iea_idx)] <- c("ScenLoop","SCEN1","SCEN2","SCEN3")
 
   #Get solved scenarios
-  scen_map_solved <- scen_map %>% filter(ScenLoop %in% SCENARIOS)
-  scen_map_solved$SCEN2 <- str_replace_all(scen_map_solved$SCEN2,"\"","")
+  scen_map_solved <- scen_map %>% filter(ScenLoop %in% SCENARIOS) %>% 
+    mutate(SCEN1=toupper(SCEN1),SCEN2=toupper(SCEN2),SCEN3=toupper(SCEN3))
+  
+  scen_map_solved$SCEN2 <- str_replace_all(scen_map_solved$SCEN2,"\"","") 
 
   # Define GLOBIOM - Downscaling map
   downs_input <- as_tibble(rgdx.param(path(str_glue(CD,"/",WD_DOWNSCALING,"/input/output_landcover_{PROJECT}_{DATE_LABEL}.gdx")),"LANDCOVER_COMPARE_SCEN"))
   names(downs_input) <- c("ScenNr","LC","SCEN1","SCEN2","SCEN3","Year","value")
   downs_input <- downs_input %>% filter(ScenNr=="World" & LC=="TotLnd" & Year==2000) %>% uncount(RESOLUTION_DOWNSCALING)
   downs_input$ScenNr <- 0:(length(downs_input$ScenNr)-1)
-  downs_input <- downs_input %>% dplyr::select(c(ScenNr,SCEN1,SCEN2,SCEN3))
+  downs_input <- downs_input %>% dplyr::select(c(ScenNr,SCEN1,SCEN2,SCEN3)) %>% 
+    mutate(SCEN1=toupper(SCEN1),SCEN2=toupper(SCEN2),SCEN3=toupper(SCEN3))
+  
+  scen_map_solved$SCEN3 <- scen_map$SCEN3 %>% toupper()
+  downs_input$SCEN3 <- downs_input$SCEN3 %>% toupper()
 
   downscaling_scenarios <- merge(downs_input,scen_map_solved,by=c("SCEN1","SCEN2","SCEN3"))
 
