@@ -567,11 +567,6 @@ run_final_postproc_limpopo <- function(cluster_nr_globiom) {
   if (any(str_detect(scen,"%"))) special_char <- TRUE
   if (special_char)  scen <- unlist(lapply(scen,function(x) str_glue("\"",x,"\"")))
 
-  # Define column indices of Macro, Bioen and IEA scenarios
-  macro_idx <- which(str_detect(scen_globiom_map[1,],regex("SSP",ignore_case = T)))
-  iea_idx <- which(str_detect(scen_globiom_map[1,],regex("RCP",ignore_case = T)))
-  bioen_idx <- 6 - macro_idx - iea_idx
-
   if(special_char) scen_globiom_map[,bioen_idx] <- unlist(lapply(scen_globiom_map[,bioen_idx],function(x) str_glue("\"",x,"\"")))
 
   # Create scenario mapping string
@@ -580,11 +575,11 @@ run_final_postproc_limpopo <- function(cluster_nr_globiom) {
       map_string <-
         str_glue(scen[i],
                  " . ",
-                 scen_globiom_map[i, macro_idx],
+                 scen_globiom_map[i, 1],
                  " . ",
-                 scen_globiom_map[i, bioen_idx],
+                 scen_globiom_map[i, 3],
                  " . ",
-                 scen_globiom_map[i, iea_idx])
+                 scen_globiom_map[i, 2])
     } else {
       map_string <-
         c(
@@ -592,11 +587,11 @@ run_final_postproc_limpopo <- function(cluster_nr_globiom) {
           str_glue(
             scen[i],
             " . ",
-            scen_globiom_map[i, macro_idx],
+            scen_globiom_map[i, 1],
             " . ",
-            scen_globiom_map[i, bioen_idx],
+            scen_globiom_map[i, 3],
             " . ",
-            scen_globiom_map[i, iea_idx]
+            scen_globiom_map[i, 2]
           )
         )
     }
