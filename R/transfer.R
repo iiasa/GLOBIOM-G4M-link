@@ -25,7 +25,8 @@ merge_and_transfer <- function(cluster_nr_downscaling) {
     downs_files <- downs_files %>% filter(LC == "Reserved") %>% dplyr::select(-LC)
 
     # Remap years to columns
-    downs2 <- downs_files %>% spread(Year, value, fill = 0, convert = FALSE)
+    downs2 <- downs_files %>% spread(Year, value, fill = 0, convert = FALSE) %>%
+      mutate(SCEN1=toupper(SCEN1),SCEN2=toupper(SCEN2),SCEN3=toupper(SCEN3))
 
     # Save to G4M folder
     write_csv(downs2, path(CD,str_glue("{WD_G4M}"),"Data","GLOBIOM",str_glue("{PROJECT}_{DATE_LABEL}"),
@@ -63,7 +64,8 @@ merge_and_transfer <- function(cluster_nr_downscaling) {
           names(downs_files) <- c("g4m_05_id","SCEN1","SCEN3","SCEN2","Year","value")
 
           # Remap years to columns
-          downs2 <- downs_files %>% spread(Year, value, fill = 0, convert = FALSE)
+          downs2 <- downs_files %>% spread(Year, value, fill = 0, convert = FALSE) %>%
+            mutate(SCEN1=toupper(SCEN1),SCEN2=toupper(SCEN2),SCEN3=toupper(SCEN3))
 
           # Construct file path
           f <- path(CD,str_glue("{WD_G4M}"),"Data","GLOBIOM",str_glue("{PROJECT}_{DATE_LABEL}"),
