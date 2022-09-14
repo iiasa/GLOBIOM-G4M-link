@@ -49,6 +49,11 @@ if (GENERATE_PLOTS){
   if (any(!SCENARIOS_PLOT_GLOBIOM %in% SCENARIOS_FOR_G4M) | any(!SCENARIOs_PLOT_LOOKUP %in% SCENARIOS_FOR_G4M)) stop("Plot scenario list must be equal or a subset of the G4M scenario list")
 }
 
+# Set baseline scenario name to upper case
+BASE_SCEN1 = BASE_SCEN1 %>% toupper()
+BASE_SCEN2 = BASE_SCEN2 %>% toupper()
+BASE_SCEN3 = BASE_SCEN3 %>% toupper()
+
 # 3. Echos
 for (name in config_names)  {
   print(str_glue("{name} = ", toString(get(name))))
