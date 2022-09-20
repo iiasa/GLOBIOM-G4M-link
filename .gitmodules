@@ -9,3 +9,6 @@
 	path = G4M
 	url = https://github.com/iiasa/G4M_global
 	branch = Link_version
+[submodule "PostProcessing"]
+	path = PostProcessing
+	url = https://github.com/iiasa/PostProcessing
