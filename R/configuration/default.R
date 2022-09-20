@@ -16,6 +16,7 @@ GLOBIOM_POSTPROC_FILE = "8_merge_output.gms"
 #-------------------------------------------------------------------------------
 
 # Post-processing script configuration (8_merged_output)
+WD_POSTPROC = "PostProcessing"
 DATE_LABEL = format(Sys.Date(), "%d%m%Y") # date of run
 REGIONAL_AG = "ggi" # regional aggregation level
 

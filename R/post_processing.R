@@ -199,3 +199,122 @@ run_final_postproc <- function(cluster_nr_globiom) {
 
 
 }
+
+
+
+#' Run initial post-processing
+#'
+#' Parameterize the GLOBIOM 8_merge_output.gms post-processing script to match
+#' the current project configuration and export its output file for downscaling
+#' and G4M.
+#'
+#' @param cluster_nr_globiom Cluster sequence number of prior GLOBIOM HTCondor submission
+run_initial_postproc_iso <- function(cluster_nr_globiom)
+{
+
+  # Check if merged GLOBIOM output exists, if not merge files
+  merged_globiom <- path(CD,WD_GLOBIOM,"Model","gdx",str_glue("output_{PROJECT}_{cluster_nr_globiom}_merged.gdx"))
+  if(!file_exists(merged_globiom)) merge_gdx(PROJECT,path(CD,WD_GLOBIOM,"Model","gdx"),cluster_nr_globiom,1000000)
+
+  # Create downscaling input folder if absent
+  if (!dir_exists(path(CD, WD_DOWNSCALING, "input"))) dir_create(path(CD, WD_DOWNSCALING, "input"))
+
+  # Create G4M input folder if absent
+  if (!dir_exists(path(CD, PATH_FOR_G4M))) dir_create(path(CD, PATH_FOR_G4M))
+
+  # Construct path of landcover output file
+  output_landcover <- path(CD, WD_DOWNSCALING, "input", str_glue("output_landcover_{PROJECT}_{DATE_LABEL}"))
+
+  # Construct path of output file for G4M
+  output_globiom4g4mm <- path(CD, PATH_FOR_G4M, str_glue("output_globiom4g4mm_{PROJECT}_{DATE_LABEL}"))
+
+  # Run post-processing script in the GLOBIOM Model directory
+  prior_wd <- getwd()
+  rc <- tryCatch ({
+    setwd(WD_POSTPROC)
+    rc <- system(str_glue('gams',
+                          '"{GLOBIOM_POSTPROC_FILE}"',
+                          '--limpopo yes',
+                          '--limpopo_nr "{cluster_nr_globiom}"',
+                          '--project "{PROJECT}"',
+                          '--lab "{DATE_LABEL}"',
+                          '--rep_g4m yes',
+                          '--rep_iamc_glo yes',
+                          '--rep_iamc_g4m no',
+                          '--g4mfile "{G4M_FEEDBACK_FILE}"',
+                          '--regionagg "{REGIONAL_AG}"',
+                          '--output_landcover "{output_landcover}"',
+                          '--output_globiom4g4mm "{output_globiom4g4mm}"',
+                          .sep = ' '))
+    if (rc != 0) {
+      stop(str_glue("GAMS failed with return code {rc}! See https://www.gams.com/latest/docs/UG_GAMSReturnCodes.html#INDEX_return_21_codes_2d__21_error_21_codes"))
+    }
+  },
+  finally = {
+    setwd(prior_wd)
+  })
+
+  # Save global environment
+  save_environment("2")
+}
+
+
+#' Run final post-processing
+#'
+#' Reads, edits and executes the GLOBIOM 8_merged_output.gms script to generate
+#' reports for IAMC.
+#'
+#' @param cluster_nr_globiom Cluster sequence number of prior GLOBIOM HTCondor submission
+run_final_postproc_iso <- function(cluster_nr_globiom){
+
+  # Create output file directory
+  out_dir <- path(CD,"output",str_glue("{PROJECT}_{DATE_LABEL}"))
+  out_dir_aux <- str_glue(str_replace_all(out_dir,"/","%X%"),"%X%")
+  if(!dir_exists(out_dir)) dir_create(out_dir)
+  out_file <- path(CD,"output",str_glue("{PROJECT}_{DATE_LABEL}"),str_glue("Output4_IAMC_template_{PROJECT}_{DATE_LABEL}.gdx"))
+
+  # Construct path for feedback file
+  path_feedback <- path(CD,WD_GLOBIOM,"Model","output","g4m",str_glue("{PROJECT}_{DATE_LABEL}"),str_glue("{G4M_FEEDBACK_FILE}"))
+
+  # Define downscaling scenarios for limpopo run
+  scen_string <- "c("
+  for (i in 1: length(SCENARIOS_FOR_G4M)){
+    if (i==1) scen_string <- str_glue(scen_string,SCENARIOS_FOR_G4M[i])
+    scen_string <- str_glue(scen_string,",",SCENARIOS_FOR_G4M[i])
+  }
+  scen_string <- str_glue(scen_string,")")
+
+  # Save edits and run post-processing script in the GLOBIOM Model directory
+  prior_wd <- getwd()
+  rc <- tryCatch ({
+    setwd(path(WD_POSTPROC))
+
+    rc <- system(str_glue('gams',
+                          '{GLOBIOM_POSTPROC_FILE}',
+                          '--limpopo yes',
+                          '--limpopo_nr {cluster_nr_globiom}',
+                          '--project "{PROJECT}"',
+                          '--lab "{DATE_LABEL}"',
+                          '--rep_g4m no',
+                          '--rep_iamc_glo yes',
+                          '--rep_iamc_g4m yes',
+                          '--g4mfile {path_feedback}',
+                          '--outdir {out_file}',
+                          '--CD {CD}',
+                          '--WD_GLOBIOM {WD_GLOBIOM}',
+                          '--g4m_scens "{scen_string}"',
+                          '--BASE1 {BASE_SCEN1}',
+                          '--BASE2 {BASE_SCEN2}',
+                          '--BASE3 {BASE_SCEN3}',
+                          '--regionagg {REGIONAL_AG}',
+                          .sep = ' '))
+    if (rc != 0) {
+      stop(str_glue("GAMS failed with return code {rc}! See https://www.gams.com/latest/docs/UG_GAMSReturnCodes.html#INDEX_return_21_codes_2d__21_error_21_codes"))
+    }
+
+  },
+  finally = {
+    setwd(prior_wd)
+  })
+
+}
