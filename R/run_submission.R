@@ -287,7 +287,7 @@ run_initial_downscaling <- function() {
 
     # Define configuration template as per https://github.com/iiasa/Condor_run_R/blob/master/configuring.md
     config_template <- c(
-      'EXPERIMENT = "{PROJECT}"',
+      'LABEL = "{PROJECT}"',
       'JOBS = c({scen_string})',
       'HOST_REGEXP = "^limpopo"',
       'REQUEST_MEMORY = 7500',
@@ -470,7 +470,7 @@ run_g4m <- function(baseline = NULL) {
 
   # Define configuration template as per https://github.com/iiasa/Condor_run_R/blob/master/configuring.md
   config_template <- c(
-    'EXPERIMENT = "{PROJECT}"',
+    'LABEL = "{PROJECT}"',
     'JOBS = c({str_c(scen_4_g4m, collapse=",")})',
     'HOST_REGEXP = "^limpopo"',
     'REQUEST_MEMORY = 3000',
@@ -728,7 +728,7 @@ run_downscaling_postproc <- function() {
   include <- str_glue(c("**/gdx/output_{PROJECT}_{DATE_LABEL}_{cluster_nr_downscaling}.*.RData"))
 
     config_template <- c(
-      'EXPERIMENT = "{PROJECT}"',
+      'LABEL = "{PROJECT}"',
       'JOBS = {scen_string}',
       'HOST_REGEXP = "^limpopo"',
       'REQUEST_MEMORY = 5000',
@@ -815,7 +815,7 @@ run_downscaling_postproc_split <- function() {
   #include <- str_glue(c("**/gdx/output_{PROJECT}_{DATE_LABEL}_{cluster_nr_downscaling}.*.RData"))
 
   config_template <- c(
-    'EXPERIMENT = "{PROJECT}"',
+    'LABEL = "{PROJECT}"',
     'JOBS = {scen_string}',
     'HOST_REGEXP = "^limpopo"',
     'REQUEST_MEMORY = 5000',
@@ -897,7 +897,7 @@ run_merge_and_transfer <- function(cluster_nr_downscaling) {
   file_copy(include_files,path(CD,WD_DOWNSCALING,"g4m_merge"),overwrite = T)
 
   config_template <- c(
-    'EXPERIMENT = "{PROJECT}"',
+    'LABEL = "{PROJECT}"',
     'JOBS = {SCENARIOS_FOR_DOWNSCALING}',
     'HOST_REGEXP = "^limpopo"',
     'REQUEST_MEMORY = 5000',
