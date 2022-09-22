@@ -81,14 +81,10 @@ DOWNSCALING_JOB_TEMPLATE <- c(
   "error = {log_dir}/{PREFIX}_$(cluster).$(job).err",
   "stream_error = True",
   "", # If a job goes on hold for more than JOB_RELEASE_DELAY seconds, release it up to JOB_RELEASES times
-  "periodic_release =  (NumJobStarts <= {JOB_RELEASES}) && (JobStatus == 5) && ((CurrentTime - EnteredCurrentStatus) > {JOB_RELEASE_DELAY})",
+  "periodic_release =  (NumJobStarts <= {JOB_RELEASES}) && ((time() - EnteredCurrentStatus) > {JOB_RELEASE_DELAY})",
   "periodic_remove =  (JobStatus == 5)",
   "",
-  "requirements = \\",
-  '  ( (Arch =="INTEL")||(Arch =="X86_64") ) && \\',
-  '  ( (OpSys == "WINDOWS")||(OpSys == "WINNT61") ) && \\',
-  "  ( GLOBIOM =?= True ) && \\",
-  "  ( ( TARGET.Machine == \"{str_c(hostdoms, collapse='\" ) || ( TARGET.Machine == \"')}\") )",
+  "{build_requirements_expression(REQUIREMENTS, hostdoms)}",
   "request_memory = {REQUEST_MEMORY}",
   "request_cpus = {REQUEST_CPUS}", # Number of "CPUs" (hardware threads) to reserve for each job
   "request_disk = {request_disk}",
