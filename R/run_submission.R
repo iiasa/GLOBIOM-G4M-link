@@ -63,47 +63,6 @@ run_globiom_scenarios <- function() {
 }
 
 
-# Define the job template for Downscaling.
-# Note that as of R 4.0.0, r(...) raw string constants are an option,
-# but we want to support R < 4.0.0
-
-DOWNSCALING_JOB_TEMPLATE <- c(
-  "executable = {bat_path}",
-  "arguments = $(job)",
-  "universe = vanilla",
-  "",
-  "nice_user = {ifelse(NICE_USER, 'True', 'False')}",
-  "",
-  "# Job log, output, and error files",
-  "log = {log_dir}/{PREFIX}_$(cluster).$(job).log", # don't use $$() expansion here: Condor creates the log file before it can resolve the expansion
-  "output = {log_dir}/{PREFIX}_$(cluster).$(job).out",
-  "stream_output = True",
-  "error = {log_dir}/{PREFIX}_$(cluster).$(job).err",
-  "stream_error = True",
-  "", # If a job goes on hold for more than JOB_RELEASE_DELAY seconds, release it up to JOB_RELEASES times
-  "periodic_release =  (NumJobStarts <= {JOB_RELEASES}) && ((time() - EnteredCurrentStatus) > {JOB_RELEASE_DELAY})",
-  "periodic_remove =  (JobStatus == 5)",
-  "",
-  "{build_requirements_expression(REQUIREMENTS, hostdoms)}",
-  "request_memory = {REQUEST_MEMORY}",
-  "request_cpus = {REQUEST_CPUS}", # Number of "CPUs" (hardware threads) to reserve for each job
-  "request_disk = {request_disk}",
-  "",
-  '+IIASAGroup = "ESM"', # Identifies you as part of the group allowed to use ESM cluster
-  "run_as_owner = {ifelse(RUN_AS_OWNER, 'True', 'False')}",
-  "",
-  "should_transfer_files = YES",
-  "when_to_transfer_output = ON_EXIT",
-  'transfer_output_files = {str_sub(in_gams_curdir(GAMS_FILE_PATH), 1, -5)}.lst{ifelse(GET_G00_OUTPUT, str_glue(",{in_gams_curdir(G00_OUTPUT_DIR)}/{G00_OUTPUT_FILE}"), "")}{ifelse(GET_GDX_OUTPUT, str_glue(",{in_gams_curdir(GDX_OUTPUT_DIR)}/{GDX_OUTPUT_FILE}"), "")}',
-  'transfer_output_remaps = "{str_sub(GAMS_FILE_PATH, 1, -5)}.lst={log_dir}/{PREFIX}_$(cluster).$(job).lst{ifelse(GET_G00_OUTPUT, str_glue(";{G00_OUTPUT_FILE}={G00_OUTPUT_DIR_SUBMIT}/{g00_prefix}_{LABEL}_$(cluster).$(job).g00"), "")}{ifelse(GET_GDX_OUTPUT, str_glue(";{GDX_OUTPUT_FILE}={GDX_OUTPUT_DIR_SUBMIT}/{gdx_prefix}_{LABEL}_$(cluster).$$([substr(strcat(string(0),string(0),string(0),string(0),string(0),string(0),string($(job))),-6)]).gdx"), "")}"',
-  "",
-  "notification = {NOTIFICATION}",
-  '{ifelse(is.null(EMAIL_ADDRESS), "", str_glue("notify_user = {EMAIL_ADDRESS}"))}',
-  "",
-  "queue job in ({str_c(JOBS,collapse=',')})"
-)
-
-
 #' Run initial downscaling
 #'
 #' Run the initial downscaling by submitting scenarios for parallel execution on
@@ -147,20 +106,17 @@ run_initial_downscaling <- function() {
       'REQUEST_MEMORY = 2500',
       'REQUEST_DISK = 1400000',
       'REQUEST_CPUS = 1',
-      'JOB_RELEASES = 3',
-      'JOB_RELEASE_DELAY = 120',
       'BUNDLE_EXCLUDE_FILES = "**/gdx/*.*"',
       'GAMS_FILE_PATH = "{DOWNSCALING_SCRIPT}"',
       'GAMS_VERSION = "32.2"',
       'GAMS_ARGUMENTS = "//project={PROJECT} //lab={DATE_LABEL} //gdx_path=gdx/downscaled.gdx //nsim=%1"',
       'BUNDLE_INCLUDE_DIRS = c("include")',
+      'JOB_OVERRIDES = list("periodic_release" = "periodic_remove = (JobStatus == 5)")',
       'WAIT_FOR_RUN_COMPLETION = TRUE',
       'CLEAR_LINES = FALSE',
       'GET_GDX_OUTPUT = TRUE',
       'GDX_OUTPUT_DIR = "gdx"',
       'GDX_OUTPUT_FILE = "downscaled.gdx"',
-      'JOB_TEMPLATE = ',
-      '{DOWNSCALING_JOB_TEMPLATE}',
       'CLUSTER_NUMBER_LOG = "{cluster_number_log}"'
     )
     config_path <- file.path(TEMP_DIR, "config_down.R")
@@ -214,20 +170,17 @@ run_initial_downscaling <- function() {
         'REQUEST_MEMORY = 2500',
         'REQUEST_DISK = 1400000',
         'REQUEST_CPUS = 1',
-        'JOB_RELEASES = 0',
-        'JOB_RELEASE_DELAY = 120',
         'BUNDLE_EXCLUDE_FILES = "**/gdx/*.*"',
         'GAMS_FILE_PATH = "{DOWNSCALING_SCRIPT}"',
         'GAMS_VERSION = "32.2"',
         'GAMS_ARGUMENTS = "//project={PROJECT} //lab={DATE_LABEL} //gdx_path=gdx/downscaled.gdx //nsim=%1"',
         'BUNDLE_INCLUDE_DIRS = c("include")',
+        'JOB_OVERRIDES = list("periodic_release" = "periodic_remove = (JobStatus == 5)")',
         'WAIT_FOR_RUN_COMPLETION = TRUE',
         'CLEAR_LINES = FALSE',
         'GET_GDX_OUTPUT = TRUE',
         'GDX_OUTPUT_DIR = "gdx"',
         'GDX_OUTPUT_FILE = "downscaled.gdx"',
-        'JOB_TEMPLATE = ',
-        '{DOWNSCALING_JOB_TEMPLATE}',
         'CLUSTER_NUMBER_LOG = "{cluster_number_log}"'
       )
       config_path <- file.path(TEMP_DIR, "config_down.R")
