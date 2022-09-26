@@ -305,45 +305,6 @@ run_initial_downscaling <- function() {
   readr::parse_number(read_file(cluster_number_log))
 }
 
-# Define the job template for G4M.
-# Note that as of R 4.0.0, r(...) raw string constants are an option,
-# but we want to support R < 4.0.0
-
-G4M_JOB_TEMPLATE <- c(
-  "executable = {bat_path}",
-  "arguments = $(job)",
-  "universe = vanilla",
-  "",
-  "nice_user = {ifelse(NICE_USER, 'True', 'False')}",
-  "",
-  "# Job log, output, and error files",
-  "log = {log_dir}/{PREFIX}_$(cluster).$(job).log", # don't use $$() expansion here: Condor creates the log file before it can resolve the expansion
-  "output = {log_dir}/{PREFIX}_$(cluster).$(job).out",
-  "stream_output = True",
-  "error = {log_dir}/{PREFIX}_$(cluster).$(job).err",
-  "stream_error = True",
-  "", # If a job goes on hold for more than JOB_RELEASE_DELAY seconds, release it up to JOB_RELEASES times
-  "periodic_release =  (NumJobStarts <= {JOB_RELEASES}) && ((time() - EnteredCurrentStatus) > {JOB_RELEASE_DELAY})",
-  "",
-  "{build_requirements_expression(REQUIREMENTS, hostdoms)}",
-  "request_memory = {REQUEST_MEMORY}",
-  "request_cpus = {REQUEST_CPUS}", # Number of "CPUs" (hardware threads) to reserve for each job
-  "request_disk = {request_disk}",
-  "",
-  '+IIASAGroup = "ESM"', # Identifies you as part of the group allowed to use ESM cluster
-  "run_as_owner = {ifelse(RUN_AS_OWNER, 'True', 'False')}",
-  "",
-  "should_transfer_files = YES",
-  "when_to_transfer_output = ON_EXIT",
-  "transfer_output_files = out",
-  'transfer_output_remaps = \"out={OUTPUT_DIR}\"',
-  "",
-  "notification = {NOTIFICATION}",
-  '{ifelse(is.null(EMAIL_ADDRESS), "", str_glue("notify_user = {EMAIL_ADDRESS}"))}',
-  "",
-  "queue job in ({str_c(JOBS,collapse=',')})"
-)
-
 #' Run G4M
 #'
 #' Run G4M by submitting jobs for parallel execution on an HTCondor cluster.
@@ -431,8 +392,7 @@ run_g4m <- function(baseline = NULL) {
     '{seed_files}',
     'BUNDLE_INCLUDE = ',
     '"{files_include}"',
-    'JOB_TEMPLATE = ',
-    '{G4M_JOB_TEMPLATE}',
+    'JOB_OVERRIDES = list("transfer_output_files" = "transfer_output_files = out", "transfer_output_remaps" = "transfer_output_remaps = \"out={OUTPUT_DIR}\"")',
     'WAIT_FOR_RUN_COMPLETION = TRUE',
     'CLEAR_LINES = FALSE',
     'GET_OUTPUT = FALSE',
