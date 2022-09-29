@@ -16,7 +16,6 @@ run_globiom_scenarios <- function() {
   config_template <- c(
     'LABEL = "{PROJECT}"',
     'JOBS = c({str_c(SCENARIOS, collapse=",")})',
-    'HOST_REGEXP = "^limpopo"',
     'REQUEST_MEMORY = 18000',
     'REQUEST_DISK = 2200000',
     'REQUEST_CPUS = 1',
@@ -102,7 +101,6 @@ run_initial_downscaling <- function() {
     config_template <- c(
       'LABEL = "{PROJECT}"',
       'JOBS = c({scen_string})',
-      'HOST_REGEXP = "^limpopo"',
       'REQUEST_MEMORY = 2500',
       'REQUEST_DISK = 1400000',
       'REQUEST_CPUS = 1',
@@ -238,7 +236,6 @@ run_initial_downscaling <- function() {
     config_template <- c(
       'LABEL = "{PROJECT}"',
       'JOBS = c({scen_string})',
-      'HOST_REGEXP = "^limpopo"',
       'REQUEST_MEMORY = 7500',
       'REQUEST_DISK = 1500000',
       'REQUEST_CPUS = 1',
@@ -378,7 +375,6 @@ run_g4m <- function(baseline = NULL) {
   config_template <- c(
     'LABEL = "{PROJECT}"',
     'JOBS = c({str_c(scen_4_g4m, collapse=",")})',
-    'HOST_REGEXP = "^limpopo"',
     'REQUEST_MEMORY = 3000',
     'REQUEST_DISK = 1400000',
     'REQUEST_CPUS = 1',
@@ -544,7 +540,6 @@ run_final_postproc_limpopo <- function(cluster_nr_globiom) {
     config_template <- c(
       'LABEL = "{PROJECT}"',
       'JOBS = 0',
-      'HOST_REGEXP = "^limpopo"',
       'REQUEST_MEMORY = 200000',
       'REQUEST_DISK = 4000000',
       'REQUEST_CPUS = 1',
@@ -635,7 +630,6 @@ run_downscaling_postproc <- function() {
     config_template <- c(
       'LABEL = "{PROJECT}"',
       'JOBS = {scen_string}',
-      'HOST_REGEXP = "^limpopo"',
       'REQUEST_MEMORY = 5000',
       'BUNDLE_EXCLUDE_FILES = c("**/gdx/*.*")',
       'REQUEST_CPUS = 1',
@@ -722,7 +716,6 @@ run_downscaling_postproc_split <- function() {
   config_template <- c(
     'LABEL = "{PROJECT}"',
     'JOBS = {scen_string}',
-    'HOST_REGEXP = "^limpopo"',
     'REQUEST_MEMORY = 5000',
     'BUNDLE_EXCLUDE_FILES = c("**/gdx/*.*","**/input/*.gdx")',
     'BUNDLE_EXCLUDE_DIRS = c("output", "prior_module", "source","t")',
@@ -804,7 +797,6 @@ run_merge_and_transfer <- function(cluster_nr_downscaling) {
   config_template <- c(
     'LABEL = "{PROJECT}"',
     'JOBS = {SCENARIOS_FOR_DOWNSCALING}',
-    'HOST_REGEXP = "^limpopo"',
     'REQUEST_MEMORY = 5000',
     'BUNDLE_EXCLUDE_DIRS = c("output", "prior_module", "source","t","postproc","renv","gdx")',
     'BUNDLE_EXCLUDE_FILES = c(".Rprofile","renv.lock","input/*.gdx")',
