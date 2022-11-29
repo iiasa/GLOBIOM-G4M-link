@@ -6,7 +6,7 @@
 # 1. Check
 for (i in seq_along(config_names))  {
   name <- config_names[i]
-  if (!exists(name)) stop(str_glue("Mandatory config setting {name} is not set in config file {args[1]}!"))
+  if (!exists(name)) stop(str_glue("Mandatory config setting {name} is not set in configuration file!"))
   type <- typeof(get(name))
   if (type != config_types[[i]] &&
       type != "integer" && # R has no stable numerical type
