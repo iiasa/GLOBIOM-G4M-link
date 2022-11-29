@@ -9,7 +9,7 @@ merge_gdx <- function(project, wd, c_nr, big_par) {
 
   # Define arguments
   merge_args <- c()
-  merge_args <- c(merge_args, str_glue("output_", project, "_", c_nr, ".*.gdx"))
+  merge_args <- c(merge_args, str_glue("output_", c_nr, ".*.gdx"))
   merge_args <- c(merge_args, str_glue("output=output_", project, "_", c_nr, "_merged.gdx"))
   merge_args <- c(merge_args, str_glue("big=", big_par))
 
@@ -33,15 +33,15 @@ merge_gdx <- function(project, wd, c_nr, big_par) {
 #' @param s_cnt identifier for the merged output
 #' @param c_nr limpopo cluster number
 #' @param path_out output directory for the merged gdx
-merge_gdx_down <- function(wd_out,s_list,s_cnt,c_nr,path_out){
+merge_gdx_down <- function(wd_out, s_list, s_cnt, c_nr, path_out){
   prior_wd <- getwd()
   rc <- tryCatch ({
     setwd(wd_out)
 
     s_list <-  sprintf("%06d", s_list)
     merge_args <- c()
-    merge_args <- c(merge_args, str_c(str_glue("downscaled_{PROJECT}_"),c_nr,".",s_list,".gdx"))
-    merge_args <- c(merge_args, str_glue(str_glue("output=",path_out,"/output_landcover_{PROJECT}_",s_cnt,"_merged.gdx")))
+    merge_args <- c(merge_args, str_c(str_glue("downscaled_"), c_nr, ".", s_list, ".gdx"))
+    merge_args <- c(merge_args, str_glue(str_glue("output=", path_out, "/output_landcover_{PROJECT}_", s_cnt, "_merged.gdx")))
 
     # Invoke GDX merge
     rc <- tryCatch(
@@ -63,7 +63,7 @@ merge_gdx_down <- function(wd_out,s_list,s_cnt,c_nr,path_out){
 #' @param cluster_nr_globiom Cluster sequence number of prior GLOBIOM HTCondor submission
 check_sol <- function(cluster_nr_globiom){
 
-  f <- path(CD,WD_GLOBIOM,"Model","gdx",str_glue("output_{PROJECT}_",cluster_nr_globiom,"_merged.gdx"))
+  f <- path(CD,WD_GLOBIOM,"Model", "gdx", str_glue("output_{PROJECT}_", cluster_nr_globiom, "_merged.gdx"))
   # Check for active ART_VARs
   artvar <- rgdx.param(f,"ARTVAR_ACTIVE")
 
@@ -175,7 +175,7 @@ gdx_to_csv_for_g4m <- function() {
 get_mapping <- function(){
 
   s_nr <-  sprintf("%06d", SCENARIOS[1])
-  scen_map <- rgdx.set(path(CD,WD_GLOBIOM,"Model","gdx",str_glue("output_{PROJECT}_",cluster_nr_globiom,".",s_nr,".gdx")),"SCEN_MAP")
+  scen_map <- rgdx.set(path(CD,WD_GLOBIOM,"Model","gdx",str_glue("output_",cluster_nr_globiom,".",s_nr,".gdx")),"SCEN_MAP")
 
   scen_map <- scen_map  %>% na_if("") %>% na.omit
   scen_dims <- colnames(scen_map)
@@ -441,7 +441,7 @@ g4m_to_simu <- function(){
 
     # Load in downscalr output
     downscalr_out <- rfunc(path(WD_DOWNSCALING,"gdx",
-                            str_glue("output_",PROJECT,"_",cluster_nr_downscaling,".",
+                            str_glue("output_",cluster_nr_downscaling,".",
                                               sprintf("%06d",dscens$ScenNr),".RData")))
 
     # Get output

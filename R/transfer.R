@@ -53,7 +53,7 @@ merge_and_transfer <- function(cluster_nr_downscaling) {
 
         # Read data for G4M
         if (!DOWNSCALING_TYPE=="downscalr"){
-          downs_files <- rgdx.param(path(CD,WD_DOWNSCALING,"gdx", str_glue("downscaled_{PROJECT}_{cluster_nr_downscaling}.",
+          downs_files <- rgdx.param(path(CD,WD_DOWNSCALING,"gdx", str_glue("downscaled_{cluster_nr_downscaling}.",
                                                                            s_list,".gdx")),"LandCover_G4MID")
           # Select data for G4M
           if (dim(downs_files)[2] == 8) downs_files <- downs_files[,-1]
@@ -81,7 +81,7 @@ merge_and_transfer <- function(cluster_nr_downscaling) {
 
         } else {
 
-          downs_files <- readRDS(path(CD,WD_DOWNSCALING,"gdx", str_glue("output_{PROJECT}_{cluster_nr_downscaling}.",
+          downs_files <- readRDS(path(CD,WD_DOWNSCALING,"gdx", str_glue("output_{cluster_nr_downscaling}.",
                                                                         s_list,".RData")))[[2]] %>% select(-LC_TYPES_EPIC)
 
           f <- path(CD,str_glue("{WD_G4M}"),"Data","GLOBIOM",str_glue("{PROJECT}_{DATE_LABEL}"),

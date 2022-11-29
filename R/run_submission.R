@@ -209,7 +209,7 @@ run_initial_downscaling <- function() {
 
       lapply(dir_ls(
         path(CD, WD_DOWNSCALING, "gdx"),
-        regexp = str_glue("downscaled_{PROJECT}_{current_cluster}.*.gdx")
+        regexp = str_glue("downscaled_{current_cluster}.*.gdx")
       ),
       function(x) {
         scen_nr <- str_sub(x, -10, -5)
@@ -218,7 +218,7 @@ run_initial_downscaling <- function() {
           CD,
           WD_DOWNSCALING,
           "gdx",
-          str_glue("downscaled_{PROJECT}_{cluster}.{scen_nr}.gdx")
+          str_glue("downscaled_{cluster}.{scen_nr}.gdx")
         ))
 
       })
