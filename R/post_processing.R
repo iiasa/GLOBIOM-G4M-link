@@ -11,7 +11,7 @@ run_initial_postproc <- function(cluster_nr_globiom)
 {
   save_environment("1")
 
-  # Merge GDX files
+  # Merge output GDX files to "output_{PROJECT}_{cluster_nr_globiom}_merged.gdx"
   merge_gdx(PROJECT,path(CD,WD_GLOBIOM,"Model","gdx"),cluster_nr_globiom,1000000)
 
   # Check solution for infeasibilities
@@ -210,8 +210,7 @@ run_final_postproc <- function(cluster_nr_globiom) {
 #' @param cluster_nr_globiom Cluster sequence number of prior GLOBIOM HTCondor submission
 run_initial_postproc_iso <- function(cluster_nr_globiom)
 {
-
-  # Merge files("output_{PROJECT}_{cluster_nr_globiom}_merged.gdx"))
+  # Merge output GDXes to "output_{PROJECT}_{cluster_nr_globiom}_merged.gdx"
   merge_gdx(PROJECT,path(CD,WD_GLOBIOM,"Model","gdx"),cluster_nr_globiom,1000000)
 
   # Create downscaling input folder if absent
