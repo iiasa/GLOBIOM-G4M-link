@@ -34,8 +34,6 @@ run_globiom_scenarios <- function() {
     'GET_GDX_OUTPUT = TRUE',
     'GDX_OUTPUT_DIR = "gdx"',
     'GDX_OUTPUT_FILE = "output.gdx"',
-    'MERGE_GDX_OUTPUT = TRUE',
-    'MERGE_BIG = 1000000',
     'CLUSTER_NUMBER_LOG = "{cluster_number_log}"'
   )
 
