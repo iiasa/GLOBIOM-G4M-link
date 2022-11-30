@@ -16,6 +16,7 @@ run_globiom_scenarios <- function() {
   config_template <- c(
     'LABEL = "{PROJECT}"',
     'JOBS = c({str_c(SCENARIOS, collapse=",")})',
+    'REQUIREMENTS = c("GLOBIOM")',
     'REQUEST_MEMORY = 18000',
     'REQUEST_DISK = 2200000',
     'REQUEST_CPUS = 1',
@@ -99,6 +100,7 @@ run_initial_downscaling <- function() {
     config_template <- c(
       'LABEL = "{PROJECT}"',
       'JOBS = c({scen_string})',
+      'REQUIREMENTS = c("GLOBIOM")',
       'REQUEST_MEMORY = 2500',
       'REQUEST_DISK = 1400000',
       'REQUEST_CPUS = 1',
@@ -538,6 +540,7 @@ run_final_postproc_limpopo <- function(cluster_nr_globiom) {
     config_template <- c(
       'LABEL = "{PROJECT}"',
       'JOBS = 0',
+      'REQUIREMENTS = c("GLOBIOM")',
       'REQUEST_MEMORY = 200000',
       'REQUEST_DISK = 4000000',
       'REQUEST_CPUS = 1',
