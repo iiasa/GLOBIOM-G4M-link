@@ -100,7 +100,7 @@ run_initial_downscaling <- function() {
     config_template <- c(
       'LABEL = "{PROJECT}"',
       'JOBS = c({scen_string})',
-      'REQUIREMENTS = c("GLOBIOM")',
+      'REQUIREMENTS = c("GAMS")',
       'REQUEST_MEMORY = 2500',
       'REQUEST_DISK = 1400000',
       'REQUEST_CPUS = 1',
@@ -164,6 +164,7 @@ run_initial_downscaling <- function() {
       config_template <- c(
         'LABEL = "{PROJECT}"',
         'JOBS = c({scen_string})',
+        'REQUIREMENTS = c("GAMS"),',
         'HOST_REGEXP = "^limpopo[5-6]"',
         'REQUEST_MEMORY = 2500',
         'REQUEST_DISK = 1400000',
@@ -236,6 +237,7 @@ run_initial_downscaling <- function() {
     config_template <- c(
       'LABEL = "{PROJECT}"',
       'JOBS = c({scen_string})',
+      'REQUIREMENTS = c("R")',
       'REQUEST_MEMORY = 7500',
       'REQUEST_DISK = 1500000',
       'REQUEST_CPUS = 1',
@@ -375,6 +377,7 @@ run_g4m <- function(baseline = NULL) {
   config_template <- c(
     'LABEL = "{PROJECT}"',
     'JOBS = c({str_c(scen_4_g4m, collapse=",")})',
+    'REQUIREMENTS = c("R")',
     'REQUEST_MEMORY = 3000',
     'REQUEST_DISK = 1400000',
     'REQUEST_CPUS = 1',
@@ -631,6 +634,7 @@ run_downscaling_postproc <- function() {
     config_template <- c(
       'LABEL = "{PROJECT}"',
       'JOBS = {scen_string}',
+      'REQUIREMENTS = c("R")',
       'REQUEST_MEMORY = 5000',
       'BUNDLE_EXCLUDE_FILES = c("**/gdx/*.*")',
       'REQUEST_CPUS = 1',
@@ -717,6 +721,7 @@ run_downscaling_postproc_split <- function() {
   config_template <- c(
     'LABEL = "{PROJECT}"',
     'JOBS = {scen_string}',
+    'REQUIREMENTS = c("R")',
     'REQUEST_MEMORY = 5000',
     'BUNDLE_EXCLUDE_FILES = c("**/gdx/*.*","**/input/*.gdx")',
     'BUNDLE_EXCLUDE_DIRS = c("output", "prior_module", "source","t")',
@@ -798,6 +803,7 @@ run_merge_and_transfer <- function(cluster_nr_downscaling) {
   config_template <- c(
     'LABEL = "{PROJECT}"',
     'JOBS = {SCENARIOS_FOR_DOWNSCALING}',
+    'REQUIREMENTS = c("R")',
     'REQUEST_MEMORY = 5000',
     'BUNDLE_EXCLUDE_DIRS = c("output", "prior_module", "source","t","postproc","renv","gdx")',
     'BUNDLE_EXCLUDE_FILES = c(".Rprofile","renv.lock","input/*.gdx")',
