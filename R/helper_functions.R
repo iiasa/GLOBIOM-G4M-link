@@ -201,7 +201,7 @@ get_mapping <- function(){
   downs_input <- downs_input %>% dplyr::select(c(ScenNr,SCEN1,SCEN2,SCEN3)) %>%
     mutate(SCEN1=toupper(SCEN1),SCEN2=toupper(SCEN2),SCEN3=toupper(SCEN3))
 
-  scen_map_solved$SCEN3 <- scen_map$SCEN3 %>% toupper()
+  scen_map_solved$SCEN3 <- scen_map_solved$SCEN3 %>% toupper()
   downs_input$SCEN3 <- downs_input$SCEN3 %>% toupper()
 
   downscaling_scenarios <- merge(downs_input,scen_map_solved,by=c("SCEN1","SCEN2","SCEN3"))

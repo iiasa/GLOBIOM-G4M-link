@@ -313,14 +313,6 @@ run_g4m <- function(baseline = NULL) {
   if (!is.logical(baseline))
     stop("Set baseline parameter to TRUE or FALSE!")
 
-  # Provide and output directory relative to WD_G4M
-  if (baseline) {
-    output_dir <- path("out", str_glue("{PROJECT}_{DATE_LABEL}\\\\baseline"))
-    output_dir_aux <- path(CD, WD_G4M, "out", str_glue("{PROJECT}_{DATE_LABEL}"),"baseline")
-    if (!dir_exists(output_dir_aux)) dir_create(output_dir_aux)
-  } else {
-    output_dir <- path("out", str_glue("{PROJECT}_{DATE_LABEL}"))
-  }
 
   # Get downscaling mapping
   downs_map <-  get_mapping() %>% dplyr::select(-ScenNr) %>%
@@ -347,7 +339,6 @@ run_g4m <- function(baseline = NULL) {
     bau_file_list <- str_glue(path(CD, WD_G4M, "out", str_glue("{PROJECT}_{DATE_LABEL}"), "baseline"),"/*.bin")
     seed_files <- c(base_file_list, bau_file_list, str_glue("{G4M_EXE}"),path(CD,WD_G4M,"g4m_run.R"))
     output_folder <- str_glue("out/{PROJECT}_{DATE_LABEL}")
-    if (!dir_exists(output_folder)) dir_create(output_folder)
   }
 
   seed_files <- str_replace_all(seed_files,"/","\\\\")
@@ -368,6 +359,7 @@ run_g4m <- function(baseline = NULL) {
   } else {
     scen_4_g4m <- SCENARIOS_FOR_G4M
   }
+
 
   files_include <- str_glue(path(CD,WD_G4M,"Data","GLOBIOM","{PROJECT}_{DATE_LABEL}/*.*"))
 
@@ -391,11 +383,11 @@ run_g4m <- function(baseline = NULL) {
     '{seed_files}',
     'BUNDLE_INCLUDE = ',
     '"{files_include}"',
-    'JOB_OVERRIDES = list("transfer_output_files" = "transfer_output_files = out", "transfer_output_remaps" = "transfer_output_remaps = \"out={OUTPUT_DIR}\"")',
+    'JOB_OVERRIDES = list("transfer_output_files" = "transfer_output_files = out", "transfer_output_remaps" = \'transfer_output_remaps = "out = {output_folder}"\')',
     'WAIT_FOR_RUN_COMPLETION = TRUE',
     'CLEAR_LINES = FALSE',
-    'GET_OUTPUT = FALSE',
-    'OUTPUT_DIR = "{output_folder}"',
+    'GET_OUTPUT = TRUE',
+    'OUTPUT_DIR = "out"',
     'OUTPUT_FILE = ""'
   )
 
