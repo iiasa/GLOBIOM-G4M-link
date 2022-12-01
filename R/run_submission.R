@@ -608,7 +608,7 @@ run_downscaling_postproc <- function() {
   saveRDS(c(PROJECT,DATE_LABEL,cluster_nr_downscaling),path(WD_DOWNSCALING,"input","config.RData"))
 
   # Define files to bundle
-  downscaling_files <- dir_ls(path(CD,WD_DOWNSCALING,"gdx"),regexp = str_glue("output_{PROJECT}_{cluster_nr_downscaling}.*.RData")) %>%
+  downscaling_files <- dir_ls(path(CD,WD_DOWNSCALING,"gdx"),regexp = str_glue("output_{cluster_nr_downscaling}.*.RData")) %>%
   str_replace_all("/","\\\\") %>% sort()
 
   g4m_files <- dir_ls(path(CD,WD_G4M,"out",str_glue("{PROJECT}_{DATE_LABEL}")),
@@ -621,7 +621,7 @@ run_downscaling_postproc <- function() {
   if (!dir_exists(path(CD,WD_DOWNSCALING,"postproc"))) dir_create(path(CD,WD_DOWNSCALING,"postproc"))
   file_copy(g4m_files,path(CD,WD_DOWNSCALING,"postproc"),overwrite = T)
   file_copy(downscaling_files,path(CD,WD_DOWNSCALING,"postproc"),overwrite = T)
-  include <- str_glue(c("**/gdx/output_{PROJECT}_{DATE_LABEL}_{cluster_nr_downscaling}.*.RData"))
+  include <- str_glue(c("**/gdx/output_{cluster_nr_downscaling}.*.RData"))
 
     config_template <- c(
       'LABEL = "{PROJECT}"',
@@ -688,7 +688,7 @@ run_downscaling_postproc_split <- function() {
     scen_string <- str_glue("c(",scen_string,str_glue(min(scenarios_idx),":",max(scenarios_idx)),")")
 
   # Define files to bundle
-  downscaling_files <- dir_ls(path(CD,WD_DOWNSCALING,"gdx"),regexp=str_glue("output_{PROJECT}_{cluster_nr_downscaling}.",
+  downscaling_files <- dir_ls(path(CD,WD_DOWNSCALING,"gdx"),regexp=str_glue("output_{cluster_nr_downscaling}.",
                                                                     "*",".RData"))  %>% sort()
   idx <-  which(!is.na(str_match(downscaling_files,sprintf("%06d",scenarios_idx))))
   #  str_replace_all("/","\\\\") %>% sort()
@@ -780,9 +780,9 @@ run_merge_and_transfer <- function(cluster_nr_downscaling) {
 
   # Get downscaled files (!transfer is faster than using BUNDLE_ADDITIONAL_FILES)
   if (!DOWNSCALING_TYPE == "downscalr") {
-    include_files <- dir_ls(path(CD,WD_DOWNSCALING,"gdx"),regexp=str_glue("downscaled_{PROJECT}_{cluster_nr_downscaling}.*.*"))
+    include_files <- dir_ls(path(CD,WD_DOWNSCALING,"gdx"),regexp=str_glue("downscaled_{cluster_nr_downscaling}.*.*"))
   } else {
-    include_files <- dir_ls(path(CD,WD_DOWNSCALING,"gdx"),regexp=str_glue("output_{PROJECT}_{cluster_nr_downscaling}.*.*"))
+    include_files <- dir_ls(path(CD,WD_DOWNSCALING,"gdx"),regexp=str_glue("output_{cluster_nr_downscaling}.*.*"))
   }
 
   exclude_files <- dir_ls(path(CD,WD_DOWNSCALING,"gdx")) %>%
