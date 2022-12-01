@@ -401,6 +401,7 @@ run_g4m <- function(baseline = NULL) {
   prior_wd <- getwd()
   rc <- tryCatch ({
     setwd(WD_G4M)
+    if(!dir_exists("out")) dir_create("out")
     system(str_glue("Rscript --vanilla {CD}/Condor_run_R//Condor_run_basic.R {config_path}"))
   },
   finally = {
