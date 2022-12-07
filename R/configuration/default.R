@@ -36,7 +36,7 @@ RESOLUTION_DOWNSCALING = 37 # number of regions specified in the downscaling
 # Specific parameters for statistical downscaling (DOWNSCALING_TYPE = downscalr)
 ISIMIP = FALSE # Use starting land cover maps from ISIMIP
 CLUSTER = TRUE # runs downscaling on the cluster
-DOWNSCALR_SCRIPT = "downscaling_GAMSlink_GGL.R"
+DOWNSCALR_SCRIPT = ifelse(ISIMIP,"downscaling_GAMSlink_ISIMIP.R","downscaling_GAMSlink_GGL.R")
 #-------------------------------------------------------------------------------
 
 # 4th and 5th block - G4M run
