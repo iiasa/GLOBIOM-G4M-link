@@ -63,7 +63,7 @@ The notebook depends on:
   that fails, install via `install.packages("fs")`.
 - [**gdxrrw**](https://github.com/GAMS-dev/gdxrrw), an R package for
   reading/writing GDX files from R.
- - On Windows only: [Rtools4](https://cran.r-project.org/bin/windows/Rtools/).
+ - On Windows only: [Rtools](https://cran.r-project.org/bin/windows/Rtools/).
 
 Please read [these instructions](https://github.com/iiasa/xl2gdx#dependencies) for details on how to install them.
 
