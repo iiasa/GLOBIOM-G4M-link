@@ -410,7 +410,7 @@ clear_environment <- function(){
 #'
 transfer_outputs <- function(){
 
-  out_file <- dir_ls(path(CD,WD_GLOBIOM,"Model","output","iamc"),regexp=str_glue("Output4_IAMC_template_{PROJECT}_{DATE_LABEL}*.*gdx"))
+  out_file <- dir_ls(path(CD,WD_GLOBIOM,"Model","output","iamc"),regexp=str_glue("Output4_IAMC_template_{PROJECT}_{cluster_nr_globiom}_{REGIONAL_AG}*.*gdx"))
   new_dir <- path(CD,"output",str_glue("{PROJECT}_{DATE_LABEL}"),str_glue("Output4_IAMC_template_{PROJECT}_{DATE_LABEL}.gdx"))
 
   # Transfer gdx to output folder
@@ -616,4 +616,23 @@ get_return_values <- function(log_directory, log_file_names) {
     return_values <- c(return_values, return_value)
   }
   return(return_values)
+}
+
+
+# Read multiple binary files based on spcific index
+get_rds_out <- function(x,k){
+  return(read_rds(x)[[k]])
+}
+
+# Split block of scenarios for submission
+divide <- function(x, n)
+{
+  i <- ceiling(length(x)/n)
+
+  if (length(scen_block) < n) {
+    scen_block <- split(x,1)
+  } else {
+    scen_block <- split(x,x%/%i+1)
+  }
+  return(scen_block)
 }

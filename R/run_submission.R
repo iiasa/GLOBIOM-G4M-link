@@ -165,7 +165,7 @@ run_initial_downscaling <- function() {
         'LABEL = "{PROJECT}"',
         'JOBS = c({scen_string})',
         'REQUIREMENTS = c("GAMS"),',
-        'HOST_REGEXP = "^limpopo[5-6]"',
+        'HOST_REGEXP = "^limpopo"',
         'REQUEST_MEMORY = 2500',
         'REQUEST_DISK = 1400000',
         'REQUEST_CPUS = 1',
@@ -553,7 +553,7 @@ run_final_postproc_limpopo <- function(cluster_nr_globiom) {
       'GET_GDX_OUTPUT = TRUE',
       'GDX_OUTPUT_DIR = "output/iamc"',
       '{gdx_submit}',
-      'GDX_OUTPUT_FILE = "Output4_IAMC_template_{PROJECT}_{DATE_LABEL}.gdx"'
+      'GDX_OUTPUT_FILE = "Output4_IAMC_template_{PROJECT}_{cluster_nr_globiom}_{REGIONAL_AG}.gdx"'
     )
 
     config_path <- path(TEMP_DIR, "config_glob.R")
@@ -629,7 +629,8 @@ run_downscaling_postproc <- function() {
       'JOBS = {scen_string}',
       'REQUIREMENTS = c("R")',
       'REQUEST_MEMORY = 5000',
-      'BUNDLE_EXCLUDE_FILES = c("**/gdx/*.*")',
+      'BUNDLE_EXCLUDE_FILES = c("**/gdx/*.*","**/input/*.gdx",".Rprofile")',
+      'BUNDLE_EXCLUDE_DIRS = c("output", "prior_module", "source","t","renv")',
       'REQUEST_CPUS = 1',
       'JOB_RELEASES = 3',
       'JOB_RELEASE_DELAY = 120',
@@ -674,6 +675,11 @@ run_downscaling_postproc <- function() {
 #'
 run_downscaling_postproc_split <- function() {
 
+  # Get cluster number
+  cluster_number_log <- path(TEMP_DIR, "cluster_number.log")
+
+  cluster_nr_ids <- c()
+
   # Get G4M scenario list
   scenario_mapping <- get_mapping() %>%
     filter(ScenLoop %in% SCENARIOS_FOR_G4M)
@@ -682,10 +688,13 @@ run_downscaling_postproc_split <- function() {
   saveRDS(scenario_mapping,path(WD_DOWNSCALING,"input","scenario_grid.RData"))
   saveRDS(c(PROJECT,DATE_LABEL,cluster_nr_downscaling),path(WD_DOWNSCALING,"input","config.RData"))
 
+  # Create submission blocks of 10 scenarios
+  scen_blocks <- divide(SCENARIOS_FOR_DOWNSCALING,10)
+
   # Define downscaling scenarios for limpopo run
-  for (i in 1: length(SCENARIOS_FOR_DOWNSCALING)){
+  for (i in 1: length(scen_blocks)){
     scen_string <- ""
-    scenarios_idx <- scenario_mapping$ScenNr[which(scenario_mapping$ScenLoop %in% SCENARIOS_FOR_DOWNSCALING[i])]
+    scenarios_idx <- scenario_mapping$ScenNr[which(scenario_mapping$ScenLoop %in% scen_blocks[[i]])]
     scen_string <- str_glue("c(",scen_string,str_glue(min(scenarios_idx),":",max(scenarios_idx)),")")
 
   # Define files to bundle
@@ -696,19 +705,15 @@ run_downscaling_postproc_split <- function() {
 
   downscaling_files <- downscaling_files[idx]
 
-  g4m_files <- dir_ls(path(CD,WD_G4M,"out",str_glue("{PROJECT}_{DATE_LABEL}")),
-                      regexep=str_glue(.Platform$file.sep,"area"))
-  s_nr <- which(scenario_mapping$ScenNr==scenarios_idx[1])
-  idx <- which(!is.na(str_match(g4m_files,str_glue("area_harv[:print:]+",paste(scenario_mapping$SCEN1[s_nr]),
-                                                   "_",paste(scenario_mapping$SCEN3[s_nr]),"_",
-                                                   paste(scenario_mapping$SCEN2[s_nr])))))
-  g4m_files <- g4m_files[idx]
-  seed_files <- c(downscaling_files,g4m_files)
-  #seed_files <- str_replace_all(seed_files,"/","\\\\")
 
-  if (!dir_exists(path(CD,WD_DOWNSCALING,"postproc"))) dir_create(path(CD,WD_DOWNSCALING,"postproc"))
-  file_copy(g4m_files,path(CD,WD_DOWNSCALING,"postproc"),overwrite = T)
-  file_copy(downscaling_files,path(CD,WD_DOWNSCALING,"postproc"),overwrite = T)
+  g4m_files <- dir_ls(path(CD,WD_G4M,"out",str_glue("{PROJECT}_{DATE_LABEL}")),
+                      regexp ="\\.csv$") %>% str_subset("area")
+
+  add_files <- c(g4m_files,downscaling_files)
+
+  #if (!dir_exists(path(CD,WD_DOWNSCALING,"postproc"))) dir_create(path(CD,WD_DOWNSCALING,"postproc"))
+  #file_copy(g4m_files,path(CD,WD_DOWNSCALING,"postproc"),overwrite = T)
+  #file_copy(downscaling_files,path(CD,WD_DOWNSCALING,"postproc"),overwrite = T)
   #include <- str_glue(c("**/gdx/output_{PROJECT}_{DATE_LABEL}_{cluster_nr_downscaling}.*.RData"))
 
   config_template <- c(
@@ -716,8 +721,10 @@ run_downscaling_postproc_split <- function() {
     'JOBS = {scen_string}',
     'REQUIREMENTS = c("R")',
     'REQUEST_MEMORY = 5000',
-    'BUNDLE_EXCLUDE_FILES = c("**/gdx/*.*","**/input/*.gdx")',
-    'BUNDLE_EXCLUDE_DIRS = c("output", "prior_module", "source","t")',
+    'BUNDLE_EXCLUDE_FILES = c("**/gdx/*.*","**/input/*.gdx",".Rprofile")',
+    'BUNDLE_EXCLUDE_DIRS = c("output", "prior_module", "source","t","renv")',
+    'BUNDLE_ADDITIONAL_FILES = ',
+    '{add_files}',
     'REQUEST_CPUS = 1',
     'REQUEST_DISK = 10000000',
     'JOB_RELEASES = 3',
@@ -730,7 +737,8 @@ run_downscaling_postproc_split <- function() {
     'CLEAR_LINES = FALSE',
     'GET_OUTPUT = TRUE',
     'OUTPUT_DIR = "gdx"',
-    'OUTPUT_FILE = "g4m_simu_out.RData"'
+    'OUTPUT_FILE = "g4m_simu_out.RData"',
+    'CLUSTER_NUMBER_LOG = "{cluster_number_log}"'
   )
 
   config_path <- path(TEMP_DIR, "config_postproc.R")
@@ -752,7 +760,14 @@ run_downscaling_postproc_split <- function() {
   unlink(path(CD,WD_DOWNSCALING,"postproc","*.*"),recursive = TRUE)
 
   if (rc != 0) stop("Condor run failed!")
+
+  # Save cluster number
+  cluster <- readr::parse_number(read_file(cluster_number_log))
+  cluster_nr_ids <- c(cluster_nr_ids,cluster)
+
   }
+
+  return(cluster_nr_ids)
 
 }
 
@@ -770,12 +785,16 @@ run_merge_and_transfer <- function(cluster_nr_downscaling) {
 
   config <- list()
 
+  # Define scenario count
+  scen_cnt <- tibble(scenid=1:length(SCENARIOS_FOR_DOWNSCALING),scencnt=as.integer(SCENARIOS_FOR_DOWNSCALING))
+
   # Save config file
   config[[1]] <- get_mapping()
   config[[2]] <- DOWNSCALING_TYPE
   config[[3]] <- cluster_nr_downscaling
   config[[4]] <- PROJECT
   config[[5]] <- DATE_LABEL
+  config[[6]] <- scen_cnt
 
   saveRDS(config,path(CD,WD_DOWNSCALING,"config.RData"))
 
@@ -795,7 +814,7 @@ run_merge_and_transfer <- function(cluster_nr_downscaling) {
 
   config_template <- c(
     'LABEL = "{PROJECT}"',
-    'JOBS = {SCENARIOS_FOR_DOWNSCALING}',
+    'JOBS = c({str_c(SCENARIOS_FOR_DOWNSCALING, collapse=",")})',
     'REQUIREMENTS = c("R")',
     'REQUEST_MEMORY = 5000',
     'BUNDLE_EXCLUDE_DIRS = c("output", "prior_module", "source","t","postproc","renv","gdx")',
@@ -850,5 +869,174 @@ run_merge_and_transfer <- function(cluster_nr_downscaling) {
     file_move(path(CD,WD_DOWNSCALING,"gdx",limpopo_f),
               path(CD,str_glue("{WD_G4M}"),"Data","GLOBIOM",str_glue("{PROJECT}_{DATE_LABEL}"),g4m_f))
   }
+
+}
+
+
+#' Run biodiversity indices computation
+#'
+#' Uses the land cover at SimU level to compute the PREDICTS - BII
+#' and cSAR biodiversity indices
+#'
+#' @param cluster_nr_downscaling_postproc Cluster sequence number of the downscaling post-processing HTCondor submission
+run_biodiversity <- function(cluster_nr_downscaling) {
+
+  # Get cluster number
+  cluster_number_log <- path(TEMP_DIR, "cluster_number.log")
+
+  # Define scenarion mapping
+  scenario_mapping <- get_mapping() %>%
+    filter(ScenLoop %in% SCENARIOS_FOR_G4M)
+
+  # Define out id for merging gdx
+  out_id <- runif(1,10^7,10^8) %>% as.integer()
+
+  # Create submission blocks of 10 scenarios
+  scen_blocks <- divide(SCENARIOS_FOR_G4M,10)
+
+  # Define downscaling scenarios for biodiversity run
+  for (i in 1: length(scen_blocks)){
+    scen_string <- ""
+    scenarios_idx <- scenario_mapping$ScenNr[which(scenario_mapping$ScenLoop %in% scen_blocks[[i]])]
+    scen_string <- str_glue("c(",scen_string,str_glue(min(scenarios_idx),":",max(scenarios_idx)),")")
+
+    # Define additional files to bundle
+
+    # Downscaling output
+    #scen_nr <- cluster_nr_downscaling_postproc[i]
+    #downscaling_files <- dir_ls(path(CD,WD_DOWNSCALING,"gdx"),regexp=str_glue("g4m_simu_out_{scen_nr}.",
+     #                                                                         "*",".RData")) %>% sort()
+   # G4M output
+    #g4m_files <- dir_ls(path(CD,WD_G4M,"out",str_glue("{PROJECT}_{DATE_LABEL}")),
+    #                    glob = str_glue("*.csv")) %>%
+    #  str_subset(str_glue("area_harvest_map_{PROJECT}_{DATE_LABEL}[:print:]*")) %>% sort()
+
+    #idx <-  which(!is.na(str_match(downscaling_files,sprintf("%06d",scenarios_idx))))
+
+   # downscaling_files <- downscaling_files[idx]
+
+   # add_files <- c(g4m_files,downscaling_files)
+
+
+    # Define files to bundle
+    downscaling_files <- dir_ls(path(CD,WD_DOWNSCALING,"gdx"),regexp=str_glue("output_{cluster_nr_downscaling}.",
+                                                                              "*",".RData"))  %>% sort()
+    idx <-  which(!is.na(str_match(downscaling_files,sprintf("%06d",scenarios_idx))))
+    #  str_replace_all("/","\\\\") %>% sort()
+
+    downscaling_files <- downscaling_files[idx]
+
+
+    g4m_files <- dir_ls(path(CD,WD_G4M,"out",str_glue("{PROJECT}_{DATE_LABEL}")),
+                        regexp ="\\.csv$") %>% str_subset("area")
+
+    add_files <- c(g4m_files,downscaling_files)
+
+    # Coinfiguration
+    # Create config for biodiversity runs
+    config <- list(PROJECT,DATE_LABEL,scenario_mapping,cluster_nr_downscaling, COMPUTE_BII, COMPUTE_cSAR)
+
+    saveRDS(config,path(WD_BIODIVERSITY,"Input","config.RData"))
+
+     config_template <- c(
+      'LABEL = "{PROJECT}"',
+      'JOBS = {scen_string}',
+      'HOST_REGEXP = "^limpopo"',
+      'REQUIREMENTS = c("R")',
+      'REQUEST_MEMORY = 5000',
+      'BUNDLE_EXCLUDE_FILES = c("**/Output/*.*")',
+      'BUNDLE_ADDITIONAL_FILES = ',
+      '{add_files}',
+      'REQUEST_CPUS = 1',
+      'JOB_RELEASES = 3',
+      'JOB_RELEASE_DELAY = 120',
+      'LAUNCHER = "Rscript"',
+      'SCRIPT = "get_biodiversity.R"',
+      'ARGUMENTS = "%1"',
+      'DATE_LABEL = "{DATE_LABEL}"',
+      'WAIT_FOR_RUN_COMPLETION = TRUE',
+      'CLEAR_LINES = FALSE',
+      'GET_OUTPUT = TRUE',
+      'OUTPUT_DIR = "Output"',
+      'OUTPUT_FILE = "biodiversity.RData"',
+      'CLUSTER_NUMBER_LOG = "{cluster_number_log}"'
+    )
+
+    config_path <- path(TEMP_DIR, "config_biodiv.R")
+
+    # Write config file
+    current_env <- environment()
+    write_lines(lapply(config_template, .envir=current_env, str_glue), config_path)
+    rm(config_template, current_env)
+
+    prior_wd <- getwd()
+    rc <- tryCatch ({
+      setwd(WD_BIODIVERSITY)
+      system(str_glue("Rscript --vanilla {CD}/Condor_run_R//Condor_run_basic.R {config_path}"))
+    },
+    finally = {
+      setwd(prior_wd)
+    })
+
+    if (rc != 0) stop("Condor run failed!")
+
+    cluster_nr <- readr::parse_number(read_file(cluster_number_log))
+
+
+    # get output and convert to gdx
+
+    # Get GLOBIOM regions
+    regions <- readRDS(path(WD_BIODIVERSITY,"Input","globiom_regions.RData"))
+
+    out_files <- dir_ls(path(WD_BIODIVERSITY,"Output"),regexp = str_glue("biodiversity_{cluster_nr}.*.RData"))
+
+    # Get BII and cSAR aggregated outputs
+    if (COMPUTE_BII) {
+      cons_out_bii <- out_files %>%
+        lapply(get_rds_out,2) %>% bind_rows() %>% left_join(scenario_mapping) %>%
+        rename(bii=score)
+    } else {
+      cons_out_bii <- NULL
+    }
+
+    if (COMPUTE_cSAR){
+      cons_out_csar <- out_files %>%
+        lapply(get_rds_out,4) %>% bind_rows() %>% left_join(scenario_mapping) %>%
+        rename(csar=score)
+    } else {
+      cons_out_csar <- NULL
+    }
+
+
+    # Create output file
+    if (COMPUTE_BII & COMPUTE_cSAR) {
+      cons_out <- cons_out_bii %>% left_join(cons_out_csar) %>%
+        rename(area=value, ScenYear=times,"BII" =  bii,"cSAR" =  csar) %>%
+        dplyr::select(-c(ScenLoop,ScenNr,area)) %>%
+        gather(Item,value,-c(REGION,SCEN1,SCEN2,SCEN3,ScenYear)) %>%
+        relocate(Item,.after = REGION) %>% as_tibble() %>% spread(ScenYear,value)
+    } else if (COMPUTE_BII & ! COMPUTE_cSAR) {
+      cons_out <- cons_out_bii %>%
+        rename(area=value, ScenYear=times,"BII" =  bii) %>%
+        dplyr::select(-c(ScenLoop,ScenNr,area)) %>%
+        gather(Item,value,-c(REGION,SCEN1,SCEN2,SCEN3,ScenYear)) %>%
+        relocate(Item,.after = REGION) %>% as_tibble() %>% spread(ScenYear,value)
+    } else if (! COMPUTE_BII & COMPUTE_cSAR) {
+      cons_out <- cons_out_csar %>%
+        rename(ScenYear=times,"cSAR" =  csar) %>%
+        dplyr::select(-c(ScenLoop,ScenNr)) %>%
+        gather(Item,value,-c(REGION,SCEN1,SCEN2,SCEN3,ScenYear)) %>%
+        relocate(Item,.after = REGION) %>% as_tibble() %>% spread(ScenYear,value)
+    }
+
+
+    wgdx.reshape(cons_out, 6, symName="Biodiversity", setNames=c("REGION","Item","SCEN1","SCEN2","SCEN3"),
+                 tName = "ScenYear", gdxName = path(WD_BIODIVERSITY,"Output",str_glue("output_{out_id}.{scen_nr}.gdx")))
+
+  }
+
+  # Merge outputs into single gdx
+  merge_gdx(PROJECT,path(WD_BIODIVERSITY,"Output"),out_id,10^6)
+
 
 }
