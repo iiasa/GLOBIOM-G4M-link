@@ -51,13 +51,23 @@ SCENARIOS_FOR_G4M = c(0,15) # full set or subset of downscaled scenarios
 
 #-------------------------------------------------------------------------------
 
-# 6th block - Final post-processing
+# 6th block - Biodiversity report
+#-------------------------------------------------------------------------------
+WD_BIODIVERSITY = "Biodiversity_Link"
+GET_BIODIVERSITY_INDICES = TRUE # Compute biodiversity indices
+COMPUTE_BII = TRUE # compute BII index
+COMPUTE_cSAR = TRUE # compute cSAR index
+#-------------------------------------------------------------------------------
+
+
+# 7th block - Final post-processing
 #-------------------------------------------------------------------------------
 PATH_FOR_FEEDBACK = stringr::str_glue("out/{PROJECT}_{DATE_LABEL}/") # directory for G4M output file relative to WD_G4M
 G4M_FEEDBACK_FILE = stringr::str_glue("tabs_gui_{PROJECT}_{DATE_LABEL}_final_csv.csv") #Name of G4M output file
 GLOBIOM_POST_FILE = "8_merge_output_tmp.gms"
-USE_LIMPOPO_POSTPROC = TRUE # logical, use limpopo to run the post-processing script (use only if out file is likely to exceed the local memory)
+USE_LIMPOPO_POSTPROC = FALSE # logical, use limpopo to run the post-processing script (use only if out file is likely to exceed the local memory)
 GENERATE_PLOTS = FALSE # logical, generate plots for the GLOBIOM and lookup table results
 SCENARIOs_PLOT_LOOKUP = c(0,15) # list of scenarios to include in diagnostic plots for the lookup table
 SCENARIOS_PLOT_GLOBIOM = c(0,15) # list of scenarios to include in diagnostic plots for the GLOBIOM results
 #-------------------------------------------------------------------------------
+
