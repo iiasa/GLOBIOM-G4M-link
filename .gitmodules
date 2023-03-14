@@ -12,3 +12,6 @@
 [submodule "PostProcessing"]
 	path = PostProcessing
 	url = https://github.com/iiasa/PostProcessing
+[submodule "Biodiversity_Link"]
+	path = Biodiversity
+	url = https://github.com/iiasa/Biodiversity_Link
