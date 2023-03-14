@@ -204,7 +204,7 @@ get_mapping <- function(){
   scen_map_solved$SCEN3 <- scen_map_solved$SCEN3 %>% toupper()
   downs_input$SCEN3 <- downs_input$SCEN3 %>% toupper()
 
-  downscaling_scenarios <- merge(downs_input,scen_map_solved,by=c("SCEN1","SCEN2","SCEN3"))
+  downscaling_scenarios <- left_join(downs_input,scen_map_solved)
 
   return(downscaling_scenarios)
 
@@ -629,10 +629,23 @@ divide <- function(x, n)
 {
   i <- ceiling(length(x)/n)
 
-  if (length(scen_block) < n) {
+  if (length(x) < n) {
     scen_block <- split(x,1)
   } else {
     scen_block <- split(x,x%/%i+1)
   }
   return(scen_block)
+}
+
+# Matching strings based on multiple patterns
+match_str <- function(x,y){
+
+  out <- list()
+
+  k <- 1
+  for (i in y){
+    out[[k]] <- x %>% str_subset(i)
+    k <- k + 1
+  }
+  return(out %>% unlist())
 }

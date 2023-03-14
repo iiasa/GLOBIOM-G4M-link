@@ -881,6 +881,9 @@ run_merge_and_transfer <- function(cluster_nr_downscaling) {
 #' @param cluster_nr_downscaling_postproc Cluster sequence number of the downscaling post-processing HTCondor submission
 run_biodiversity <- function(cluster_nr_downscaling) {
 
+  # Create output folder
+  if (!dir_exists(path(CD,WD_BIODIVERSITY,"Output"))) dir_create(path(CD,WD_BIODIVERSITY,"Output"))
+
   # Get cluster number
   cluster_number_log <- path(TEMP_DIR, "cluster_number.log")
 
@@ -889,50 +892,41 @@ run_biodiversity <- function(cluster_nr_downscaling) {
     filter(ScenLoop %in% SCENARIOS_FOR_G4M)
 
   # Define out id for merging gdx
-  out_id <- runif(1,10^7,10^8) %>% as.integer()
+  out_id <- format(Sys.time(), "%d %X %Y") %>% str_remove_all(":") %>% str_remove_all(" ")
 
-  # Create submission blocks of 10 scenarios
-  scen_blocks <- divide(SCENARIOS_FOR_G4M,10)
+  # Split scenarios into submission blocks of 40 scenarios
+  scen_blocks <- divide(SCENARIOS_FOR_G4M,ceiling(length(SCENARIOS_FOR_G4M)*37/40))
 
   # Define downscaling scenarios for biodiversity run
   for (i in 1: length(scen_blocks)){
-    scen_string <- ""
-    scenarios_idx <- scenario_mapping$ScenNr[which(scenario_mapping$ScenLoop %in% scen_blocks[[i]])]
-    scen_string <- str_glue("c(",scen_string,str_glue(min(scenarios_idx),":",max(scenarios_idx)),")")
 
-    # Define additional files to bundle
-
-    # Downscaling output
-    #scen_nr <- cluster_nr_downscaling_postproc[i]
-    #downscaling_files <- dir_ls(path(CD,WD_DOWNSCALING,"gdx"),regexp=str_glue("g4m_simu_out_{scen_nr}.",
-     #                                                                         "*",".RData")) %>% sort()
-   # G4M output
-    #g4m_files <- dir_ls(path(CD,WD_G4M,"out",str_glue("{PROJECT}_{DATE_LABEL}")),
-    #                    glob = str_glue("*.csv")) %>%
-    #  str_subset(str_glue("area_harvest_map_{PROJECT}_{DATE_LABEL}[:print:]*")) %>% sort()
-
-    #idx <-  which(!is.na(str_match(downscaling_files,sprintf("%06d",scenarios_idx))))
-
-   # downscaling_files <- downscaling_files[idx]
-
-   # add_files <- c(g4m_files,downscaling_files)
+    block_scen <- NA
+    scen_string <- "c("
+    for(j in 1:length(scen_blocks[[i]])){
+      scenarios_idx <- scenario_mapping$ScenNr[which(scenario_mapping$ScenLoop %in% scen_blocks[[i]][j])]
+      block_scen <- c(block_scen,scenarios_idx)
+      if (j==length(scen_blocks[[i]])){
+        scen_string <- str_glue(scen_string,str_glue(min(scenarios_idx),":",max(scenarios_idx)),")")
+      } else{
+        scen_string <- str_glue(scen_string,str_glue(min(scenarios_idx),":",max(scenarios_idx)),",")
+      }
+    }
 
 
     # Define files to bundle
-    downscaling_files <- dir_ls(path(CD,WD_DOWNSCALING,"gdx"),regexp=str_glue("output_{cluster_nr_downscaling}.",
-                                                                              "*",".RData"))  %>% sort()
-    idx <-  which(!is.na(str_match(downscaling_files,sprintf("%06d",scenarios_idx))))
-    #  str_replace_all("/","\\\\") %>% sort()
+    downscaling_files <- dir_ls(path(CD,WD_DOWNSCALING,"gdx"),
+                                regexp=str_glue("output_{cluster_nr_downscaling}.",
+                                                                              "*",".RData"))  %>% sort() %>%
+      match_str(sprintf("%06d",block_scen[-1]))
 
-    downscaling_files <- downscaling_files[idx]
-
+    scens <- scenario_mapping %>% filter(ScenLoop %in% scen_blocks[[i]]) %>%
+      mutate(id = str_c("area[:print:]*",SCEN1,"_",SCEN3,"_",SCEN2)) %>% dplyr::select(id) %>% unique()
 
     g4m_files <- dir_ls(path(CD,WD_G4M,"out",str_glue("{PROJECT}_{DATE_LABEL}")),
-                        regexp ="\\.csv$") %>% str_subset("area")
+                        regexp ="\\.csv$") %>% match_str(scens$id)
 
     add_files <- c(g4m_files,downscaling_files)
 
-    # Coinfiguration
     # Create config for biodiversity runs
     config <- list(PROJECT,DATE_LABEL,scenario_mapping,cluster_nr_downscaling, COMPUTE_BII, COMPUTE_cSAR)
 
@@ -943,7 +937,7 @@ run_biodiversity <- function(cluster_nr_downscaling) {
       'JOBS = {scen_string}',
       'HOST_REGEXP = "^limpopo"',
       'REQUIREMENTS = c("R")',
-      'REQUEST_MEMORY = 5000',
+      'REQUEST_MEMORY = 9000',
       'BUNDLE_EXCLUDE_FILES = c("**/Output/*.*")',
       'BUNDLE_ADDITIONAL_FILES = ',
       '{add_files}',
@@ -982,9 +976,6 @@ run_biodiversity <- function(cluster_nr_downscaling) {
 
     cluster_nr <- readr::parse_number(read_file(cluster_number_log))
 
-
-    # get output and convert to gdx
-
     # Get GLOBIOM regions
     regions <- readRDS(path(WD_BIODIVERSITY,"Input","globiom_regions.RData"))
 
@@ -994,7 +985,7 @@ run_biodiversity <- function(cluster_nr_downscaling) {
     if (COMPUTE_BII) {
       cons_out_bii <- out_files %>%
         lapply(get_rds_out,2) %>% bind_rows() %>% left_join(scenario_mapping) %>%
-        rename(bii=score)
+        rename(bii=score, bii_prod = score_prod)
     } else {
       cons_out_bii <- NULL
     }
@@ -1011,13 +1002,13 @@ run_biodiversity <- function(cluster_nr_downscaling) {
     # Create output file
     if (COMPUTE_BII & COMPUTE_cSAR) {
       cons_out <- cons_out_bii %>% left_join(cons_out_csar) %>%
-        rename(area=value, ScenYear=times,"BII" =  bii,"cSAR" =  csar) %>%
+        rename(area=value, ScenYear=times,"BII" =  bii,"BII_PROD" =  bii_prod,"cSAR" =  csar) %>%
         dplyr::select(-c(ScenLoop,ScenNr,area)) %>%
         gather(Item,value,-c(REGION,SCEN1,SCEN2,SCEN3,ScenYear)) %>%
         relocate(Item,.after = REGION) %>% as_tibble() %>% spread(ScenYear,value)
     } else if (COMPUTE_BII & ! COMPUTE_cSAR) {
       cons_out <- cons_out_bii %>%
-        rename(area=value, ScenYear=times,"BII" =  bii) %>%
+        rename(area=value, ScenYear=times,"BII" =  bii, "BII_PROD" =  bii_prod) %>%
         dplyr::select(-c(ScenLoop,ScenNr,area)) %>%
         gather(Item,value,-c(REGION,SCEN1,SCEN2,SCEN3,ScenYear)) %>%
         relocate(Item,.after = REGION) %>% as_tibble() %>% spread(ScenYear,value)
@@ -1031,7 +1022,7 @@ run_biodiversity <- function(cluster_nr_downscaling) {
 
 
     wgdx.reshape(cons_out, 6, symName="Biodiversity", setNames=c("REGION","Item","SCEN1","SCEN2","SCEN3"),
-                 tName = "ScenYear", gdxName = path(WD_BIODIVERSITY,"Output",str_glue("output_{out_id}.{scen_nr}.gdx")))
+                 tName = "ScenYear", gdxName = path(WD_BIODIVERSITY,"Output",str_glue("output_{out_id}.{i}.gdx")))
 
   }
 
