@@ -895,7 +895,7 @@ run_biodiversity <- function(cluster_nr_downscaling) {
   out_id <- format(Sys.time(), "%d %X %Y") %>% str_remove_all(":") %>% str_remove_all(" ")
 
   # Split scenarios into submission blocks of 40 scenarios
-  scen_blocks <- divide(SCENARIOS_FOR_G4M,ceiling(length(SCENARIOS_FOR_G4M)*37/40))
+  scen_blocks <- divide(SCENARIOS_FOR_G4M,ceiling(length(SCENARIOS_FOR_G4M)/40))
 
   # Define downscaling scenarios for biodiversity run
   for (i in 1: length(scen_blocks)){

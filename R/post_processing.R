@@ -85,12 +85,13 @@ run_final_postproc <- function(cluster_nr_globiom) {
   # Construct path for feedback file
   path_feedback <- str_glue(".%X%output%X%g4m%X%{PROJECT}_{DATE_LABEL}%X%")
 
-  # rGet G4M scenario list
-  scen_map <-  get_mapping() %>% dplyr::select(-4) %>% unique() %>%
-    filter(ScenLoop %in% SCENARIOS_FOR_G4M) %>% droplevels()
-  length_scen1 <- scen_map[,1] %>% lapply(FUN=function(x) {x %>% str_split("_") %>% unlist() %>% length() }) %>% unlist()
-  length_scen2 <- scen_map[,3] %>% lapply(FUN=function(x) {x %>% str_split("_") %>% unlist() %>% length() }) %>% unlist()
-  length_scen3 <- scen_map[,2] %>% lapply(FUN=function(x) {x %>% str_split("_") %>% unlist() %>% length() }) %>% unlist()
+  # Get G4M scenario list
+  scen_map <-  get_mapping() %>% dplyr::select(-ScenNr) %>%
+    filter(ScenLoop %in% SCENARIOS_FOR_G4M) %>% unique()  %>% slice(1)
+
+  length_scen1 <- length(unlist(str_split(scen_map[,1],"_")))
+  length_scen2 <- length(unlist(str_split(scen_map[,3],"_")))
+  length_scen3 <- length(unlist(str_split(scen_map[,2],"_")))
 
   # Define G4M scenarios
   scen <- matrix(unlist(str_split(get_g4m_jobs(baseline = FALSE)[-1]," ")),ncol=4,byrow=T)[,3]

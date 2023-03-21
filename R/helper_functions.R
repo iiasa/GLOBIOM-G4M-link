@@ -649,3 +649,13 @@ match_str <- function(x,y){
   }
   return(out %>% unlist())
 }
+
+# Function from tstev package
+str_exclude <- function(string, pattern) {
+  if (requireNamespace("stringr", quietly = TRUE)) {
+    string[!stringr::str_detect(string, pattern)]
+  } else {
+    grep(pattern, string, value = TRUE, invert = TRUE)
+  }
+}
+
