@@ -185,6 +185,8 @@ get_mapping <- function(){
   bioen_idx <- which(str_detect(scen_dims,regex("SCEN2",ignore_case = T)))
   iea_idx <- which(str_detect(scen_dims,regex("SCEN3",ignore_case = T)))
 
+  if (dim(scen_map)[1] != dim(unique(scen_map[,c(macro_idx,bioen_idx,iea_idx)]))[1]) stop("GLOBIOM scenarios are not unique! Please omit repeated scenarios in SCENARIOS_FOR_DOWNSCALING and SCENARIOS_FOR_G4M")
+
   colnames(scen_map)[c(loop_idx,macro_idx,bioen_idx,iea_idx)] <- c("ScenLoop","SCEN1","SCEN2","SCEN3")
 
   #Get solved scenarios
