@@ -438,11 +438,11 @@ run_final_postproc_limpopo <- function(cluster_nr_globiom) {
 
   # Get G4M scenario list
   scen_map <-  get_mapping() %>% dplyr::select(-ScenNr) %>%
-    filter(ScenLoop %in% SCENARIOS_FOR_G4M) %>% unique()  %>% slice(1)
+    filter(ScenLoop %in% SCENARIOS_FOR_G4M) %>% unique()
 
-  length_scen1 <- length(unlist(str_split(scen_map[,1],"_")))
-  length_scen2 <- length(unlist(str_split(scen_map[,3],"_")))
-  length_scen3 <- length(unlist(str_split(scen_map[,2],"_")))
+  length_scen1 <- scen_map[[1]] %>% sapply(FUN=function(x) length(unlist(str_split(x,"_"))))
+  length_scen2 <- scen_map[[3]] %>% sapply(FUN=function(x) length(unlist(str_split(x,"_"))))
+  length_scen3 <- scen_map[[2]] %>% sapply(FUN=function(x) length(unlist(str_split(x,"_"))))
 
   # Define G4M scenarios
   scen <- matrix(unlist(str_split(get_g4m_jobs(baseline = FALSE)[-1]," ")),ncol=4,byrow=T)[,3]
@@ -452,10 +452,12 @@ run_final_postproc_limpopo <- function(cluster_nr_globiom) {
   scen_aux <- str_split(scen,"_")
   scen_aux <- matrix(unlist(scen_aux),ncol = length(scen_aux[[1]]), byrow = TRUE)
   scen_globiom_map <- array(dim=c(length(scen),3),data="")
-  for(i in 1:dim(scen_aux)[1]){
-    scen_globiom_map[i,1] <- do.call(str_glue, c(as.list(scen_aux[i,1:length_scen1]), .sep = "_"))
-    scen_globiom_map[i,2] <- do.call(str_glue, c(as.list(scen_aux[i,(length_scen1 + 1):(length_scen1 + length_scen2)]), .sep = "_"))
-    scen_globiom_map[i,3] <- do.call(str_glue, c(as.list(scen_aux[i,c(-1:-(length_scen1 + length_scen2))]), .sep = "_"))
+
+  for(i in 1:length(scen)){
+    scen_aux <- scen[i] %>% str_split("_") %>% unlist()
+    scen_globiom_map[i,1] <- do.call(str_glue, c(as.list(scen_aux[1:length_scen1[i]]), .sep = "_"))
+    scen_globiom_map[i,2] <- do.call(str_glue, c(as.list(scen_aux[(length_scen1[i] + 1):(length_scen1[i] + length_scen2[i])]), .sep = "_"))
+    scen_globiom_map[i,3] <- do.call(str_glue, c(as.list(scen_aux[c(-1:-(length_scen1[i] + length_scen2[i]))]), .sep = "_"))
   }
 
 
@@ -1031,3 +1033,161 @@ run_biodiversity <- function(cluster_nr_downscaling) {
 
 
 }
+
+
+
+
+
+#' Run output maps generation
+#'
+#' Produces netcdf files from downscaling outputs
+#' @param cluster_nr_downscaling Cluster sequence number of the downscaling HTCondor submission
+run_merge_and_transfer <- function(cluster_nr_downscaling) {
+
+  # Get cluster number
+  cluster_number_log <- path(TEMP_DIR, "cluster_number.log")
+
+  config <- list()
+
+  # Save config file
+  config[[1]] <- cluster_nr_downscaling
+  config[[2]] <- get_mapping()
+
+  saveRDS(config,path(CD,WD_DOWNSCALING,"config.RData"))
+
+  # Get downscaled files (!transfer is faster than using BUNDLE_ADDITIONAL_FILES)
+  include_files <- dir_ls(path(CD,WD_DOWNSCALING,"gdx"),regexp=str_glue("downscaled_{cluster_nr_downscaling}.*.*"))
+
+  exclude_files <- dir_ls(path(CD,WD_DOWNSCALING,"gdx")) %>%
+    str_extract(str_glue("_[0-9]+.")) %>% unique() %>% na.omit()
+
+
+  config_template <- c(
+    'LABEL = "{PROJECT}"',
+    'JOBS = c({str_c(SCENARIOS_FOR_DOWNSCALING, collapse=",")})',
+    'REQUIREMENTS = c("R")',
+    'REQUEST_MEMORY = 50000',
+    'BUNDLE_EXCLUDE_DIRS = c("output", "prior_module", "source","t","postproc","renv","gdx")',
+    'BUNDLE_EXCLUDE_FILES = c(".Rprofile","renv.lock","input/*.gdx")',
+    #    'BUNDLE_ADDITIONAL_FILES = ',
+    #    '{include_files}',
+    'REQUEST_CPUS = 1',
+    'REQUEST_DISK = 20000000',
+    'JOB_RELEASES = 3',
+    'JOB_RELEASE_DELAY = 120',
+    'LAUNCHER = "Rscript"',
+    'SCRIPT = "compile_LC_data.R"',
+    'ARGUMENTS = "%1"',
+    'DATE_LABEL = "{DATE_LABEL}"',
+    'RETAIN_BUNDLE = FALSE',
+    'WAIT_FOR_RUN_COMPLETION = TRUE',
+    'CLEAR_LINES = FALSE',
+    'GET_OUTPUT = TRUE',
+    'OUTPUT_DIR = "gdx"',
+    'OUTPUT_FILE = "GLOBIOM2G4M_output_LC_abs_{PROJECT}_{DATE_LABEL}.csv"'
+  )
+
+  config_path <- path(TEMP_DIR, "config_merge.R")
+
+  # Write config file
+  current_env <- environment()
+  write_lines(lapply(config_template, .envir=current_env, str_glue), config_path)
+  rm(config_template, current_env)
+
+  prior_wd <- getwd()
+  rc <- tryCatch ({
+    setwd(WD_DOWNSCALING)
+    system(str_glue("Rscript --vanilla {CD}/Condor_run_R//Condor_run_basic.R {config_path}"))
+  },
+  finally = {
+    setwd(prior_wd)
+  })
+
+
+  cluster_nr <- readr::parse_number(read_file(cluster_number_log))
+
+  # rename and transfer to g4m
+  g4m_dir <- path(CD,str_glue("{WD_G4M}"),"Data","GLOBIOM",str_glue("{PROJECT}_{DATE_LABEL}"))
+  if (!dir_exists(g4m_dir)) dir_create(g4m_dir)
+
+  for (k in SCENARIOS_FOR_DOWNSCALING){
+    limpopo_f <- str_glue("GLOBIOM2G4M_output_LC_abs_{PROJECT}_{DATE_LABEL}_{PROJECT}_{cluster_nr}.",sprintf("%06d",k),".csv")
+    g4m_f <- str_glue("GLOBIOM2G4M_output_LC_abs_{PROJECT}_{DATE_LABEL}_",k+1,".csv")
+
+    file_move(path(CD,WD_DOWNSCALING,"gdx",limpopo_f),
+              path(CD,str_glue("{WD_G4M}"),"Data","GLOBIOM",str_glue("{PROJECT}_{DATE_LABEL}"),g4m_f))
+  }
+
+}
+
+
+
+
+#' Run merge and transfer
+#'
+#' Sends data compilation from Downscaling to G4M to limpopo
+#' @param cluster_nr_downscaling Cluster sequence number of the downscaling HTCondor submission
+run_merge_and_transfer <- function(cluster_nr_downscaling) {
+
+  # Get cluster number
+  cluster_number_log <- path(TEMP_DIR, "cluster_number.log")
+
+  config <- list()
+
+  # Define scenario count
+  scen_cnt <- tibble(scenid=1:length(SCENARIOS_FOR_DOWNSCALING),scencnt=as.integer(SCENARIOS_FOR_DOWNSCALING))
+
+  # Save config file
+  config[[1]] <- cluster_nr_downscaling
+  config[[2]] <- get_mapping()
+
+  saveRDS(config,path(CD,WD_DOWNSCALING,"config.RData"))
+
+  # Get downscaled files (!transfer is faster than using BUNDLE_ADDITIONAL_FILES)
+    include_files <- dir_ls(path(CD,WD_DOWNSCALING,"gdx"),regexp=str_glue("g4m_simu_out_{cluster_nr_downscaling}.*.*"))
+
+
+  config_template <- c(
+    'LABEL = "{PROJECT}"',
+    'JOBS = c({str_c(SCENARIOS_FOR_DOWNSCALING, collapse=",")})',
+    'REQUIREMENTS = c("R")',
+    'REQUEST_MEMORY = 50000',
+    'BUNDLE_EXCLUDE_DIRS = c("output", "prior_module", "source","t","postproc","renv","g4m_merge")',
+    'BUNDLE_EXCLUDE_FILES = c(".Rprofile","renv.lock","input/*.gdx","gdx/*.*")',
+    'BUNDLE_ADDITIONAL_FILES = ',
+    '{include_files}',
+    'REQUEST_CPUS = 1',
+    'JOB_RELEASES = 0',
+    'JOB_RELEASE_DELAY = 120',
+    'LAUNCHER = "Rscript"',
+    'SCRIPT = "write_maps.R"',
+    'ARGUMENTS = "%1"',
+    'DATE_LABEL = "{DATE_LABEL}"',
+    'RETAIN_BUNDLE = FALSE',
+    'WAIT_FOR_RUN_COMPLETION = TRUE',
+    'CLEAR_LINES = FALSE',
+    'GET_OUTPUT = TRUE',
+    'OUTPUT_DIR = "out"',
+    'OUTPUT_FILES = c("results_land_cover_CrpLnd.nc","results_land_cover_Grass.nc","results_land_cover_OthNatLnd.nc","results_land_cover_PltFor.nc","results_land_cover_forest_new_ha.nc","results_land_cover_forest_old_ha.nc","results_land_cover_arable.nc","results_land_cover_SS_area.nc","results_land_cover_urban.nc")'
+  )
+
+  config_path <- path(TEMP_DIR, "config_map.R")
+
+  # Write config file
+  current_env <- environment()
+  write_lines(lapply(config_template, .envir=current_env, str_glue), config_path)
+  rm(config_template, current_env)
+
+  prior_wd <- getwd()
+  rc <- tryCatch ({
+    setwd(WD_DOWNSCALING)
+    system(str_glue("Rscript --vanilla {CD}/Condor_run_R//Condor_run_basic.R {config_path}"))
+  },
+  finally = {
+    setwd(prior_wd)
+  })
+
+
+}
+
+
