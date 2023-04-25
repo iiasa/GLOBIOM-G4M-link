@@ -437,20 +437,18 @@ run_final_postproc_limpopo <- function(cluster_nr_globiom) {
   path_feedback <- "..%X%"
 
   # Get G4M scenario list
-  scen_map <-  get_mapping() %>% dplyr::select(-ScenNr) %>%
-    filter(ScenLoop %in% SCENARIOS_FOR_G4M) %>% unique()
+  scen_map <-  get_mapping() %>% dplyr::select(-ScenNr) %>% unique() %>%
+    filter(ScenLoop %in% SCENARIOS_FOR_G4M) %>% droplevels()
 
-  length_scen1 <- scen_map[[1]] %>% sapply(FUN=function(x) length(unlist(str_split(x,"_"))))
-  length_scen2 <- scen_map[[3]] %>% sapply(FUN=function(x) length(unlist(str_split(x,"_"))))
-  length_scen3 <- scen_map[[2]] %>% sapply(FUN=function(x) length(unlist(str_split(x,"_"))))
+  length_scen1 <- scen_map[,1] %>% lapply(FUN=function(x) {x %>% str_split("_") %>% unlist() %>% length() }) %>% unlist()
+  length_scen2 <- scen_map[,3] %>% lapply(FUN=function(x) {x %>% str_split("_") %>% unlist() %>% length() }) %>% unlist()
+  length_scen3 <- scen_map[,2] %>% lapply(FUN=function(x) {x %>% str_split("_") %>% unlist() %>% length() }) %>% unlist()
 
   # Define G4M scenarios
   scen <- matrix(unlist(str_split(get_g4m_jobs(baseline = FALSE)[-1]," ")),ncol=4,byrow=T)[,3]
   scen <- scen[which(scen != "")]
 
   # Split G4M scenarios into GLOBIOM dimensions
-  scen_aux <- str_split(scen,"_")
-  scen_aux <- matrix(unlist(scen_aux),ncol = length(scen_aux[[1]]), byrow = TRUE)
   scen_globiom_map <- array(dim=c(length(scen),3),data="")
 
   for(i in 1:length(scen)){
@@ -459,7 +457,6 @@ run_final_postproc_limpopo <- function(cluster_nr_globiom) {
     scen_globiom_map[i,2] <- do.call(str_glue, c(as.list(scen_aux[(length_scen1[i] + 1):(length_scen1[i] + length_scen2[i])]), .sep = "_"))
     scen_globiom_map[i,3] <- do.call(str_glue, c(as.list(scen_aux[c(-1:-(length_scen1[i] + length_scen2[i]))]), .sep = "_"))
   }
-
 
   # Check if scenario name must be treated as string
   special_char <- FALSE
