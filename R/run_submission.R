@@ -49,7 +49,7 @@ run_globiom_scenarios <- function() {
   prior_wd <- getwd()
   rc <- tryCatch ({
     setwd(WD_GLOBIOM)
-    system(str_glue("Rscript --vanilla {CD}/Condor_run_R/Condor_run.R {config_path}"))
+    system(str_glue('Rscript --vanilla "{CD}/Condor_run_R/Condor_run.R" "{config_path}"'))
   },
   finally = {
     setwd(prior_wd)
@@ -134,7 +134,7 @@ run_initial_downscaling <- function() {
       if (!dir_exists('output')) dir_create("output")
       if (!dir_exists('t')) dir_create("t")
 
-      system(str_glue("Rscript --vanilla {CD}/Condor_run_R/Condor_run.R {config_path}"))
+      system(str_glue('Rscript --vanilla "{CD}/Condor_run_R/Condor_run.R" "{config_path}"'))
     },
     finally = {
       setwd(prior_wd)
@@ -196,7 +196,7 @@ run_initial_downscaling <- function() {
         if (!dir_exists('output')) dir_create("output")
         if (!dir_exists('t')) dir_create("t")
 
-        system(str_glue("Rscript --vanilla {CD}/Condor_run_R/Condor_run.R {config_path}"))
+        system(str_glue('Rscript --vanilla "{CD}/Condor_run_R/Condor_run.R" "{config_path}"'))
       },
       finally = {
         setwd(prior_wd)
@@ -292,7 +292,7 @@ run_initial_downscaling <- function() {
         renv::install("tkrisztin/downscalr")
       }
 
-      system(str_glue("Rscript --vanilla {CD}/Condor_run_R/Condor_run_basic.R {config_path}"))
+      system(str_glue('Rscript --vanilla "{CD}/Condor_run_R/Condor_run_basic.R" "{config_path}"'))
     },
     finally = {
       setwd(prior_wd)
@@ -402,7 +402,7 @@ run_g4m <- function(baseline = NULL) {
   rc <- tryCatch ({
     setwd(WD_G4M)
     if(!dir_exists("out")) dir_create("out")
-    system(str_glue("Rscript --vanilla {CD}/Condor_run_R//Condor_run_basic.R {config_path}"))
+    system(str_glue('Rscript --vanilla "{CD}/Condor_run_R/Condor_run_basic.R" "{config_path}"'))
   },
   finally = {
     setwd(prior_wd)
@@ -565,7 +565,7 @@ run_final_postproc_limpopo <- function(cluster_nr_globiom) {
     # Submit GLOBIOM scenarios and wait for run completion
     rc <- tryCatch ({
       setwd(WD_GLOBIOM)
-      system(str_glue("Rscript --vanilla {CD}/Condor_run_R/Condor_run.R {config_path}"))
+      system(str_glue('Rscript --vanilla "{CD}/Condor_run_R/Condor_run.R" "{config_path}"'))
     },
     finally = {
       setwd(prior_wd)
@@ -654,7 +654,7 @@ run_downscaling_postproc <- function() {
   prior_wd <- getwd()
   rc <- tryCatch ({
     setwd(WD_DOWNSCALING)
-    system(str_glue("Rscript --vanilla {CD}/Condor_run_R//Condor_run_basic.R {config_path}"))
+    system(str_glue('Rscript --vanilla "{CD}/Condor_run_R/Condor_run_basic.R" "{config_path}"'))
   },
   finally = {
     setwd(prior_wd)
@@ -750,7 +750,7 @@ run_downscaling_postproc_split <- function() {
   prior_wd <- getwd()
   rc <- tryCatch ({
     setwd(WD_DOWNSCALING)
-    system(str_glue("Rscript --vanilla {CD}/Condor_run_R//Condor_run_basic.R {config_path}"))
+    system(str_glue('Rscript --vanilla "{CD}/Condor_run_R/Condor_run_basic.R" "{config_path}"'))
   },
   finally = {
     setwd(prior_wd)
@@ -846,7 +846,7 @@ run_merge_and_transfer <- function(cluster_nr_downscaling) {
   prior_wd <- getwd()
   rc <- tryCatch ({
     setwd(WD_DOWNSCALING)
-    system(str_glue("Rscript --vanilla {CD}/Condor_run_R//Condor_run_basic.R {config_path}"))
+    system(str_glue('Rscript --vanilla "{CD}/Condor_run_R/Condor_run_basic.R" "{config_path}"'))
   },
   finally = {
     setwd(prior_wd)
@@ -965,7 +965,7 @@ run_biodiversity <- function(cluster_nr_downscaling) {
     prior_wd <- getwd()
     rc <- tryCatch ({
       setwd(WD_BIODIVERSITY)
-      system(str_glue("Rscript --vanilla {CD}/Condor_run_R//Condor_run_basic.R {config_path}"))
+      system(str_glue('Rscript --vanilla "{CD}/Condor_run_R/Condor_run_basic.R" "{config_path}"'))
     },
     finally = {
       setwd(prior_wd)
@@ -1094,7 +1094,7 @@ run_merge_and_transfer <- function(cluster_nr_downscaling) {
   prior_wd <- getwd()
   rc <- tryCatch ({
     setwd(WD_DOWNSCALING)
-    system(str_glue("Rscript --vanilla {CD}/Condor_run_R//Condor_run_basic.R {config_path}"))
+    system(str_glue('Rscript --vanilla "{CD}/Condor_run_R/Condor_run_basic.R" "{config_path}"'))
   },
   finally = {
     setwd(prior_wd)
@@ -1178,7 +1178,7 @@ run_merge_and_transfer <- function(cluster_nr_downscaling) {
   prior_wd <- getwd()
   rc <- tryCatch ({
     setwd(WD_DOWNSCALING)
-    system(str_glue("Rscript --vanilla {CD}/Condor_run_R//Condor_run_basic.R {config_path}"))
+    system(str_glue('Rscript --vanilla "{CD}/Condor_run_R/Condor_run_basic.R" "{config_path}"'))
   },
   finally = {
     setwd(prior_wd)
