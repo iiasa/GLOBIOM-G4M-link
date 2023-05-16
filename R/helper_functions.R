@@ -177,7 +177,7 @@ get_mapping <- function(){
   s_nr <-  sprintf("%06d", SCENARIOS[1])
   scen_map <- rgdx.set(path(CD,WD_GLOBIOM,"Model","gdx",str_glue("output_",cluster_nr_globiom,".",s_nr,".gdx")),"SCEN_MAP")
 
-  scen_map <- scen_map  %>% na_if("") %>% na.omit
+  scen_map <- scen_map %>% na.omit
   scen_dims <- colnames(scen_map)
 
   loop_idx <- which(str_detect(scen_dims,regex("ScenLoop",ignore_case = T)))
