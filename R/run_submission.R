@@ -688,81 +688,89 @@ run_downscaling_postproc_split <- function() {
   saveRDS(c(PROJECT,DATE_LABEL,cluster_nr_downscaling),path(WD_DOWNSCALING,"input","config.RData"))
 
   # Create submission blocks of 10 scenarios
-  scen_blocks <- divide(SCENARIOS_FOR_DOWNSCALING,10)
+  scen_blocks <- divide(SCENARIOS_FOR_G4M,ceiling(length(SCENARIOS_FOR_G4M)/15))
 
   # Define downscaling scenarios for limpopo run
   for (i in 1: length(scen_blocks)){
-    scen_string <- ""
-    scenarios_idx <- scenario_mapping$ScenNr[which(scenario_mapping$ScenLoop %in% scen_blocks[[i]])]
-    scen_string <- str_glue("c(",scen_string,str_glue(min(scenarios_idx),":",max(scenarios_idx)),")")
+    #scen_string <- ""
+    scenarios_idx_all <- scenario_mapping$ScenNr[which(scenario_mapping$ScenLoop %in% scen_blocks[[i]])]
 
-  # Define files to bundle
-  downscaling_files <- dir_ls(path(CD,WD_DOWNSCALING,"gdx"),regexp=str_glue("output_{cluster_nr_downscaling}.",
-                                                                    "*",".RData"))  %>% sort()
-  idx <-  which(!is.na(str_match(downscaling_files,sprintf("%06d",scenarios_idx))))
-  #  str_replace_all("/","\\\\") %>% sort()
+    scen_string <- "c("
+    for (j in 1:length(scen_blocks[[i]])){
+      scenarios_idx <- scenario_mapping$ScenNr[which(scenario_mapping$ScenLoop %in% scen_blocks[[i]][j])]
+      if (j==1) {scen_string <- str_glue(scen_string,str_glue(min(scenarios_idx),":",max(scenarios_idx)))} else {
+        scen_string <- str_glue(scen_string,",",str_glue(min(scenarios_idx),":",max(scenarios_idx)))}
+    }
+    scen_string <- str_glue(scen_string,")")
 
-  downscaling_files <- downscaling_files[idx]
+    # Define files to bundle
+    downscaling_files <- dir_ls(path(CD,WD_DOWNSCALING,"gdx"),regexp=str_glue("output_{cluster_nr_downscaling}.",
+                                                                              "*",".RData"))  %>% sort() %>%
+      match_str(sprintf("%06d",scenarios_idx_all))
+    #idx <-  which(!is.na(str_match(downscaling_files,sprintf("%06d",scenarios_idx_all))))
+    #  str_replace_all("/","\\\\") %>% sort()
+
+    #downscaling_files <- downscaling_files[idx]
 
 
-  g4m_files <- dir_ls(path(CD,WD_G4M,"out",str_glue("{PROJECT}_{DATE_LABEL}")),
-                      regexp ="\\.csv$") %>% str_subset("area")
+    g4m_files <- dir_ls(path(CD,WD_G4M,"out",str_glue("{PROJECT}_{DATE_LABEL}")),
+                        regexp ="\\.csv$") %>% str_subset("area")
 
-  add_files <- c(g4m_files,downscaling_files)
+    add_files <- c(g4m_files,downscaling_files)
 
-  #if (!dir_exists(path(CD,WD_DOWNSCALING,"postproc"))) dir_create(path(CD,WD_DOWNSCALING,"postproc"))
-  #file_copy(g4m_files,path(CD,WD_DOWNSCALING,"postproc"),overwrite = T)
-  #file_copy(downscaling_files,path(CD,WD_DOWNSCALING,"postproc"),overwrite = T)
-  #include <- str_glue(c("**/gdx/output_{PROJECT}_{DATE_LABEL}_{cluster_nr_downscaling}.*.RData"))
+    #if (!dir_exists(path(CD,WD_DOWNSCALING,"postproc"))) dir_create(path(CD,WD_DOWNSCALING,"postproc"))
+    #file_copy(g4m_files,path(CD,WD_DOWNSCALING,"postproc"),overwrite = T)
+    #file_copy(downscaling_files,path(CD,WD_DOWNSCALING,"postproc"),overwrite = T)
+    #include <- str_glue(c("**/gdx/output_{PROJECT}_{DATE_LABEL}_{cluster_nr_downscaling}.*.RData"))
 
-  config_template <- c(
-    'LABEL = "{PROJECT}"',
-    'JOBS = {scen_string}',
-    'REQUIREMENTS = c("R")',
-    'REQUEST_MEMORY = 5000',
-    'BUNDLE_EXCLUDE_FILES = c("**/gdx/*.*","**/input/*.gdx",".Rprofile")',
-    'BUNDLE_EXCLUDE_DIRS = c("output", "prior_module", "source","t","renv")',
-    'BUNDLE_ADDITIONAL_FILES = ',
-    '{add_files}',
-    'REQUEST_CPUS = 1',
-    'REQUEST_DISK = 10000000',
-    'JOB_RELEASES = 3',
-    'JOB_RELEASE_DELAY = 120',
-    'LAUNCHER = "Rscript"',
-    'SCRIPT = "run_downscaling_postproc.R"',
-    'ARGUMENTS = "%1"',
-    'DATE_LABEL = "{DATE_LABEL}"',
-    'WAIT_FOR_RUN_COMPLETION = TRUE',
-    'CLEAR_LINES = FALSE',
-    'GET_OUTPUT = TRUE',
-    'OUTPUT_DIR = "gdx"',
-    'OUTPUT_FILE = "g4m_simu_out.RData"',
-    'CLUSTER_NUMBER_LOG = "{cluster_number_log}"'
-  )
+    config_template <- c(
+      'LABEL = "{PROJECT}"',
+      'JOBS = {scen_string}',
+      'REQUIREMENTS = c("R")',
+      'REQUEST_MEMORY = 5000',
+      'BUNDLE_EXCLUDE_FILES = c("**/gdx/*.*","**/input/*.gdx",".Rprofile")',
+      'BUNDLE_EXCLUDE_DIRS = c("output", "prior_module", "source","t","renv")',
+      'BUNDLE_ADDITIONAL_FILES = ',
+      '{add_files}',
+      'REQUEST_CPUS = 1',
+      'REQUEST_DISK = 10000000',
+      'JOB_RELEASES = 3',
+      'JOB_RELEASE_DELAY = 120',
+      'LAUNCHER = "Rscript"',
+      'SCRIPT = "run_downscaling_postproc.R"',
+      'ARGUMENTS = "%1"',
+      'DATE_LABEL = "{DATE_LABEL}"',
+      'WAIT_FOR_RUN_COMPLETION = TRUE',
+      'CLEAR_LINES = FALSE',
+      'GET_OUTPUT = TRUE',
+      'OUTPUT_DIR = "gdx"',
+      'OUTPUT_FILE = "g4m_simu_out.RData"',
+      'CLUSTER_NUMBER_LOG = "{cluster_number_log}"'
+    )
 
-  config_path <- path(TEMP_DIR, "config_postproc.R")
+    config_path <- path(TEMP_DIR, "config_postproc.R")
 
-  # Write config file
-  current_env <- environment()
-  write_lines(lapply(config_template, .envir=current_env, str_glue), config_path)
-  rm(config_template, current_env)
+    # Write config file
+    current_env <- environment()
+    write_lines(lapply(config_template, .envir=current_env, str_glue), config_path)
+    rm(config_template, current_env)
 
-  prior_wd <- getwd()
-  rc <- tryCatch ({
-    setwd(WD_DOWNSCALING)
-    system(str_glue('Rscript --vanilla "{CD}/Condor_run_R/Condor_run_basic.R" "{config_path}"'))
-  },
-  finally = {
-    setwd(prior_wd)
-  })
+    prior_wd <- getwd()
+    rc <- tryCatch ({
+      setwd(WD_DOWNSCALING)
+      system(str_glue("Rscript --vanilla {CD}/Condor_run_R//Condor_run_basic.R {config_path}"))
+    },
+    finally = {
+      setwd(prior_wd)
+    })
 
-  unlink(path(CD,WD_DOWNSCALING,"postproc","*.*"),recursive = TRUE)
+    #unlink(path(CD,WD_DOWNSCALING,"postproc","*.*"),recursive = TRUE)
 
-  if (rc != 0) stop("Condor run failed!")
+    if (rc != 0) stop("Condor run failed!")
 
-  # Save cluster number
-  cluster <- readr::parse_number(read_file(cluster_number_log))
-  cluster_nr_ids <- c(cluster_nr_ids,cluster)
+    # Save cluster number
+    cluster <- readr::parse_number(read_file(cluster_number_log))
+    cluster_nr_ids <- c(cluster_nr_ids,cluster)
 
   }
 
