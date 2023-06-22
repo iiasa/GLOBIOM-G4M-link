@@ -45,7 +45,7 @@ Automatize the [link between GLOBIOM and G4M](https://iiasa.github.io/GLOBIOM/do
    
    **:warning:Caution:** To make sure that Git does not try to track changes in the `GLOBIOM`
    subdirectory, it is ignored via an entry in the `.gitignore` file. But this means that the
-   content of the `GLOBIOM` directory content should be separately managed by you with the aid
+   content of the `GLOBIOM` directory should be separately managed by you with aid
    of Subversion.
  
 5. With GAMS 32.2, run the GLOBIOM precompilation `GLOBIOM/Data/0_executebatch_total.gms`
