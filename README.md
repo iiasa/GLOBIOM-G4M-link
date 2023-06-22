@@ -80,7 +80,7 @@ Please read [these instructions](https://github.com/iiasa/xl2gdx#dependencies) f
 
 Specific commits of the submodule repositories are referenced by the link. These
 should be used, and sometimes change as newer versions of the submodules become
-available. However, submodules do not automatically updated when pulling/fetching
+available. However, submodules do not automatically updatedwhen pulling/fetching
 the parent Git repository of the GLOBIOM-G4M-link.
 
 To update submodules or a submodule, issue:
@@ -90,14 +90,16 @@ git submodule update[ -- <name of submodule>]
 Alternatively, you can `cd` into a sub modules directory and issue `git fetch/merge/pull`
 to update it as per normal git practice. But do not change the branch or current checked
 out commit since the parent repository has referenced a vetted/tested commit: anything
-else may break the link`.
+else may break the link. When using `git status` or `git log` from a submodule directory,
+you may see that the remote repository of the submodule is ahead by several commits, and
+that you have a "detached HEAD". Don't worry, this is because the submodules are typically
+behind the latest changes in the remote repository.
 
 To view the status of the submodules, issue:
 ```
 git submodule status
 ```
-from the root directory.
-
+from the root directory of the link.
 
 ## Running the notebook
 
