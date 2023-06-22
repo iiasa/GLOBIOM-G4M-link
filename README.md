@@ -44,7 +44,7 @@ Automatize the [link between GLOBIOM and G4M](https://iiasa.github.io/GLOBIOM/do
    subdirectory of `GLOBIOM`.
    
    **:warning:Caution:** To make sure that Git does not try to track changes in the `GLOBIOM`
-   subdirectory, it is ignored via an entry the `.gitignore` file. But this means that the
+   subdirectory, it is ignored via an entry in the `.gitignore` file. But this means that the
    content of the `GLOBIOM` directory content should be separately managed by you with the aid
    of Subversion.
  
