@@ -14,11 +14,13 @@ Automatize the [link between GLOBIOM and G4M](https://iiasa.github.io/GLOBIOM/do
    to also clone the `Condor_run_R` and `DownScale` submodules. You can access the repository
    URL and other clone options by clicking on the 'Code' drop-down menu at the top right of the
    [GitHub repository page](https://github.com/iiasa/GLOBIOM-G4M-link).
+
 2. Check that the `Condor_run_R` and `DownScale` subdirectories have content. If not, the
    clone did not clone the Git submodule that lives there. To still get it, with the command
    line Git client do  
    `git submodule update --init --recursive`  
    from the root of the cloned repository.
+
 3. The submodule URLs as configured in the `.gitmodules` file of this repository are https-based.
    You may want or need to use ssh authentication instead. To do so you can have Git automatically
    substitute ssh equivalents for GitHub https URLs by issuing the following global configuration
@@ -27,7 +29,7 @@ Automatize the [link between GLOBIOM and G4M](https://iiasa.github.io/GLOBIOM/do
    Note that the `--global` switch makes the configuration change apply to your global git config
    instead of the repositorie's git config.
    
-3. Checkout a GLOBIOM branch from subversion by running the `checkout.bat` script from
+4. Checkout a GLOBIOM branch from subversion by running the `checkout.bat` script from
    the command prompt or your bash shell with a Trunk commit/revision number as only
    argument. The link has been tested with Trunk commit/revision 3554. You may wish
    to change the Subversion URL in `checkout.bat` to check out a different branch. The
@@ -40,7 +42,13 @@ Automatize the [link between GLOBIOM and G4M](https://iiasa.github.io/GLOBIOM/do
    graphical client like TortoiseSVN, making sure the working copy goes into a `GLOBIOM`
    subdirectory of the root level of your clone of this repository. Also, make a `Condor`
    subdirectory of `GLOBIOM`.
-4. With GAMS 32.2, run the GLOBIOM precompilation `GLOBIOM/Data/0_executebatch_total.gms`
+   
+   **:warning:Caution:** To make sure that Git does not try to track changes in the `GLOBIOM`
+   subdirectory, it is ignored via an entry the `.gitignore` file. But this means that the
+   content of the `GLOBIOM` directory content should be separately managed by you with the aid
+   of Subversion.
+ 
+5. With GAMS 32.2, run the GLOBIOM precompilation `GLOBIOM/Data/0_executebatch_total.gms`
    and thereafter the model `GLOBIOM/Model/0_executebatch.gms` up to the scenarios stage
    6 (comment out the stages >= 6). This will provide a restart file in the `GLOBIOM/Model/t`
    directory that is used by the notebook to perform parallel scenario (stage 6)
@@ -48,7 +56,8 @@ Automatize the [link between GLOBIOM and G4M](https://iiasa.github.io/GLOBIOM/do
    
    Make sure you have a single GAMS installation directory in your path, preferably the lastest
    GAMS version available.
-6. Install the R dependencies if needed.
+
+6. Install the R dependencies if needed. See below.
 
 ## R Dependencies
 
@@ -66,6 +75,29 @@ The notebook depends on:
  - On Windows only: [Rtools](https://cran.r-project.org/bin/windows/Rtools/).
 
 Please read [these instructions](https://github.com/iiasa/xl2gdx#dependencies) for details on how to install them.
+
+## Managing submodules
+
+Specific commits of the submodule repositories are referenced by the link. These
+should be used, and sometimes change as newer versions of the submodules become
+available. However, submodules do not automatically updated when pulling/fetching
+the parent Git repository of the GLOBIOM-G4M-link.
+
+To update submodules or a submodule, issue:
+```
+git submodule update[ -- <name of submodule>]
+```
+Alternatively, you can `cd` into a sub modules directory and issue `git fetch/merge/pull`
+to update it as per normal git practice. But do not change the branch or current checked
+out commit since the parent repository has referenced a vetted/tested commit: anything
+else may break the link`.
+
+To view the status of the submodules, issue:
+```
+git submodule status
+```
+from the root directory.
+
 
 ## Running the notebook
 
