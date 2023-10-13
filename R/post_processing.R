@@ -78,8 +78,9 @@ run_final_postproc <- function(cluster_nr_globiom) {
   globiom_postproc_file <- string_replace(GLOBIOM_POSTPROC_FILE,".gms","")
 
   if (!any(str_detect(tempString,str_glue("{g4m_postproc_file}_tmp.gms")))) tempString <- string_replace(tempString,str_glue("\\$include\\s+{g4m_postproc_file}.gms"),str_glue("$include {g4m_postproc_file}_tmp.gms"))
-  out_line <- str_glue("execute_unload '{out_dir_aux}Output4_IAMC_template_%project%_%lab%.gdx' Output4_SSP, Output4_SSP_AG, REGION_AG_MAP")
-  tempString[which(str_detect(tempString,"execute_unload[:print:]+.gdx"))] <- out_line
+  # out_line <- str_glue("execute_unload '{out_dir_aux}Output4_IAMC_template_%project%_%lab%.gdx' Output4_SSP, Output4_SSP_AG, REGION_AG_MAP")
+  # tempString[which(str_detect(tempString,"execute_unload[:print:]+.gdx"))] <- out_line
+  if (any(str_detect(tempString,str_glue("execute_unload")))) tempString <- string_replace(tempString,str_glue("execute_unload[:print:]+.gdx"),str_glue("execute_unload '{out_dir_aux}Output4_IAMC_template_%project%_%lab%.gdx"))
   write_lines(tempString, path(WD_GLOBIOM, "Model", str_glue("{globiom_postproc_file}_tmp.gms")))
 
   # Construct path for feedback file
