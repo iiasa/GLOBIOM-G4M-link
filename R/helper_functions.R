@@ -176,8 +176,10 @@ get_mapping <- function(){
 
   s_nr <-  sprintf("%06d", SCENARIOS[1])
   scen_map <- rgdx.set(path(CD,WD_GLOBIOM,"Model","gdx",str_glue("output_",cluster_nr_globiom,".",s_nr,".gdx")),"SCEN_MAP")
+  region_map <- rgdx.param(path(CD,WD_GLOBIOM,"Model","gdx",str_glue("output_",cluster_nr_globiom,".",s_nr,".gdx")),"LANDCOVER_COMPARE_SCEN") %>%
+    dplyr::select(ANYREGION) %>% filter(ANYREGION!="World") %>% unique() %>% droplevels() %>% pull()
 
-  scen_map <- scen_map %>% na.omit
+  scen_map <- scen_map  %>% na_if("") %>% na.omit
   scen_dims <- colnames(scen_map)
 
   loop_idx <- which(str_detect(scen_dims,regex("ScenLoop",ignore_case = T)))
@@ -198,15 +200,20 @@ get_mapping <- function(){
   # Define GLOBIOM - Downscaling map
   downs_input <- as_tibble(rgdx.param(path(str_glue(CD,"/",WD_DOWNSCALING,"/input/output_landcover_{PROJECT}_{DATE_LABEL}.gdx")),"LANDCOVER_COMPARE_SCEN"))
   names(downs_input) <- c("ScenNr","LC","SCEN1","SCEN2","SCEN3","Year","value")
-  downs_input <- downs_input %>% filter(ScenNr=="World" & LC=="TotLnd" & Year==2000) %>% uncount(RESOLUTION_DOWNSCALING)
+  downs_input <- downs_input %>% filter(ScenNr=="World" & LC=="TotLnd" & Year==2000)
+  Nscen <- dim(downs_input)[1]
+  downs_input <- downs_input %>% uncount(length(region_map))
   downs_input$ScenNr <- 0:(length(downs_input$ScenNr)-1)
   downs_input <- downs_input %>% dplyr::select(c(ScenNr,SCEN1,SCEN2,SCEN3)) %>%
-    mutate(SCEN1=toupper(SCEN1),SCEN2=toupper(SCEN2),SCEN3=toupper(SCEN3))
+    mutate(SCEN1=toupper(SCEN1),SCEN2=toupper(SCEN2),SCEN3=toupper(SCEN3)) %>%
+    mutate(RegionName=rep(region_map,Nscen))
 
   scen_map_solved$SCEN3 <- scen_map_solved$SCEN3 %>% toupper()
   downs_input$SCEN3 <- downs_input$SCEN3 %>% toupper()
 
-  downscaling_scenarios <- left_join(downs_input,scen_map_solved)
+  downscaling_scenarios <- left_join(downs_input,scen_map_solved) %>%
+    mutate(ScenLoop=as.integer(paste(ScenLoop))) %>% relocate(RegionName, .after ="ScenLoop")
+
 
   return(downscaling_scenarios)
 
