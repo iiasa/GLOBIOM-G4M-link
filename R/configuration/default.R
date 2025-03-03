@@ -2,8 +2,8 @@
 
 # 0th block - Global options
 #-------------------------------------------------------------------------------
-GAMS_VERSION = ""42.5" # GAMS version for Limpopo parallel runs, should match what you use locally
-
+GAMS_VERSION = ""42.5" # GAMS version for HTCondor parallel runs, should match what you use locally
+RUN_AS_OWNER = TRUE # Run jobs of HTCondor parallel runs as user that runs the link
 
 #-------------------------------------------------------------------------------
 
