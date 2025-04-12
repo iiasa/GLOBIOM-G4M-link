@@ -51,7 +51,8 @@ DOWNSCALR_SCRIPT = ifelse(ISIMIP,"downscaling_GAMSlink_ISIMIP.R","downscaling_GA
 
 # 4th and 5th block - G4M run
 #-------------------------------------------------------------------------------
-G4M_EXE = "G4M_newInterface_ver_EPA_07052021.exe" # name of G4M executable
+G4M_EXE = "G4M_global_REGION37_ImprovePerform_20240712.exe" # name of G4M executable - for REGION37 G4M
+# G4M_EXE = "G4M_global_REGION59_Aug2024.exe" # name of G4M executable - for REGION59 G4M
 BASE_SCEN1 = "SSP2" # SCEN1 to use as baseline
 BASE_SCEN2 = "SPA0" # SCEN2 to use as baseline
 BASE_SCEN3 = "scenRCPref" # SCEN3 to use as baseline
