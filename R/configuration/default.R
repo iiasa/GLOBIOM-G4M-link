@@ -2,7 +2,7 @@
 
 # 0th block - Global options
 #-------------------------------------------------------------------------------
-GAMS_VERSION = ""42.5" # GAMS version for HTCondor parallel runs, should match what you use locally
+GAMS_VERSION = "42.5" # GAMS version for HTCondor parallel runs, should match what you use locally
 RUN_AS_OWNER = TRUE # Run jobs of HTCondor parallel runs as user that runs the link
 
 #-------------------------------------------------------------------------------
@@ -15,7 +15,7 @@ WD_GLOBIOM = "GLOBIOM" # optional, working directory for GLOBIOM relative to roo
 PROJECT = "test_Link" # project name
 SCENARIOS = c(0,15) # scenarios to run
 GLOBIOM_RESTART_FILE = "a4_r1.g00" # restart file name from GLOBIOM
-GLOBIOM_GAMS_ARGS = "//nsim=%1 //limpopo=yes //yes_output=1 //ssp=SSP2 //scen_type=feedback //water_bio=0 PC=2 PS=0 PW=130" # GAMS arguments for the GLOBIOM run
+GLOBIOM_GAMS_ARGS = "//nsim=%1 //limpopo=yes //yes_output=1 //lookup=0 //ssp=SSP2 //scen_type=feedback //water_bio=0 PC=2 PS=0 PW=130" # GAMS arguments for the GLOBIOM run
 GLOBIOM_SCEN_FILE = "6_scenarios.gms"
 GLOBIOM_POSTPROC_FILE = "8_merge_output.gms"
 
@@ -28,6 +28,7 @@ GLOBIOM_POSTPROC_FILE = "8_merge_output.gms"
 WD_POSTPROC = "PostProcessing"
 DATE_LABEL = format(Sys.Date(), "%d%m%Y") # date of run
 REGIONAL_AG = "ggi" # regional aggregation level
+REGION_RESOLUTION = 37 # regional resolution for GLOBIOM
 
 #-------------------------------------------------------------------------------
 
@@ -40,7 +41,7 @@ WD_DOWNSCALING = "DownScale" # optional, working directory for downscaling relat
 WD_G4M = "G4M" # optional, working directory for G4M relative to root directory
 PATH_FOR_G4M = stringr::str_glue("{WD_G4M}/Data/GLOBIOM/{PROJECT}_{DATE_LABEL}") # directory where to save GDX for G4M run
 SCENARIOS_FOR_DOWNSCALING = c(0,15) # full set or subset of scenarios defined previously
-RESOLUTION_DOWNSCALING = 37 # number of regions specified in the downscaling
+RESOLUTION_DOWNSCALING = REGION_RESOLUTION # number of regions specified in the downscaling
 
 # Specific parameters for statistical downscaling (DOWNSCALING_TYPE = downscalr)
 ISIMIP = FALSE # Use starting land cover maps from ISIMIP

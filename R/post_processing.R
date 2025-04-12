@@ -7,12 +7,16 @@
 #' and G4M.
 #'
 #' @param cluster_nr_globiom Cluster sequence number of prior GLOBIOM HTCondor submission
-run_initial_postproc <- function(cluster_nr_globiom)
+run_initial_postproc <- function(cluster_nr_globiom, mergeGDX=TRUE)
 {
   save_environment("1")
 
   # Merge output GDX files to "output_{PROJECT}_{cluster_nr_globiom}_merged.gdx"
-  merge_gdx(PROJECT,path(CD,WD_GLOBIOM,"Model","gdx"),cluster_nr_globiom,1000000)
+  if(mergeGDX==TRUE){
+    merge_gdx(PROJECT,path(CD,WD_GLOBIOM,"Model","gdx"),cluster_nr_globiom,1000000)
+  }else{
+  if(!file.exists(paste0(path(CD,WD_GLOBIOM,"Model","gdx"),"/","output_", PROJECT, "_", cluster_nr_globiom, "_merged.gdx"))){merge_gdx(PROJECT,path(CD,WD_GLOBIOM,"Model","gdx"),cluster_nr_globiom,1000000)}
+  }
 
   # Check solution for infeasibilities
   check_sol(cluster_nr_globiom)
@@ -44,6 +48,7 @@ run_initial_postproc <- function(cluster_nr_globiom)
                           '--rep_iamc_g4m no',
                           '--g4mfile "{G4M_FEEDBACK_FILE}"',
                           '--regionagg "{REGIONAL_AG}"',
+                          '--region "REGION{REGION_RESOLUTION}"',
                           '--output_landcover "{output_landcover}"',
                           '--output_globiom4g4mm "{output_globiom4g4mm}"',
                           .sep = ' '))

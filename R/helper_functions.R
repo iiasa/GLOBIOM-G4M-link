@@ -179,7 +179,7 @@ get_mapping <- function(){
   region_map <- rgdx.param(path(CD,WD_GLOBIOM,"Model","gdx",str_glue("output_",cluster_nr_globiom,".",s_nr,".gdx")),"LANDCOVER_COMPARE_SCEN") %>%
     dplyr::select(ANYREGION) %>% filter(ANYREGION!="World") %>% unique() %>% droplevels() %>% pull()
 
-  scen_map <- scen_map  %>% na_if("") %>% na.omit
+  scen_map <- scen_map %>% na.omit
   scen_dims <- colnames(scen_map)
 
   loop_idx <- which(str_detect(scen_dims,regex("ScenLoop",ignore_case = T)))
