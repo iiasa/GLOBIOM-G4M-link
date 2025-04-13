@@ -28,7 +28,7 @@ GLOBIOM_POSTPROC_FILE = "8_merge_output.gms"
 WD_POSTPROC = "PostProcessing"
 DATE_LABEL = format(Sys.Date(), "%d%m%Y") # date of run
 REGIONAL_AG = "ggi" # regional aggregation level
-REGION_RESOLUTION = 37 # regional resolution for GLOBIOM
+REGION_RESOLUTION = 37 # regional resolution for GLOBIOM: currently two options available - 37 or 59 REGIONS
 
 #-------------------------------------------------------------------------------
 

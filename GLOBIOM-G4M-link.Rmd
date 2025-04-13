@@ -159,9 +159,9 @@ if (!file_exists(path(PATH_FOR_G4M, str_glue("GLOBIOM2G4M_output_LC_abs_{PROJECT
 
 gdx_to_csv_for_g4m()
 
-## copying Protection layer file (if needed) to the created G4M folder "\G4M\Data\GLOBIOM\"
-if(file_exists("G4M\\Data\\Default\\Protect_output_LC_abs_example.csv")){
-file.copy("G4M\\Data\\Default\\Protect_output_LC_abs_example.csv", paste0("G4M\\Data\\GLOBIOM\\",PROJECT,"_",DATE_LABEL,"\\Protect_output_LC_abs_",PROJECT,"_",DATE_LABEL,".csv"))
+## copying Protection layer file (if needed) to the created G4M folder "\G4M\Data\GLOBIOM\". This "_Example.csv" can be used to adapt for current scenarios.
+if(file_exists("G4M\\Data\\Default\\Protect_output_LC_abs_Example.csv")){
+file.copy("G4M\\Data\\Default\\Protect_output_LC_abs_Example.csv", paste0("G4M\\Data\\GLOBIOM\\",PROJECT,"_",DATE_LABEL,"\\Protect_output_LC_abs_",PROJECT,"_",DATE_LABEL,".csv"))
 }
 
 ```
