@@ -36,7 +36,7 @@ REGION_RESOLUTION = 37 # regional resolution for GLOBIOM
 #-------------------------------------------------------------------------------
 
 # Downscaling configuration
-DOWNSCALING_TYPE = "default" # optional, one of "default", "econometric", "econometricMNL" or "downscalr"
+DOWNSCALING_TYPE = "downscalr" # optional, one of "default", "econometric", "econometricMNL" or "downscalr"
 WD_DOWNSCALING = "DownScale" # optional, working directory for downscaling relative to root directory
 WD_G4M = "G4M" # optional, working directory for G4M relative to root directory
 PATH_FOR_G4M = stringr::str_glue("{WD_G4M}/Data/GLOBIOM/{PROJECT}_{DATE_LABEL}") # directory where to save GDX for G4M run
