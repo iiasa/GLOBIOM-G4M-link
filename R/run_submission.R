@@ -244,7 +244,7 @@ run_initial_downscaling <- function() {
       'REQUEST_MEMORY = 7500',
       'REQUEST_DISK = 1500000',
       'REQUEST_CPUS = 1',
-      'JOB_RELEASES = 3',
+      'JOB_RELEASES = 1',
       'JOB_RELEASE_DELAY = 120',
       'BUNDLE_EXCLUDE_FILES = "**/gdx/*.*"',
       'LAUNCHER = "Rscript"',
@@ -279,6 +279,7 @@ run_initial_downscaling <- function() {
     downscaling_pars[[3]] <- PROJECT
     downscaling_pars[[4]] <- DATE_LABEL
     downscaling_pars[[5]] <- scenario_mapping
+    downscaling_pars[[6]] <- REGION_RESOLUTION
 
     saveRDS(downscaling_pars,path(CD,WD_DOWNSCALING,"downscaling_pars.RData"))
 
@@ -317,10 +318,19 @@ run_g4m <- function(baseline = NULL) {
   if (!is.logical(baseline))
     stop("Set baseline parameter to TRUE or FALSE!")
 
-
+  # Prepare historical input files for G4M (choose the correct ones for current REGION_RESOLUTION, i.e. REGION37 or REGION59)
+  for(G4MInput in c("LandRent","SupplyWood","Wood_price")){
+    G4MInput_filename <- paste0(path(CD,WD_G4M,"Data","Default"),"/","GLOBIOM2G4M_output_",G4MInput,"_beis_08022022_2000_2020.csv")
+    G4MInput_filename_curREGION <- paste0(path(CD,WD_G4M,"Data","Default"),"/","GLOBIOM2G4M_output_",G4MInput,"_beis_08022022_2000_2020_",paste0("REGION",REGION_RESOLUTION),".csv")
+    
+  if(file.exists(G4MInput_filename)){file.remove(G4MInput_filename)}
+  file.copy(from=G4MInput_filename_curREGION,to=G4MInput_filename)
+  }
+  
   # Get downscaling mapping
   downs_map <-  get_mapping() %>% dplyr::select(-ScenNr) %>%
-    filter(ScenLoop %in% SCENARIOS_FOR_G4M) %>% unique()
+    filter(ScenLoop %in% SCENARIOS_FOR_G4M) %>% 
+    dplyr::select(-RegionName) %>% unique()
 
   # Save config files
   lab <- str_glue("{PROJECT}_{DATE_LABEL}")
@@ -358,6 +368,7 @@ run_g4m <- function(baseline = NULL) {
   if (baseline) {
     scen_4_g4m <- get_mapping() %>% dplyr::select(-ScenNr) %>%
       filter(SCEN1==BASE_SCEN1 & SCEN2==BASE_SCEN2 & SCEN3==BASE_SCEN3) %>%
+      dplyr::select(-RegionName) %>%
       unique() %>% droplevels()
     scen_4_g4m <- scen_4_g4m$ScenLoop
   } else {
