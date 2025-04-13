@@ -327,6 +327,14 @@ run_g4m <- function(baseline = NULL) {
   file.copy(from=G4MInput_filename_curREGION,to=G4MInput_filename)
   }
   
+  # Prepare historical input files for G4M (choose the correct ones for current REGION_RESOLUTION, i.e. REGION37 or REGION59)
+    G4MIni_filename <- paste0(path(CD,WD_G4M,"Data","Default"),"/","settings_glob_cell_nas_v10_ukbeis_3_allScen.ini")
+    GG4MIni_filename_curREGION <- paste0(path(CD,WD_G4M,"Data","Default"),"/","settings_glob_cell_nas_v10_ukbeis_3_allScen_",paste0("REGION",REGION_RESOLUTION),".ini")
+    if(file.exists(G4MIni_filename)){file.remove(G4MIni_filename)}
+    file.copy(from=GG4MIni_filename_curREGION,to=G4MIni_filename)
+  
+  
+  
   # Get downscaling mapping
   downs_map <-  get_mapping() %>% dplyr::select(-ScenNr) %>%
     filter(ScenLoop %in% SCENARIOS_FOR_G4M) %>% 
@@ -391,6 +399,7 @@ run_g4m <- function(baseline = NULL) {
     'REQUEST_CPUS = 1',
     'JOB_RELEASES = 1',
     'JOB_RELEASE_DELAY = 120',
+    'HOST_REGEXP = "^limpopo[678]"', # suggested hosts from the cluster for running G4M tasks
     'LAUNCHER = "Rscript"',
     'SCRIPT = "{G4M_SUBMISSION_SCRIPT}"',
     'ARGUMENTS = "%1"',
