@@ -4,5 +4,15 @@
 .Ruserdata
 /GLOBIOM/
 /G4M/
+/G4M/Condor/
 /log/
 /R/environment/
+/renv/
+/DownScale/renv/
+/output/
+/G4M_DS_Link/
+/G4M_global/
+/ForTestRunning/
+/Proj_G4M/
+/Write_netcdf/
+*/Condor/

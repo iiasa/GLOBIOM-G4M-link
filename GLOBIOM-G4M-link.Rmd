@@ -37,6 +37,7 @@ library(gdxrrw)
 suppressWarnings(library(tidyverse))
 library(stringr) # part of the tidyverse, but not attached by default
 library(fs)
+library(data.table) #for function "fwrite" which is much faster than write.csv or write.table
 ```
 
 ## Customize configuration
@@ -96,6 +97,16 @@ compile_table_merger()
 dyn.load(path(CD,WD_G4M,"/tableMergeForLinker/merge_files.so"))
 ```
 
+## 0. If restarting Rstudio session (and finished runs not saved to Rproject or RData)
+```{r}
+# setwd(dirname(rstudioapi::getSourceEditorContext()$path)) ##copy to Console to run
+
+# Manually put the cluster number for finished GLOBIOM and Downscaling jobs here:
+cluster_nr_globiom <- "XXXX"
+cluster_nr_downscaling <- "XXXX"
+
+```
+
 ## 1. Run GLOBIOM scenarios
 
 ```{r}
@@ -109,7 +120,7 @@ print("GLOBIOM scenarios run complete.")
 Merge and export GLOBIOM output for use by downscaling and G4M.
 
 ```{r}
-run_initial_postproc(cluster_nr_globiom)
+run_initial_postproc(cluster_nr_globiom, mergeGDX=TRUE)
 
 print("Initial post processing complete.")
 ```
@@ -147,6 +158,12 @@ if (!file_exists(path(PATH_FOR_G4M, str_glue("GLOBIOM2G4M_output_LC_abs_{PROJECT
   stop("File for G4M run not found! Please perform intial downscaling first.")
 
 gdx_to_csv_for_g4m()
+
+## copying Protection layer file (if needed) to the created G4M folder "\G4M\Data\GLOBIOM\". This "_Example.csv" can be used to adapt for current scenarios.
+if(file_exists("G4M\\Data\\Default\\Protect_output_LC_abs_Example.csv")){
+file.copy("G4M\\Data\\Default\\Protect_output_LC_abs_Example.csv", paste0("G4M\\Data\\GLOBIOM\\",PROJECT,"_",DATE_LABEL,"\\Protect_output_LC_abs_",PROJECT,"_",DATE_LABEL,".csv"))
+}
+
 ```
 
 ## 4. Preliminary: Run baseline G4M scenarios---needs data from the intial downscaling
@@ -174,6 +191,18 @@ print("G4M scenario run complete")
 
 ```{r}
 compile_g4m_data(baseline = FALSE)
+
+## Post-process merged g4m result (tab_gui_xxx_.csv): replace nan (in Malta and Svalbard_and_Jan_Mayen) with zero - The NAN values exist after MG updated G4M to REGION59 in Aug 2024
+file_outpath <- path(CD,WD_GLOBIOM,"Model","output","g4m",str_glue("{PROJECT}_{DATE_LABEL}"))
+file_g4m_result_name <- path(file_outpath,G4M_FEEDBACK_FILE)
+
+df.g4m.result.raw <- read.csv(file=file_g4m_result_name,header=TRUE)
+df.g4m.result <- na.omit(df.g4m.result.raw)
+colnames(df.g4m.result) <- gsub("X","",colnames(df.g4m.result))
+
+file_move(file_g4m_result_name,path(file_outpath,gsub(".csv","_raw.csv",G4M_FEEDBACK_FILE)))
+fwrite(x=df.g4m.result, file = file_g4m_result_name, append = FALSE, quote = TRUE,sep = ",")  
+
 ```
 
 ## 6. Preliminary: Perform the final post-processing---needs data from the G4M run
