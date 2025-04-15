@@ -282,7 +282,7 @@ export_gdx_for_g4m <- function(data,data_for_g4m){
 get_g4m_jobs <- function(baseline = NULL){
 
   # Get downscaling mapping
-  downs_map <-  get_mapping() %>% dplyr::select(-ScenNr) %>%
+  downs_map <-  get_mapping() %>% dplyr::select(-ScenNr) %>% dplyr::select(-RegionName) %>%
                 filter(ScenLoop %in% SCENARIOS_FOR_G4M) %>% unique()
 
   # Save config files
@@ -437,7 +437,7 @@ g4m_to_simu <- function(){
   source(path(WD_DOWNSCALING,"G4M_DS_to_simu_link_final_v2.R"))
 
   # Get downscaling mapping
-  downs_map <-  get_mapping() %>% dplyr::select(-REGION) %>%
+  downs_map <-  get_mapping() %>% dplyr::select(-RegionName) %>%
     filter(ScenLoop %in% SCENARIOS_FOR_G4M)
 
   for (i in 1:dim(downs_map)[1]){
@@ -539,7 +539,7 @@ plot_results <- function(scenarios_for_lookup,scenarios_for_globiom){
   out_lookup <- out_lookup %>% mutate(Scenario=str_c(out_lookup$SCEN1,"_",out_lookup$SCEN2,"_",out_lookup$SCEN3))
 
   # Select scenarios for plotting
-  scen_list <- unique(get_mapping()) %>% dplyr::select(-ScenNr)
+  scen_list <- unique(get_mapping()) %>% dplyr::select(-RegionName) %>% dplyr::select(-ScenNr)
   scen_for_plot <- scen_list %>% filter(ScenLoop %in% scenarios_for_lookup)
   scen_for_plot <- str_c(scen_for_plot[,1],"_",scen_for_plot[,2],"_",scen_for_plot[,3])
   out_lookup <- out_lookup %>% filter(Scenario %in% scen_for_plot)
@@ -567,7 +567,7 @@ plot_results <- function(scenarios_for_lookup,scenarios_for_globiom){
   out_merged <- out_merged %>% mutate(Scenario=str_c(out_merged$SCEN1,"_",out_merged$SCEN2,"_",out_merged$SCEN3))
 
   # Select scenarios for plotting
-  scen_list <- unique(get_mapping()) %>% dplyr::select(-ScenNr)
+  scen_list <- unique(get_mapping()) %>% dplyr::select(-RegionName) %>% dplyr::select(-ScenNr)
   scen_for_plot <- scen_list %>% filter(ScenLoop %in% scenarios_for_globiom)
   scen_for_plot <- str_c(scen_for_plot[,1],"_",scen_for_plot[,2],"_",scen_for_plot[,3])
   out_merged <-out_merged %>% filter(Scenario %in% c(scen_for_plot,"FAO_FAO_FAO"))
