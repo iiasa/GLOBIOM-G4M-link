@@ -155,8 +155,9 @@ run_final_postproc <- function(cluster_nr_globiom) {
 
   # Edit mapping set
   tempString <- read_file(path(WD_GLOBIOM, "Model", str_glue("{g4m_postproc_file}.gms")))
-  tempString <- string_replace(tempString,regex('G4MScen2[[:print:]*|[\r\n]*]*G4M_SCEN_MAP[[:print:]*|[\r\n]*]*/[\r\n\\s]+;'),
-                            str_c(g4m_globiom_map,collapse="\n"))
+  ## the below line is modified to accommodate for different possible separator (spaces/tabs, from GAMSIDE or GAMS Studio)
+  tempString <- string_replace(tempString,regex("G4MScen2(?:.|\\s)*?G4M_SCEN_MAP(?:.|\\s)*?/\\s*;",ignore_case = T),
+                               str_c(g4m_globiom_map,collapse="\n"))
 
   # Edit feedback file
   path_for_feedback_file <-str_glue(path_feedback, G4M_FEEDBACK_FILE)
