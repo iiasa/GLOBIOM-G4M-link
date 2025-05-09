@@ -926,13 +926,16 @@ run_biodiversity <- function(cluster_nr_downscaling) {
 
   # Define scenarion mapping
   scenario_mapping <- get_mapping() %>%
-    filter(ScenLoop %in% SCENARIOS_FOR_G4M)
+    filter(ScenLoop %in% SCENARIOS_FOR_BIODIVERSITY)
 
   # Define out id for merging gdx
-  out_id <- format(Sys.time(), "%d %X %Y") %>% str_remove_all(":") %>% str_remove_all(" ")
+  # out_id <- format(Sys.time(), "%d %X %Y") %>% str_remove_all(":") %>% str_remove_all(" ")  ## out_id identifier, 1st Alternative - use system time
+  out_id <- paste0(PROJECT,"_",DATE_LABEL) ## out_id identifier, 2ND Alternative - use {PROJECT} and {DATE_LABEL}
 
   # Split scenarios into submission blocks of 40 scenarios
-  scen_blocks <- divide(SCENARIOS_FOR_G4M,ceiling(length(SCENARIOS_FOR_G4M)/40))
+  scen_blocks <- ifelse(length(SCENARIOS_FOR_BIODIVERSITY)<10,
+                        list(SCENARIOS_FOR_BIODIVERSITY),
+                        divide(SCENARIOS_FOR_BIODIVERSITY,ceiling(length(SCENARIOS_FOR_BIODIVERSITY)/40)))
 
   # Define downscaling scenarios for biodiversity run
   for (i in 1: length(scen_blocks)){
@@ -967,19 +970,19 @@ run_biodiversity <- function(cluster_nr_downscaling) {
     # Create config for biodiversity runs
     config <- list(PROJECT,DATE_LABEL,scenario_mapping,cluster_nr_downscaling, COMPUTE_BII, COMPUTE_cSAR)
 
-    saveRDS(config,path(WD_BIODIVERSITY,"Input","config.RData"))
+    saveRDS(config,path(CD,WD_BIODIVERSITY,"Input","config.RData"))
 
      config_template <- c(
       'LABEL = "{PROJECT}"',
       'JOBS = {scen_string}',
       'HOST_REGEXP = "^limpopo"',
       'REQUIREMENTS = c("R")',
-      'REQUEST_MEMORY = 9000',
-      'BUNDLE_EXCLUDE_FILES = c("**/Output/*.*")',
+      'REQUEST_MEMORY = 10000',
+      'BUNDLE_EXCLUDE_FILES = c("**/Output/*.*","Output/*.*")',
       'BUNDLE_ADDITIONAL_FILES = ',
       '{add_files}',
       'REQUEST_CPUS = 1',
-      'JOB_RELEASES = 3',
+      'JOB_RELEASES = 1',
       'JOB_RELEASE_DELAY = 120',
       'LAUNCHER = "Rscript"',
       'SCRIPT = "get_biodiversity.R"',
@@ -990,7 +993,7 @@ run_biodiversity <- function(cluster_nr_downscaling) {
       'CLEAR_LINES = FALSE',
       'GET_OUTPUT = TRUE',
       'OUTPUT_DIR = "Output"',
-      'OUTPUT_FILE = "biodiversity.RData"',
+      'OUTPUT_FILE = "biodiversity_{PROJECT}_{DATE_LABEL}.RData"',
       'CLUSTER_NUMBER_LOG = "{cluster_number_log}"'
     )
 
@@ -1003,7 +1006,7 @@ run_biodiversity <- function(cluster_nr_downscaling) {
 
     prior_wd <- getwd()
     rc <- tryCatch ({
-      setwd(WD_BIODIVERSITY)
+      setwd(path(CD,WD_BIODIVERSITY))
       system(str_glue('Rscript --vanilla "{CD}/Condor_run_R/Condor_run_basic.R" "{config_path}"'))
     },
     finally = {
@@ -1015,10 +1018,10 @@ run_biodiversity <- function(cluster_nr_downscaling) {
     cluster_nr <- readr::parse_number(read_file(cluster_number_log))
 
     # Get GLOBIOM regions
-    regions <- readRDS(path(WD_BIODIVERSITY,"Input","globiom_regions.RData"))
+    regions <- readRDS(path(CD,WD_BIODIVERSITY,"Input","globiom_regions.RData"))
 
-    out_files <- dir_ls(path(WD_BIODIVERSITY,"Output"),regexp = str_glue("biodiversity_{cluster_nr}.*.RData"))
-
+    out_files <- dir_ls(path(CD,WD_BIODIVERSITY,"Output"),regexp = str_glue("biodiversity_{PROJECT}_{DATE_LABEL}_{cluster_nr}.*.RData"))
+    
     # Get BII and cSAR aggregated outputs
     if (COMPUTE_BII) {
       cons_out_bii <- out_files %>%
@@ -1060,14 +1063,15 @@ run_biodiversity <- function(cluster_nr_downscaling) {
 
 
     wgdx.reshape(cons_out, 6, symName="Biodiversity", setNames=c("REGION","Item","SCEN1","SCEN2","SCEN3"),
-                 tName = "ScenYear", gdxName = path(WD_BIODIVERSITY,"Output",str_glue("output_{out_id}.{i}.gdx")))
+                 tName = "ScenYear", gdxName = path(CD,WD_BIODIVERSITY,"Output",str_glue("output_{out_id}.{i}.gdx")))
 
   }
 
   # Merge outputs into single gdx
-  merge_gdx(PROJECT,path(WD_BIODIVERSITY,"Output"),out_id,10^6)
+  merge_gdx(PROJECT,path(CD,WD_BIODIVERSITY,"Output"),out_id,10^6)
 
-
+  # Return the cluster number
+  readr::parse_number(read_file(cluster_number_log))
 }
 
 

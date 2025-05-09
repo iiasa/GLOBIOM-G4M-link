@@ -53,7 +53,7 @@ DOWNSCALR_SCRIPT = ifelse(ISIMIP,"downscaling_GAMSlink_ISIMIP.R","downscaling_GA
 #-------------------------------------------------------------------------------
 G4M_EXE = "G4M_global_REGION37or59_Aug2024.exe" # name of G4M executable: this updated G4M version is used for either REGION37 or REGION59
 BASE_SCEN1 = "SSP2" # SCEN1 to use as baseline
-BASE_SCEN2 = "SPA0" # SCEN2 to use as baseline
+BASE_SCEN2 = "SCEN" # SCEN2 to use as baseline (Current default in Trunk is 'SCEN'; please adapt to specific scenario name according to PROJECT)
 BASE_SCEN3 = "scenRCPref" # SCEN3 to use as baseline
 G4M_SUBMISSION_SCRIPT = "g4m_run.R" # submission script to run G4M
 CO2_PRICE = -1 # co2 price for G4M run, -1 if read form a file or actual price otherwise
@@ -67,6 +67,7 @@ WD_BIODIVERSITY = "Biodiversity_Link"
 GET_BIODIVERSITY_INDICES = TRUE # Compute biodiversity indices
 COMPUTE_BII = TRUE # compute BII index
 COMPUTE_cSAR = TRUE # compute cSAR index
+SCENARIOS_FOR_BIODIVERSITY = SCENARIOS_FOR_G4M # choose a full set or subset of scenarios that ran through downscaling & G4M steps
 #-------------------------------------------------------------------------------
 
 
