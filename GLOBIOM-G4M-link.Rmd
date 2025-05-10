@@ -217,7 +217,18 @@ if (USE_LIMPOPO_POSTPROC) {
 print("Final post-processing complete")
 ```
 
-## 7. Remove files and plot results
+
+## 7.Run Biodiversity_link: calculating biodiversity indicators (PREDICTS|BII, cSAR|FGRS)
+
+```{r}
+cluster_nr_biodiversity <- run_biodiversity(cluster_nr_downscaling)
+
+print("Biodiversity indicators calculation complete")
+
+```
+
+
+## 8. Remove files and plot results
 
 ```{r}
 # Generate plots for results
