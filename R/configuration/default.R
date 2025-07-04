@@ -18,6 +18,8 @@ GLOBIOM_RESTART_FILE = "a4_r1.g00" # restart file name from GLOBIOM
 GLOBIOM_GAMS_ARGS = "//nsim=%1 //limpopo=yes //yes_output=1 //lookup=0 //ssp=SSP2 //scen_type=feedback //water_bio=0 PC=2 PS=0 PW=130" # GAMS arguments for the GLOBIOM run
 GLOBIOM_SCEN_FILE = "6_scenarios.gms"
 GLOBIOM_POSTPROC_FILE = "8_merge_output.gms"
+THERE_ARE_BTC_Scenarios = TRUE ## in the modelled scenarios, are there scenarios that include BTC (bending the curve) type of biodiversity protection & conservation setups? (This information needs to be passed on to DownScale to choose the correct initial LC map, and to G4M to prepare corresponding forest protection layers, to ensure consistent and full BTC representation throughout the GLOBIOM-G4M pipeline)
+SCENARIOS_BTC <- c(0,1,8,9,10)
 
 #-------------------------------------------------------------------------------
 

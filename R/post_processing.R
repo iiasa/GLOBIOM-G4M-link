@@ -46,6 +46,9 @@ run_initial_postproc <- function(cluster_nr_globiom, mergeGDX=TRUE)
                           '--rep_g4m yes',
                           '--rep_iamc_glo yes',
                           '--rep_iamc_g4m no',
+                          '--rep_iamc_forest no',
+                          '--rep_iamc_biodiversity no',
+                          '--gdxmerge no',
                           '--g4mfile "{G4M_FEEDBACK_FILE}"',
                           '--regionagg "{REGIONAL_AG}"',
                           '--region "REGION{REGION_RESOLUTION}"',
@@ -70,7 +73,7 @@ run_initial_postproc <- function(cluster_nr_globiom, mergeGDX=TRUE)
 #' reports for IAMC.
 #'
 #' @param cluster_nr_globiom Cluster sequence number of prior GLOBIOM HTCondor submission
-run_final_postproc <- function(cluster_nr_globiom) {
+run_final_postproc <- function(cluster_nr_globiom, mergeGDX=TRUE) {
 
   # Create output file directory
   out_dir <- path(CD,"output",str_glue("{PROJECT}_{DATE_LABEL}"))
@@ -178,6 +181,18 @@ run_final_postproc <- function(cluster_nr_globiom) {
     tempString <- string_replace_all(tempString,regex(ifelse(country_aggregation,ref_ctry,ref_reg), ignore_case = T),
                                 ifelse(country_aggregation,ref_sum_ctry,ref_sum_reg))
 
+    if(mergeGDX){
+      gdxmerge <- "yes"
+    }else{
+      gdxmerge <- "no"
+    }
+
+    if(exists("cluster_nr_biodiversity")){
+      process_and_report_biodiversity <- "yes"
+    }else{
+      process_and_report_biodiversity <- "no"
+    }
+
   # Save edits and run post-processing script in the GLOBIOM Model directory
   prior_wd <- getwd()
   rc <- tryCatch ({
@@ -189,9 +204,12 @@ run_final_postproc <- function(cluster_nr_globiom) {
                           '--limpopo_nr "{cluster_nr_globiom}"',
                           '--project "{PROJECT}"',
                           '--lab "{DATE_LABEL}"',
+                          '--gdxmerge "{gdxmerge}"',
                           '--rep_g4m no',
                           '--rep_iamc_glo yes',
                           '--rep_iamc_g4m yes',
+                          '--rep_iamc_forest yes',
+                          '--rep_iamc_biodiversity {process_and_report_biodiversity}',
                           '--g4mfile "{G4M_FEEDBACK_FILE}"',
                           '--regionagg "{REGIONAL_AG}"',
                           .sep = ' '))

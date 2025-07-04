@@ -26,8 +26,8 @@ run_globiom_scenarios <- function() {
     'GAMS_ARGUMENTS = "{GLOBIOM_GAMS_ARGS}"',
     'BUNDLE_INCLUDE = "Model"',
     'BUNDLE_INCLUDE_DIRS = c("include")',
-    'BUNDLE_EXCLUDE_DIRS = c("Model/t",".git", ".svn", "225*", "doc")',
-    'BUNDLE_EXCLUDE_FILES = c("**/*.~*","**/~*.*", "**/*.log", "**/*.log~*", "**/*.lxi", "**/*.lst","**/output/iamc/*.*","**/output/g4m/*.*","**/gdx/*.*") # supports wildcards',
+    'BUNDLE_EXCLUDE_DIRS = c("Model/t","Model/output",".git", ".svn", "225*", "doc")',
+    'BUNDLE_EXCLUDE_FILES = c("**/*.~*","**/~*.*", "**/*.log", "**/*.log~*", "**/*.lxi", "**/*.lst","**/output/g4m/*.*","**/output/iamc/*.*","**/output/g4m/*.*","**/gdx/*.*") # supports wildcards',
     'BUNDLE_ADDITIONAL_FILES = c()',
     'RESTART_FILE_PATH = "t/{GLOBIOM_RESTART_FILE}"',
     'RUN_AS_OWNER = {RUN_AS_OWNER}',
@@ -280,6 +280,8 @@ run_initial_downscaling <- function() {
     downscaling_pars[[4]] <- DATE_LABEL
     downscaling_pars[[5]] <- scenario_mapping
     downscaling_pars[[6]] <- REGION_RESOLUTION
+    downscaling_pars[[7]] <- THERE_ARE_BTC_Scenarios
+    downscaling_pars[[8]] <- SCENARIOS_BTC
 
     saveRDS(downscaling_pars,path(CD,WD_DOWNSCALING,"downscaling_pars.RData"))
 
@@ -322,11 +324,11 @@ run_g4m <- function(baseline = NULL) {
   for(G4MInput in c("LandRent","SupplyWood","Wood_price")){
     G4MInput_filename <- paste0(path(CD,WD_G4M,"Data","Default"),"/","GLOBIOM2G4M_output_",G4MInput,"_beis_08022022_2000_2020.csv")
     G4MInput_filename_curREGION <- paste0(path(CD,WD_G4M,"Data","Default"),"/","GLOBIOM2G4M_output_",G4MInput,"_beis_08022022_2000_2020_",paste0("REGION",REGION_RESOLUTION),".csv")
-    
+
   if(file.exists(G4MInput_filename)){file.remove(G4MInput_filename)}
   file.copy(from=G4MInput_filename_curREGION,to=G4MInput_filename)
   }
-  
+
   # Prepare historical input files for G4M (choose the correct ones for current REGION_RESOLUTION, i.e. REGION37 or REGION59)
     G4MIni_filename <- paste0(path(CD,WD_G4M,"Data","Default"),"/","settings_glob_cell_nas_v10_ukbeis_3_allScen.ini")
     GG4MIni_filename_curREGION <- paste0(path(CD,WD_G4M,"Data","Default"),"/","settings_glob_cell_nas_v10_ukbeis_3_allScen_",paste0("REGION",REGION_RESOLUTION),".ini")
@@ -1026,6 +1028,7 @@ run_biodiversity <- function(cluster_nr_downscaling) {
     if (COMPUTE_BII) {
       cons_out_bii <- out_files %>%
         lapply(get_rds_out,2) %>% bind_rows() %>% left_join(scenario_mapping) %>%
+        dplyr::select(-c(RegionName)) %>%
         rename(bii=score, bii_prod = score_prod)
     } else {
       cons_out_bii <- NULL
@@ -1034,6 +1037,7 @@ run_biodiversity <- function(cluster_nr_downscaling) {
     if (COMPUTE_cSAR){
       cons_out_csar <- out_files %>%
         lapply(get_rds_out,4) %>% bind_rows() %>% left_join(scenario_mapping) %>%
+        dplyr::select(-c(RegionName)) %>%
         rename(csar=score)
     } else {
       cons_out_csar <- NULL
