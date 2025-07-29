@@ -334,12 +334,12 @@ run_g4m <- function(baseline = NULL) {
     GG4MIni_filename_curREGION <- paste0(path(CD,WD_G4M,"Data","Default"),"/","settings_glob_cell_nas_v10_ukbeis_3_allScen_",paste0("REGION",REGION_RESOLUTION),".ini")
     if(file.exists(G4MIni_filename)){file.remove(G4MIni_filename)}
     file.copy(from=GG4MIni_filename_curREGION,to=G4MIni_filename)
-  
-  
-  
+
+
+
   # Get downscaling mapping
   downs_map <-  get_mapping() %>% dplyr::select(-ScenNr) %>%
-    filter(ScenLoop %in% SCENARIOS_FOR_G4M) %>% 
+    filter(ScenLoop %in% SCENARIOS_FOR_G4M) %>%
     dplyr::select(-RegionName) %>% unique()
 
   # Save config files
@@ -1023,7 +1023,7 @@ run_biodiversity <- function(cluster_nr_downscaling) {
     regions <- readRDS(path(CD,WD_BIODIVERSITY,"Input","globiom_regions.RData"))
 
     out_files <- dir_ls(path(CD,WD_BIODIVERSITY,"Output"),regexp = str_glue("biodiversity_{PROJECT}_{DATE_LABEL}_{cluster_nr}.*.RData"))
-    
+
     # Get BII and cSAR aggregated outputs
     if (COMPUTE_BII) {
       cons_out_bii <- out_files %>%
@@ -1168,11 +1168,11 @@ run_merge_and_transfer <- function(cluster_nr_downscaling) {
 
 
 
-#' Run merge and transfer
+#' Generates land cover maps
 #'
-#' Sends data compilation from Downscaling to G4M to limpopo
+#' Used for computing biodiversity indicators and export output - now deprecated
 #' @param cluster_nr_downscaling Cluster sequence number of the downscaling HTCondor submission
-run_merge_and_transfer <- function(cluster_nr_downscaling) {
+run_map_write <- function(cluster_nr_downscaling) {
 
   # Get cluster number
   cluster_number_log <- path(TEMP_DIR, "cluster_number.log")
