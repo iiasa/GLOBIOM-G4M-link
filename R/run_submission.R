@@ -334,12 +334,12 @@ run_g4m <- function(baseline = NULL) {
     GG4MIni_filename_curREGION <- paste0(path(CD,WD_G4M,"Data","Default"),"/","settings_glob_cell_nas_v10_ukbeis_3_allScen_",paste0("REGION",REGION_RESOLUTION),".ini")
     if(file.exists(G4MIni_filename)){file.remove(G4MIni_filename)}
     file.copy(from=GG4MIni_filename_curREGION,to=G4MIni_filename)
-  
-  
-  
+
+
+
   # Get downscaling mapping
   downs_map <-  get_mapping() %>% dplyr::select(-ScenNr) %>%
-    filter(ScenLoop %in% SCENARIOS_FOR_G4M) %>% 
+    filter(ScenLoop %in% SCENARIOS_FOR_G4M) %>%
     dplyr::select(-RegionName) %>% unique()
 
   # Save config files
@@ -1023,7 +1023,7 @@ run_biodiversity <- function(cluster_nr_downscaling) {
     regions <- readRDS(path(CD,WD_BIODIVERSITY,"Input","globiom_regions.RData"))
 
     out_files <- dir_ls(path(CD,WD_BIODIVERSITY,"Output"),regexp = str_glue("biodiversity_{PROJECT}_{DATE_LABEL}_{cluster_nr}.*.RData"))
-    
+
     # Get BII and cSAR aggregated outputs
     if (COMPUTE_BII) {
       cons_out_bii <- out_files %>%
@@ -1168,72 +1168,72 @@ run_merge_and_transfer <- function(cluster_nr_downscaling) {
 
 
 
-#' Run merge and transfer for writing map - used when Pipeline was first developed; not used now and therefore commented out
+#' Generates land cover maps
 #'
-#' Sends data compilation from Downscaling to G4M to limpopo
+#' Used for computing biodiversity indicators and export output - now deprecated
 #' @param cluster_nr_downscaling Cluster sequence number of the downscaling HTCondor submission
-# run_merge_and_transfer <- function(cluster_nr_downscaling) {
-#
-#   # Get cluster number
-#   cluster_number_log <- path(TEMP_DIR, "cluster_number.log")
-#
-#   config <- list()
-#
-#   # Define scenario count
-#   scen_cnt <- tibble(scenid=1:length(SCENARIOS_FOR_DOWNSCALING),scencnt=as.integer(SCENARIOS_FOR_DOWNSCALING))
-#
-#   # Save config file
-#   config[[1]] <- cluster_nr_downscaling
-#   config[[2]] <- get_mapping()
-#
-#   saveRDS(config,path(CD,WD_DOWNSCALING,"config.RData"))
-#
-#   # Get downscaled files (!transfer is faster than using BUNDLE_ADDITIONAL_FILES)
-#     include_files <- dir_ls(path(CD,WD_DOWNSCALING,"gdx"),regexp=str_glue("g4m_simu_out_{cluster_nr_downscaling}.*.*"))
-#
-#
-#   config_template <- c(
-#     'LABEL = "{PROJECT}"',
-#     'JOBS = c({str_c(SCENARIOS_FOR_DOWNSCALING, collapse=",")})',
-#     'REQUIREMENTS = c("R")',
-#     'REQUEST_MEMORY = 50000',
-#     'BUNDLE_EXCLUDE_DIRS = c("output", "prior_module", "source","t","postproc","renv","g4m_merge")',
-#     'BUNDLE_EXCLUDE_FILES = c(".Rprofile","renv.lock","input/*.gdx","gdx/*.*")',
-#     'BUNDLE_ADDITIONAL_FILES = ',
-#     '{include_files}',
-#     'REQUEST_CPUS = 1',
-#     'JOB_RELEASES = 0',
-#     'JOB_RELEASE_DELAY = 120',
-#     'LAUNCHER = "Rscript"',
-#     'SCRIPT = "write_maps.R"',
-#     'ARGUMENTS = "%1"',
-#     'DATE_LABEL = "{DATE_LABEL}"',
-#     'RETAIN_BUNDLE = FALSE',
-#     'RUN_AS_OWNER = {RUN_AS_OWNER}',
-#     'WAIT_FOR_RUN_COMPLETION = TRUE',
-#     'CLEAR_LINES = FALSE',
-#     'GET_OUTPUT = TRUE',
-#     'OUTPUT_DIR = "out"',
-#     'OUTPUT_FILES = c("results_land_cover_CrpLnd.nc","results_land_cover_Grass.nc","results_land_cover_OthNatLnd.nc","results_land_cover_PltFor.nc","results_land_cover_forest_new_ha.nc","results_land_cover_forest_old_ha.nc","results_land_cover_arable.nc","results_land_cover_SS_area.nc","results_land_cover_urban.nc")'
-#   )
-#
-#   config_path <- path(TEMP_DIR, "config_map.R")
-#
-#   # Write config file
-#   current_env <- environment()
-#   write_lines(lapply(config_template, .envir=current_env, str_glue), config_path)
-#   rm(config_template, current_env)
-#
-#   prior_wd <- getwd()
-#   rc <- tryCatch ({
-#     setwd(WD_DOWNSCALING)
-#     system(str_glue('Rscript --vanilla "{CD}/Condor_run_R/Condor_run_basic.R" "{config_path}"'))
-#   },
-#   finally = {
-#     setwd(prior_wd)
-#   })
-#
-#
-# }
+run_map_write <- function(cluster_nr_downscaling) {
+
+  # Get cluster number
+  cluster_number_log <- path(TEMP_DIR, "cluster_number.log")
+
+  config <- list()
+
+  # Define scenario count
+  scen_cnt <- tibble(scenid=1:length(SCENARIOS_FOR_DOWNSCALING),scencnt=as.integer(SCENARIOS_FOR_DOWNSCALING))
+
+  # Save config file
+  config[[1]] <- cluster_nr_downscaling
+  config[[2]] <- get_mapping()
+
+  saveRDS(config,path(CD,WD_DOWNSCALING,"config.RData"))
+
+  # Get downscaled files (!transfer is faster than using BUNDLE_ADDITIONAL_FILES)
+    include_files <- dir_ls(path(CD,WD_DOWNSCALING,"gdx"),regexp=str_glue("g4m_simu_out_{cluster_nr_downscaling}.*.*"))
+
+
+  config_template <- c(
+    'LABEL = "{PROJECT}"',
+    'JOBS = c({str_c(SCENARIOS_FOR_DOWNSCALING, collapse=",")})',
+    'REQUIREMENTS = c("R")',
+    'REQUEST_MEMORY = 50000',
+    'BUNDLE_EXCLUDE_DIRS = c("output", "prior_module", "source","t","postproc","renv","g4m_merge")',
+    'BUNDLE_EXCLUDE_FILES = c(".Rprofile","renv.lock","input/*.gdx","gdx/*.*")',
+    'BUNDLE_ADDITIONAL_FILES = ',
+    '{include_files}',
+    'REQUEST_CPUS = 1',
+    'JOB_RELEASES = 0',
+    'JOB_RELEASE_DELAY = 120',
+    'LAUNCHER = "Rscript"',
+    'SCRIPT = "write_maps.R"',
+    'ARGUMENTS = "%1"',
+    'DATE_LABEL = "{DATE_LABEL}"',
+    'RETAIN_BUNDLE = FALSE',
+    'RUN_AS_OWNER = {RUN_AS_OWNER}',
+    'WAIT_FOR_RUN_COMPLETION = TRUE',
+    'CLEAR_LINES = FALSE',
+    'GET_OUTPUT = TRUE',
+    'OUTPUT_DIR = "out"',
+    'OUTPUT_FILES = c("results_land_cover_CrpLnd.nc","results_land_cover_Grass.nc","results_land_cover_OthNatLnd.nc","results_land_cover_PltFor.nc","results_land_cover_forest_new_ha.nc","results_land_cover_forest_old_ha.nc","results_land_cover_arable.nc","results_land_cover_SS_area.nc","results_land_cover_urban.nc")'
+  )
+
+  config_path <- path(TEMP_DIR, "config_map.R")
+
+  # Write config file
+  current_env <- environment()
+  write_lines(lapply(config_template, .envir=current_env, str_glue), config_path)
+  rm(config_template, current_env)
+
+  prior_wd <- getwd()
+  rc <- tryCatch ({
+    setwd(WD_DOWNSCALING)
+    system(str_glue('Rscript --vanilla "{CD}/Condor_run_R/Condor_run_basic.R" "{config_path}"'))
+  },
+  finally = {
+    setwd(prior_wd)
+  })
+
+
+}
 
 
