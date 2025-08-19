@@ -43,6 +43,7 @@ run_initial_postproc <- function(cluster_nr_globiom, mergeGDX=TRUE)
                           '--limpopo_nr "{cluster_nr_globiom}"',
                           '--project "{PROJECT}"',
                           '--lab "{DATE_LABEL}"',
+                          '--lookup "{LookupType}"',
                           '--rep_g4m yes',
                           '--rep_iamc_glo yes',
                           '--rep_iamc_g4m no',
@@ -96,7 +97,8 @@ run_final_postproc <- function(cluster_nr_globiom, mergeGDX=TRUE) {
 
   # Get G4M scenario list
   scen_map <-  get_mapping() %>% dplyr::select(-ScenNr) %>%
-    filter(ScenLoop %in% SCENARIOS_FOR_G4M) %>% unique() %>% droplevels()
+    filter(ScenLoop %in% SCENARIOS_FOR_G4M) %>%
+    dplyr::select(-RegionName) %>% unique() %>% droplevels()
 
   length_scen1 <- scen_map[[1]] %>% sapply(FUN=function(x) length(unlist(str_split(x,"_"))))
   length_scen2 <- scen_map[[3]] %>% sapply(FUN=function(x) length(unlist(str_split(x,"_"))))
@@ -205,6 +207,7 @@ run_final_postproc <- function(cluster_nr_globiom, mergeGDX=TRUE) {
                           '--project "{PROJECT}"',
                           '--lab "{DATE_LABEL}"',
                           '--gdxmerge "{gdxmerge}"',
+                          '--lookup "{LookupType}"',
                           '--rep_g4m no',
                           '--rep_iamc_glo yes',
                           '--rep_iamc_g4m yes',
@@ -212,6 +215,7 @@ run_final_postproc <- function(cluster_nr_globiom, mergeGDX=TRUE) {
                           '--rep_iamc_biodiversity {process_and_report_biodiversity}',
                           '--g4mfile "{G4M_FEEDBACK_FILE}"',
                           '--regionagg "{REGIONAL_AG}"',
+                          '--region "REGION{REGION_RESOLUTION}"',
                           .sep = ' '))
     if (rc != 0) {
       stop(str_glue("GAMS failed with return code {rc}! See https://www.gams.com/latest/docs/UG_GAMSReturnCodes.html#INDEX_return_21_codes_2d__21_error_21_codes"))
