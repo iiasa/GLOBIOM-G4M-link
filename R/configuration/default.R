@@ -4,6 +4,7 @@
 #-------------------------------------------------------------------------------
 GAMS_VERSION = "42.5" # GAMS version for HTCondor parallel runs, should match what you use locally
 RUN_AS_OWNER = TRUE # Run jobs of HTCondor parallel runs as user that runs the link
+SEED_JOB_TIMEOUT = 180 # Seeding timeout time (sec)
 
 #-------------------------------------------------------------------------------
 
@@ -14,8 +15,9 @@ RUN_AS_OWNER = TRUE # Run jobs of HTCondor parallel runs as user that runs the l
 WD_GLOBIOM = "GLOBIOM" # optional, working directory for GLOBIOM relative to root directory
 PROJECT = "test_Link" # project name
 SCENARIOS = c(0,15) # scenarios to run
+LookupType = 0 # 0=Normal scenarios, 1=Price-driven lookup, 2=Demand-driven lookup, 3=GLOBIOM feedback scenarios
 GLOBIOM_RESTART_FILE = "a4_r1.g00" # restart file name from GLOBIOM
-GLOBIOM_GAMS_ARGS = "//nsim=%1 //limpopo=yes //yes_output=1 //lookup=0 //ssp=SSP2 //scen_type=feedback //water_bio=0 PC=2 PS=0 PW=130" # GAMS arguments for the GLOBIOM run
+GLOBIOM_GAMS_ARGS = stringr::str_glue("//nsim=%1 //limpopo=yes //yes_output=1 //lookup={LookupType} //ssp=SSP2 //water_bio=0 PC=2 PS=0 PW=130" ) # GAMS arguments for the GLOBIOM run; "ssp" configuration is only needed when running lookup table
 GLOBIOM_SCEN_FILE = "6_scenarios.gms"
 GLOBIOM_POSTPROC_FILE = "8_merge_output.gms"
 THERE_ARE_BTC_Scenarios = TRUE ## in the modelled scenarios, are there scenarios that include BTC (bending the curve) type of biodiversity protection & conservation setups? (This information needs to be passed on to DownScale to choose the correct initial LC map, and to G4M to prepare corresponding forest protection layers, to ensure consistent and full BTC representation throughout the GLOBIOM-G4M pipeline)

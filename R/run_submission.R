@@ -17,8 +17,8 @@ run_globiom_scenarios <- function() {
     'LABEL = "{PROJECT}"',
     'JOBS = c({str_c(SCENARIOS, collapse=",")})',
     'REQUIREMENTS = c("GLOBIOM")',
-    'REQUEST_MEMORY = 20000',
-    'REQUEST_DISK = 2200000',
+    'REQUEST_MEMORY = 27000',
+    'REQUEST_DISK = 1800000',
     'REQUEST_CPUS = 1',
     'GAMS_CURDIR = "Model"',
     'GAMS_FILE_PATH = "{GLOBIOM_SCEN_FILE}"',
@@ -934,10 +934,12 @@ run_biodiversity <- function(cluster_nr_downscaling) {
   # out_id <- format(Sys.time(), "%d %X %Y") %>% str_remove_all(":") %>% str_remove_all(" ")  ## out_id identifier, 1st Alternative - use system time
   out_id <- paste0(PROJECT,"_",DATE_LABEL) ## out_id identifier, 2ND Alternative - use {PROJECT} and {DATE_LABEL}
 
-  # Split scenarios into submission blocks of 40 scenarios
-  scen_blocks <- ifelse(length(SCENARIOS_FOR_BIODIVERSITY)<10,
-                        list(SCENARIOS_FOR_BIODIVERSITY),
-                        divide(SCENARIOS_FOR_BIODIVERSITY,ceiling(length(SCENARIOS_FOR_BIODIVERSITY)/40)))
+  # Split scenarios into submission blocks of 40 scenarios (replace ifelse() with the regular if-else expression, as ifelse() returns vectorised results and surpress the multiple entries in list in case of divide)
+  if (length(SCENARIOS_FOR_BIODIVERSITY) < 15) {
+    scen_blocks <- list(SCENARIOS_FOR_BIODIVERSITY)
+  } else {
+    scen_blocks <- divide(SCENARIOS_FOR_BIODIVERSITY,ceiling(length(SCENARIOS_FOR_BIODIVERSITY)/40))
+  }
 
   # Define downscaling scenarios for biodiversity run
   for (i in 1: length(scen_blocks)){
@@ -977,7 +979,7 @@ run_biodiversity <- function(cluster_nr_downscaling) {
      config_template <- c(
       'LABEL = "{PROJECT}"',
       'JOBS = {scen_string}',
-      'HOST_REGEXP = "^limpopo"',
+      'HOST_REGEXP = "^limpopo[567]"',
       'REQUIREMENTS = c("R")',
       'REQUEST_MEMORY = 10000',
       'BUNDLE_EXCLUDE_FILES = c("**/Output/*.*","Output/*.*")',
