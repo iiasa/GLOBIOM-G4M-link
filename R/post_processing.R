@@ -43,9 +43,13 @@ run_initial_postproc <- function(cluster_nr_globiom, mergeGDX=TRUE)
                           '--limpopo_nr "{cluster_nr_globiom}"',
                           '--project "{PROJECT}"',
                           '--lab "{DATE_LABEL}"',
+                          '--lookup "{LookupType}"',
                           '--rep_g4m yes',
                           '--rep_iamc_glo yes',
                           '--rep_iamc_g4m no',
+                          '--rep_iamc_forest no',
+                          '--rep_iamc_biodiversity no',
+                          '--gdxmerge no',
                           '--g4mfile "{G4M_FEEDBACK_FILE}"',
                           '--regionagg "{REGIONAL_AG}"',
                           '--region "REGION{REGION_RESOLUTION}"',
@@ -70,7 +74,7 @@ run_initial_postproc <- function(cluster_nr_globiom, mergeGDX=TRUE)
 #' reports for IAMC.
 #'
 #' @param cluster_nr_globiom Cluster sequence number of prior GLOBIOM HTCondor submission
-run_final_postproc <- function(cluster_nr_globiom) {
+run_final_postproc <- function(cluster_nr_globiom, mergeGDX=TRUE) {
 
   # Create output file directory
   out_dir <- path(CD,"output",str_glue("{PROJECT}_{DATE_LABEL}"))
@@ -85,7 +89,13 @@ run_final_postproc <- function(cluster_nr_globiom) {
   if (!any(str_detect(tempString,str_glue("{g4m_postproc_file}_tmp.gms")))) tempString <- string_replace(tempString,str_glue("\\$include\\s+{g4m_postproc_file}.gms"),str_glue("$include {g4m_postproc_file}_tmp.gms"))
   # out_line <- str_glue("execute_unload '{out_dir_aux}Output4_IAMC_template_%project%_%lab%.gdx' Output4_SSP, Output4_SSP_AG, REGION_AG_MAP")
   # tempString[which(str_detect(tempString,"execute_unload[:print:]+.gdx"))] <- out_line
-  if (any(str_detect(tempString,str_glue("execute_unload")))) tempString <- string_replace(tempString,str_glue("execute_unload[:print:]+.gdx"),str_glue("execute_unload '{out_dir_aux}Output4_IAMC_template_%project%_%lab%.gdx"))
+
+  # if (any(str_detect(tempString,str_glue("execute_unload")))) tempString <- string_replace(tempString,str_glue("execute_unload[:print:]+.gdx"),str_glue("execute_unload '{out_dir_aux}Output4_IAMC_template_%project%_%lab%.gdx"))
+  if (any(str_detect(tempString,str_glue("execute_unload")))){
+  out_line <- str_glue("execute_unload '{out_dir_aux}Output4_IAMC_template_%project%_%lab%.gdx' Output4_SSP,Output4_SSP_AG,Output4_SSP_AG_2DIM,REGION_AG_MAP,REGION_MAP,Obj_Compare;execute_unload '{out_dir_aux}Output4_IAMC_template_%project%_%lab%_all.gdx';") # if want to unload "_all" as well
+  # out_line <- str_glue("execute_unload '{out_dir_aux}Output4_IAMC_template_%project%_%lab%.gdx' Output4_SSP,Output4_SSP_AG,Output4_SSP_AG_2DIM,REGION_AG_MAP,Obj_Compare;")
+  tempString[which(str_detect(tempString,"execute_unload[:print:]+.gdx"))] <- out_line
+  }
   write_lines(tempString, path(WD_GLOBIOM, "Model", str_glue("{globiom_postproc_file}_tmp.gms")))
 
   # Construct path for feedback file
@@ -93,7 +103,8 @@ run_final_postproc <- function(cluster_nr_globiom) {
 
   # Get G4M scenario list
   scen_map <-  get_mapping() %>% dplyr::select(-ScenNr) %>%
-    filter(ScenLoop %in% SCENARIOS_FOR_G4M) %>% unique() %>% droplevels()
+    filter(ScenLoop %in% SCENARIOS_FOR_G4M) %>%
+    dplyr::select(-RegionName) %>% unique() %>% droplevels()
 
   length_scen1 <- scen_map[[1]] %>% sapply(FUN=function(x) length(unlist(str_split(x,"_"))))
   length_scen2 <- scen_map[[3]] %>% sapply(FUN=function(x) length(unlist(str_split(x,"_"))))
@@ -178,6 +189,18 @@ run_final_postproc <- function(cluster_nr_globiom) {
     tempString <- string_replace_all(tempString,regex(ifelse(country_aggregation,ref_ctry,ref_reg), ignore_case = T),
                                 ifelse(country_aggregation,ref_sum_ctry,ref_sum_reg))
 
+    if(mergeGDX){
+      gdxmerge <- "yes"
+    }else{
+      gdxmerge <- "no"
+    }
+
+    if(exists("cluster_nr_biodiversity")){
+      process_and_report_biodiversity <- "yes"
+    }else{
+      process_and_report_biodiversity <- "no"
+    }
+
   # Save edits and run post-processing script in the GLOBIOM Model directory
   prior_wd <- getwd()
   rc <- tryCatch ({
@@ -189,11 +212,16 @@ run_final_postproc <- function(cluster_nr_globiom) {
                           '--limpopo_nr "{cluster_nr_globiom}"',
                           '--project "{PROJECT}"',
                           '--lab "{DATE_LABEL}"',
+                          '--gdxmerge "{gdxmerge}"',
+                          '--lookup "{LookupType}"',
                           '--rep_g4m no',
                           '--rep_iamc_glo yes',
                           '--rep_iamc_g4m yes',
+                          '--rep_iamc_forest yes',
+                          '--rep_iamc_biodiversity {process_and_report_biodiversity}',
                           '--g4mfile "{G4M_FEEDBACK_FILE}"',
                           '--regionagg "{REGIONAL_AG}"',
+                          '--region "REGION{REGION_RESOLUTION}"',
                           .sep = ' '))
     if (rc != 0) {
       stop(str_glue("GAMS failed with return code {rc}! See https://www.gams.com/latest/docs/UG_GAMSReturnCodes.html#INDEX_return_21_codes_2d__21_error_21_codes"))

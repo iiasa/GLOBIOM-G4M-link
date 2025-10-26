@@ -159,9 +159,9 @@ if (!file_exists(path(PATH_FOR_G4M, str_glue("GLOBIOM2G4M_output_LC_abs_{PROJECT
 
 gdx_to_csv_for_g4m()
 
-## copying Protection layer file (if needed) to the created G4M folder "\G4M\Data\GLOBIOM\". This "_Example.csv" can be used to adapt for current scenarios.
-if(file_exists("G4M\\Data\\Default\\Protect_output_LC_abs_Example.csv")){
-file.copy("G4M\\Data\\Default\\Protect_output_LC_abs_Example.csv", paste0("G4M\\Data\\GLOBIOM\\",PROJECT,"_",DATE_LABEL,"\\Protect_output_LC_abs_",PROJECT,"_",DATE_LABEL,".csv"))
+## When modelled scenarios include BTC scenarios: generate Protection layer for G4M
+if(THERE_ARE_BTC_Scenarios){
+  generate_BTC_forest_prot_layer(SCENARIOS_BTC)
 }
 
 ```
@@ -217,7 +217,18 @@ if (USE_LIMPOPO_POSTPROC) {
 print("Final post-processing complete")
 ```
 
-## 7. Remove files and plot results
+
+## 7.Run Biodiversity_link: calculating biodiversity indicators (PREDICTS|BII, cSAR|FGRS)
+
+```{r}
+cluster_nr_biodiversity <- run_biodiversity(cluster_nr_downscaling)
+
+print("Biodiversity indicators calculation complete")
+
+```
+
+
+## 8. Remove files and plot results
 
 ```{r}
 # Generate plots for results

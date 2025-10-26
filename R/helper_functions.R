@@ -668,3 +668,58 @@ str_exclude <- function(string, pattern) {
   }
 }
 
+#' Generate forest protection layers for running G4M, for scenarios with BTC conservation
+#'
+#' @param SCENARIOS_BTC Array of scenarios with BTC biodiversity conservation features activated
+generate_BTC_forest_prot_layer <- function(SCENARIOS_BTC){
+
+  ## Extract scenario list (for scens that have BTC feature)
+  scenario_mapping <- get_mapping()
+
+  scenario_name_G4M <-  scenario_mapping  %>%
+    filter(ScenLoop %in% SCENARIOS_FOR_G4M) %>%
+    select(-c(RegionName, ScenNr,ScenLoop)) %>%
+    distinct()
+
+  scenario_name_G4M_wBTC <- scenario_mapping %>%
+    filter(ScenLoop %in% SCENARIOS_FOR_G4M) %>%
+    filter(ScenLoop %in% SCENARIOS_BTC) %>%
+    select(-c(RegionName, ScenNr,ScenLoop)) %>%
+    distinct()
+
+  scenario_name_G4M_woBTC <- scenario_mapping %>%
+    filter(ScenLoop %in% SCENARIOS_FOR_G4M) %>%
+    filter(!ScenLoop %in% SCENARIOS_BTC) %>%
+    select(-c(RegionName, ScenNr,ScenLoop)) %>%
+    distinct()
+
+
+  ## Load protection layers
+  # 1) Default protection layer from default G4M input csv
+  data_G4M_raw <- read.csv(file=path(CD,WD_G4M,paste0("Data/Default/oecd_ssp2_decc2016_pbl_r31_r37_r59_16032022.csv")))
+  data_G4M_cell <- data_G4M_raw %>% select(c(x,y,simuid))
+  data_prot_G4Mdefault <- data_G4M_raw %>% select(c(x,y,simuid,protect))
+
+  # 2) Protection layer from BTC
+  ## New | 20230828 | based on total protected forest area > 50% forest are or not
+  data_BTC_raw2 <- read.csv(file=path(CD,WD_G4M,paste0("Data/Default/table_protect_area_fromDavidBTC_2_ForestCriteria.csv")))
+  data_prot_BTC2 <- data_BTC_raw2 %>%
+    dplyr::select(x,y,Share_ForestProt) %>%
+    mutate(IsProtect=ifelse(Share_ForestProt>=0.5,1,0)) %>%
+    left_join(data_G4M_raw %>% select(c(x,y,simuid)),by=c("x","y")) %>% na.omit() %>%
+    dplyr::rename(protect=IsProtect)
+
+## Create protection layer for current scenarios
+  data_prot_wBTC <- expand_grid(scenario_name_G4M_wBTC,data_G4M_cell %>% distinct(x,y,simuid)) %>%
+    left_join(data_prot_BTC2 %>% select(x,y,simuid,protect),by=c("x","y","simuid"))
+
+  data_prot_woBTC <- expand_grid(scenario_name_G4M_woBTC,data_G4M_cell %>% distinct(x,y,simuid)) %>%
+    left_join(data_prot_G4Mdefault %>% select(x,y,simuid,protect),by=c("x","y","simuid"))
+
+  data_prot_rbind <- rbind(data_prot_wBTC,data_prot_woBTC)%>%
+    select(SCEN1,SCEN3,SCEN2,x,y,simuid,protect)
+
+  fwrite(data_prot_rbind,file = path(CD,WD_G4M,paste0("Data\\GLOBIOM\\",PROJECT,"_",DATE_LABEL,"\\Protect_output_LC_abs_",PROJECT,"_",DATE_LABEL,".csv")),sep=",",append=FALSE)
+
+}
+
