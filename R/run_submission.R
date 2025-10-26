@@ -20,6 +20,8 @@ run_globiom_scenarios <- function() {
     'REQUEST_MEMORY = 27000',
     'REQUEST_DISK = 1800000',
     'REQUEST_CPUS = 1',
+    # 'HOST_REGEXP = "^limpopo[567]"',
+    'HOST_REGEXP = "^limpopo[7]"', ## YW local PC - to constraint the potential limpopo resource but make scenarios more reproduciable
     'GAMS_CURDIR = "Model"',
     'GAMS_FILE_PATH = "{GLOBIOM_SCEN_FILE}"',
     'GAMS_VERSION = "{GAMS_VERSION}"',
@@ -105,6 +107,7 @@ run_initial_downscaling <- function() {
       'REQUEST_MEMORY = 2500',
       'REQUEST_DISK = 1400000',
       'REQUEST_CPUS = 1',
+      'HOST_REGEXP = "^limpopo[67]"',
       'BUNDLE_EXCLUDE_FILES = "**/gdx/*.*"',
       'GAMS_FILE_PATH = "{DOWNSCALING_SCRIPT}"',
       'GAMS_VERSION = "{GAMS_VERSION}"',
@@ -167,7 +170,7 @@ run_initial_downscaling <- function() {
         'LABEL = "{PROJECT}"',
         'JOBS = c({scen_string})',
         'REQUIREMENTS = c("GAMS"),',
-        'HOST_REGEXP = "^limpopo"',
+        'HOST_REGEXP = "^limpopo[67]"', 
         'REQUEST_MEMORY = 2500',
         'REQUEST_DISK = 1400000',
         'REQUEST_CPUS = 1',
@@ -240,6 +243,8 @@ run_initial_downscaling <- function() {
     config_template <- c(
       'LABEL = "{PROJECT}"',
       'JOBS = c({scen_string})',
+      'HOST_REGEXP = "^limpopo[67]"',
+      # 'HOST_REGEXP = "^limpopo[7]"',
       'REQUIREMENTS = c("R")',
       'REQUEST_MEMORY = 7500',
       'REQUEST_DISK = 1500000',
@@ -401,7 +406,8 @@ run_g4m <- function(baseline = NULL) {
     'REQUEST_CPUS = 1',
     'JOB_RELEASES = 1',
     'JOB_RELEASE_DELAY = 120',
-    'HOST_REGEXP = "^limpopo[678]"', # suggested hosts from the cluster for running G4M tasks
+    # 'HOST_REGEXP = "^limpopo[567]"', # suggested hosts from the cluster for running downscaling tasks
+    'HOST_REGEXP = "^limpopo[7]"', # suggested hosts from the cluster for running G4M tasks - easy to reproduce
     'LAUNCHER = "Rscript"',
     'SCRIPT = "{G4M_SUBMISSION_SCRIPT}"',
     'ARGUMENTS = "%1"',
