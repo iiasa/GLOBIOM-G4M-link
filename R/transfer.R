@@ -82,7 +82,7 @@ merge_and_transfer <- function(cluster_nr_downscaling) {
         } else {
 
           downs_files <- readRDS(path(CD,WD_DOWNSCALING,"gdx", str_glue("output_{cluster_nr_downscaling}.",
-                                                                        s_list,".RData")))[[2]] %>% select(-LC_TYPES_EPIC)
+                                                                        s_list,".RData")))[[2]] %>% ungroup() %>% select(-LC_TYPES_EPIC)
 
           f <- path(CD,str_glue("{WD_G4M}"),"Data","GLOBIOM",str_glue("{PROJECT}_{DATE_LABEL}"),
                     str_glue("GLOBIOM2G4M_output_LC_abs_{PROJECT}_{DATE_LABEL}_{scen_cnt}.csv"))
