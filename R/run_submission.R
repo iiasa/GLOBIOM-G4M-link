@@ -262,7 +262,8 @@ run_initial_downscaling <- function() {
       'CLEAR_LINES = FALSE',
       'GET_OUTPUT = TRUE',
       'OUTPUT_DIR = "gdx"',
-      'OUTPUT_FILE = "output.RData"',
+      # 'OUTPUT_FILE = "output.RData"',
+      'OUTPUT_FILE = "output_{PROJECT}_{DATE_LABEL}.RData"', # YW 20251030 update output naming to include project and lab
       'CLUSTER_NUMBER_LOG = "{cluster_number_log}"'
     )
 
@@ -935,13 +936,15 @@ run_biodiversity <- function(cluster_nr_downscaling) {
   # Define scenarion mapping
   scenario_mapping <- get_mapping() %>%
     filter(ScenLoop %in% SCENARIOS_FOR_BIODIVERSITY)
-
+  
+  fwrite(scenario_mapping,file = path(CD,WD_BIODIVERSITY,"Input",str_glue("scenario_mapping_{PROJECT}_{DATE_LABEL}_runBiodiversity.csv")))
+  
   # Define out id for merging gdx
   # out_id <- format(Sys.time(), "%d %X %Y") %>% str_remove_all(":") %>% str_remove_all(" ")  ## out_id identifier, 1st Alternative - use system time
   out_id <- paste0(PROJECT,"_",DATE_LABEL) ## out_id identifier, 2ND Alternative - use {PROJECT} and {DATE_LABEL}
 
   # Split scenarios into submission blocks of 40 scenarios (replace ifelse() with the regular if-else expression, as ifelse() returns vectorised results and surpress the multiple entries in list in case of divide)
-  if (length(SCENARIOS_FOR_BIODIVERSITY) < 15) {
+  if (length(SCENARIOS_FOR_BIODIVERSITY) < 25) {
     scen_blocks <- list(SCENARIOS_FOR_BIODIVERSITY)
   } else {
     scen_blocks <- divide(SCENARIOS_FOR_BIODIVERSITY,ceiling(length(SCENARIOS_FOR_BIODIVERSITY)/40))
@@ -965,7 +968,7 @@ run_biodiversity <- function(cluster_nr_downscaling) {
 
     # Define files to bundle
     downscaling_files <- dir_ls(path(CD,WD_DOWNSCALING,"gdx"),
-                                regexp=str_glue("output_{cluster_nr_downscaling}.",
+                                regexp=str_glue("output_{PROJECT}_{DATE_LABEL}_{cluster_nr_downscaling}.",
                                                                               "*",".RData"))  %>% sort() %>%
       match_str(sprintf("%06d",block_scen[-1]))
 
@@ -1054,20 +1057,20 @@ run_biodiversity <- function(cluster_nr_downscaling) {
 
     # Create output file
     if (COMPUTE_BII & COMPUTE_cSAR) {
-      cons_out <- cons_out_bii %>% left_join(cons_out_csar) %>%
-        rename(area=value, ScenYear=times,"BII" =  bii,"BII_PROD" =  bii_prod,"cSAR" =  csar) %>%
+      cons_out <- cons_out_bii %>% left_join(cons_out_csar %>% select(-c(value))) %>%
+        dplyr::rename(area=value, ScenYear=times,"BII" =  bii,"BII_PROD" =  bii_prod,"cSAR" =  csar) %>%
         dplyr::select(-c(ScenLoop,ScenNr,area)) %>%
         gather(Item,value,-c(REGION,SCEN1,SCEN2,SCEN3,ScenYear)) %>%
         relocate(Item,.after = REGION) %>% as_tibble() %>% spread(ScenYear,value)
     } else if (COMPUTE_BII & ! COMPUTE_cSAR) {
       cons_out <- cons_out_bii %>%
-        rename(area=value, ScenYear=times,"BII" =  bii, "BII_PROD" =  bii_prod) %>%
+        dplyr::rename(area=value, ScenYear=times,"BII" =  bii, "BII_PROD" =  bii_prod) %>%
         dplyr::select(-c(ScenLoop,ScenNr,area)) %>%
         gather(Item,value,-c(REGION,SCEN1,SCEN2,SCEN3,ScenYear)) %>%
         relocate(Item,.after = REGION) %>% as_tibble() %>% spread(ScenYear,value)
     } else if (! COMPUTE_BII & COMPUTE_cSAR) {
       cons_out <- cons_out_csar %>%
-        rename(ScenYear=times,"cSAR" =  csar) %>%
+        dplyr::rename(ScenYear=times,"cSAR" =  csar) %>%
         dplyr::select(-c(ScenLoop,ScenNr)) %>%
         gather(Item,value,-c(REGION,SCEN1,SCEN2,SCEN3,ScenYear)) %>%
         relocate(Item,.after = REGION) %>% as_tibble() %>% spread(ScenYear,value)

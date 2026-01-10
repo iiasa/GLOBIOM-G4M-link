@@ -275,6 +275,49 @@ export_gdx_for_g4m <- function(data,data_for_g4m){
   wgdx.lst(path(CD,WD_DOWNSCALING,"gdx"), LC,G4M[[7]])
 }
 
+#' Process downscale result to provide G4M with full LC data (with all LC amounts being explicit in different columns, not aggregated to "reserved" as default). The output files are "GLOBIOM2G4M_output_AllLCInfo_{project}_{lab}.csv" to "G4M/Data/GLOBIOM/" folder.
+#' P.S. This file-writing function was adapted from the merge_and_transfer function (in transfer.R)
+#' @param cluster_nr_downscaling 
+#' 
+export_full_GLOBIOMLC_forG4M <-  function(cluster_nr_downscaling) {
+  
+  # Get scenario mapping and indices
+  scenario_mapping <- get_mapping()
+  
+  # scenario counter
+  scen_cnt <- 1
+  
+  for (k in 1: length(SCENARIOS_FOR_DOWNSCALING)){
+    
+    scenarios_idx <- scenario_mapping$ScenNr[which(scenario_mapping$ScenLoop %in% SCENARIOS_FOR_DOWNSCALING[k])] %>% sort()
+    
+    # Extract land cover table for G4M
+    for (i in 1:length(scenarios_idx)){
+      
+      # Get scenario number
+      s_list <-  sprintf("%06d", scenarios_idx[i])
+      
+      # Read data for G4M
+      downs_files <- readRDS(path(CD,WD_DOWNSCALING,"gdx", str_glue("output_{PROJECT}_{DATE_LABEL}_{cluster_nr_downscaling}.",
+                                                                    s_list,".RData")))[[6]] %>% ungroup() %>% arrange(g4m_05_id)
+      f <- path(CD,str_glue("{WD_G4M}"),"Data","GLOBIOM",str_glue("{PROJECT}_{DATE_LABEL}"),
+                str_glue("GLOBIOM2G4M_output_AllLCInfo_{PROJECT}_{DATE_LABEL}_{scen_cnt}.csv"))
+      
+      if (i==1) {
+        # Write csv file
+        write_csv(downs_files, f, col_names = T)
+      } else {
+        # Append to csv file
+        write_csv(downs_files, f, append = T)
+      }
+      
+    } # end loop for scenarios_idx(i) for extracting land cover table for G4M for current scenario
+    
+    scen_cnt <- scen_cnt + 1
+    
+  } # end loop for scenarios(k)
+  
+}
 
 #' Generate G4M job string for the new G4M interface
 #'
